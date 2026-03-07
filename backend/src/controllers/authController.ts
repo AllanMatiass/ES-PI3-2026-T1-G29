@@ -7,5 +7,8 @@ const authService = new AuthService(db);
 export async function signupController(req: Request, res: Response) {
     const {email, password, name, cpf} = req.body;
     const user = await authService.createUser({email, password, name, cpf})
-    return res.status(201).json(user);
+    return res.status(201).json({
+        success: true,
+        data: user
+    });
 }
