@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 export class AppError extends Error {
   public readonly statusCode: number;
 
