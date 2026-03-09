@@ -1,3 +1,4 @@
+// Autores: Allan Giovanni Matias Paes
 export type User = {
   id: string
   firebaseUid: string

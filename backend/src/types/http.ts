@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 export type ApiErrorResponse = {
   status: number;
   message: string;
