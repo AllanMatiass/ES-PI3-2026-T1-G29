@@ -3,7 +3,9 @@ import cors from 'cors';
 import {config} from 'dotenv';
 import { firebaseTest } from './config/firebase.js';
 import  authRoutes  from './routes/public/authRoutes.js';
+import  userRoutes  from './routes/private/userRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { authMiddleware } from './middlewares/authMiddleware.js';
 
 config();
 await firebaseTest();
@@ -15,6 +17,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use('/auth', authRoutes);
+app.use('/user', authMiddleware, userRoutes);
 
 app.use(errorHandler);
 
