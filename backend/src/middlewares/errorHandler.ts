@@ -10,6 +10,9 @@ export function errorHandler(
   _next: NextFunction
 ) {
   const now = new Date().toISOString();
+  // Se for um erro customizado (AppError) lançado em qualquer momento da aplicação, 
+  // retorna um body e um status personalizado definido no lançamento do erro.
+
   if (err instanceof AppError) {
     const error = {
       status: err.statusCode,
@@ -23,10 +26,12 @@ export function errorHandler(
       error
     } as ApiResponse<void>;
 
-    
 
     return res.status(err.statusCode).json(body);
   }
+
+  // Se não for um AppError, não sabemos o que causou o erro e exibimos a mensagem do erro para corrigir. 
+  // O ideal é que essa mensagem de status 500 não seja visível pro usuário.
 
   const internalError = {
     status: 500,

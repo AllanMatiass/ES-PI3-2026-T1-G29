@@ -1,3 +1,4 @@
+// Autores: Allan Giovanni Matias Paes
 import { Router } from "express";
 import { signupController } from "../../controllers/authController.js";
 

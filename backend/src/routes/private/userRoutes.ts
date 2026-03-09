@@ -1,3 +1,4 @@
+// Autores: Allan Giovanni Matias Paes
 import { Router } from "express";
 import { db } from "../../config/firebase.js";
 import { UserService } from "../../services/UserService.js";
