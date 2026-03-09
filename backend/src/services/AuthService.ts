@@ -3,8 +3,7 @@ import admin from "../config/firebase.js";
 import type { CreateUserDTO } from "../models/userSchema.js";
 
 export class AuthService {
-
-    db: Firestore;
+    private db: Firestore;
 
     constructor(db: Firestore){
         this.db = db;
