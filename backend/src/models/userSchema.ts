@@ -16,3 +16,8 @@ export type CreateUserDTO = {
   cpf: string
   password: string
 }
+
+export type LoginDTO = {
+  email: string,
+  password: string
+}
