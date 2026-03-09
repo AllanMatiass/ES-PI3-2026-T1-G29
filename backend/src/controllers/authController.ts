@@ -1,3 +1,5 @@
+// Autores: Allan Giovanni Matias Paes
+
 import { type Request, type Response } from "express";
 import { AuthService } from "../services/AuthService.js";
 import { db } from "../config/firebase.js";

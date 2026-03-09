@@ -1,3 +1,5 @@
+// Autor: Allan Giovanni Matias Paes
+
 import 'package:firebase_auth/firebase_auth.dart';
 
 Future<Map<String, String>> login(String email, String senha) async {
@@ -10,17 +12,13 @@ Future<Map<String, String>> login(String email, String senha) async {
     final user = credential.user;
 
     if (user == null) {
-      throw Exception("Usuário não encontrado");
+      throw Exception("User not found");
     }
 
     final token = await user.getIdToken();
 
-    return {
-      "uid": user.uid,
-      "token": token!,
-    };
-
+    return {"uid": user.uid, "token": token!};
   } on FirebaseAuthException catch (e) {
-    throw Exception(e.message ?? "Erro no login");
+    throw Exception(e.message ?? "Login error");
   }
 }

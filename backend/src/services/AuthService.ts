@@ -1,3 +1,4 @@
+// Autores: Allan Giovanni Matias Paes
 import type { Firestore } from "firebase-admin/firestore";
 import admin from "../config/firebase.js";
 import type { CreateUserDTO } from "../models/userSchema.js";
