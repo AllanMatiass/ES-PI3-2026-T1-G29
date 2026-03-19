@@ -1,17 +1,6 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:frontend/services/auth.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await dotenv.load(fileName: ".env");
-  final res = await login('matias@22e.com', '123456');
-
-  print("UID: ${res['uid']!}");
-  print('TOKEN: ${res['token']!}');
-
+void main() {
   runApp(const MyApp());
 }
 
