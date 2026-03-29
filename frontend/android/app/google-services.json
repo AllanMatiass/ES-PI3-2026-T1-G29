@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "721217409673",
-    "project_id": "es---pi-3---g29",
-    "storage_bucket": "es---pi-3---g29.firebasestorage.app"
+    "project_number": "785582899168",
+    "project_id": "projeto-integrador-3---g29",
+    "storage_bucket": "projeto-integrador-3---g29.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:721217409673:android:7be6f99b58797dc5b76c58",
+        "mobilesdk_app_id": "1:785582899168:android:40fa0a4f32529e3fd3b585",
         "android_client_info": {
-          "package_name": "com.example.frontend"
+          "package_name": "com.mesclainvest"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBbHNTVPpOvKkyvHuG76-HVnV8YdBAdLhY"
+          "current_key": "AIzaSyDmH_EmJyPGzi_J-2-gSLVsGDzfKKn2ZgA"
         }
       ],
       "services": {
