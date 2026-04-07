@@ -6,9 +6,9 @@
 | ----------------------------- | -------- |
 | Allan Giovanni Matias Paes    | 25008211 |
 | Giovanna Bonfim Portela Souza | 25005958 |
-| Murilo Rigoni                 | -        |
+| Murilo Rigoni                 | 25006049 |
 | Pedro Vinícius Romanato       | 25004075 |
-| Vinícius Castro de Oliveira   | -        |
+| Vinícius Castro de Oliveira   | 25002026 |
 
 # MesclaInvest
 
