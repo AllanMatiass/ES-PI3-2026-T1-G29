@@ -1,4 +1,8 @@
+// Autor: Allan Giovanni Matias Paes
 import { Timestamp } from "firebase-admin/firestore";
+
+// Modelos e tipos relacionados a startups,
+// incluindo enums para estágio, status e setor,
 
 export enum StartupStage {
   NEW,
