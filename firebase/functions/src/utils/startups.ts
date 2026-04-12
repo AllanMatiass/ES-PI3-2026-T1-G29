@@ -1,9 +1,14 @@
+// Autor: Allan Giovanni Matias Paes
 import {
   StartupStatus,
   Startup,
   StartupSector,
   StartupStage,
 } from "../models/startupModels";
+
+// Dados de startups para serem usados no processo de seed,
+// permitindo a criação de dados iniciais no Firestore
+// para testes e desenvolvimento.
 
 export const startupsData: Startup[] = [
   {
