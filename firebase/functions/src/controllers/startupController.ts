@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { Request, Response } from "firebase-functions/v1";
 import { StartupService } from "../services/startupService";
 
