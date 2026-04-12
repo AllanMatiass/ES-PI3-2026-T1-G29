@@ -29,6 +29,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src", "src/config/firebase.ts"],
+  "include": ["src", "src/config/firebase.ts", "../firebase/functions/src/errors", "../firebase/functions/src/middlewares/errorHandler.ts", "../firebase/functions/src/@types/http.ts"],
   "exclude": ["prisma"],
 }
