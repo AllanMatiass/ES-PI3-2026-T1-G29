@@ -36,7 +36,7 @@ export function withErrorHandler(
         success: false,
         error: {
           status: 500,
-          message: "An unexpected error occurred",
+          message: "Um erro inesperado ocorreu.",
           timestamp: now,
           path: req.get("host"),
         },
