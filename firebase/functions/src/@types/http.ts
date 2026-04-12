@@ -7,7 +7,7 @@ export type ApiErrorResponse = {
 };
 
 export type ApiResponse<T> = {
-    success: boolean;
-    data?: T;
-    error?: ApiErrorResponse;
-}
+  success: boolean;
+  data?: T;
+  error?: ApiErrorResponse;
+};

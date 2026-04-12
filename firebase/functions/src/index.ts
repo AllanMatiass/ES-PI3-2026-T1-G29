@@ -2,6 +2,8 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { StartupController } from "./controllers/startupController";
 import { StartupService } from "./services/startupService";
+import { withErrorHandler } from "./middlewares/errorHandler";
+import { AppError } from "./errors/AppError";
 
 const app = admin.initializeApp();
 const db = app.firestore();
@@ -11,18 +13,20 @@ const startupController = new StartupController(
   new StartupService(startupsCollection),
 );
 
-export const seedStartups = functions.https.onRequest(async (req, res) => {
-  const initialTime = Date.now();
-  functions.logger.info("Seeding startups data...");
+export const seedStartups = functions.https.onRequest(
+  withErrorHandler(async (req, res) => {
+    const initialTime = Date.now();
 
-  if (req.method !== "POST") {
-    res.status(405).send("Method Not Allowed");
-    return;
-  }
+    if (req.method !== "POST") {
+      throw new AppError({
+        message: "Method Not Allowed",
+        statusCode: 405,
+      });
+    }
 
-  await startupController.seedStartups(req, res);
+    await startupController.seedStartups(req, res);
 
-  const endTime = Date.now();
-  const duration = (endTime - initialTime) / 1000;
-  functions.logger.info(`Data seeding completed in ${duration} seconds`);
-});
+    const duration = (Date.now() - initialTime) / 1000;
+    functions.logger.info(`Done in ${duration}s`);
+  }),
+);

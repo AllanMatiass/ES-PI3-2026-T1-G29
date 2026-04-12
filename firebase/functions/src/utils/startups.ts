@@ -3,7 +3,7 @@ import {
   Startup,
   StartupSector,
   StartupStage,
-} from "../@types/startupTypes";
+} from "../models/startupModels";
 
 export const startupsData: Startup[] = [
   {
