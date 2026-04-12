@@ -1,17 +1,10 @@
+import { db } from "./firebase";
 import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
 import { StartupController } from "./controllers/startupController";
 import { StartupService } from "./services/startupService";
 import { withErrorHandler } from "./middlewares/errorHandler";
 import { AppError } from "./errors/AppError";
-
-const app = admin.initializeApp();
-const db = app.firestore();
-const startupsCollection = db.collection("startups");
-
-const startupController = new StartupController(
-  new StartupService(startupsCollection),
-);
+import { signupFunction } from "./routes/public/authRoutes";
 
 export const seedStartups = functions.https.onRequest(
   withErrorHandler(async (req, res) => {
@@ -19,10 +12,14 @@ export const seedStartups = functions.https.onRequest(
 
     if (req.method !== "POST") {
       throw new AppError({
-        message: "Method Not Allowed",
+        message: "Método HTTP não permitido.",
         statusCode: 405,
       });
     }
+
+    const startupController = new StartupController(
+      new StartupService(db.collection("startups")),
+    );
 
     await startupController.seedStartups(req, res);
 
@@ -30,3 +27,7 @@ export const seedStartups = functions.https.onRequest(
     functions.logger.info(`Done in ${duration}s`);
   }),
 );
+
+export const signup = functions.https.onRequest(async (req, res) => {
+  await signupFunction(req, res);
+});
