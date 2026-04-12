@@ -1,32 +1,28 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { StartupController } from "./controllers/startupController";
+import { StartupService } from "./services/startupService";
 
 const app = admin.initializeApp();
 const db = app.firestore();
-const collectionUsers = db.collection("users");
+const startupsCollection = db.collection("startups");
 
-export const mockupFunction = functions.https.onRequest(async (req, res) => {
-  const user = {
-    email: "allangiovannimatias@gmail.com",
-    name: "John Doe",
-    cpf: "12345678900",
-    password: "123456",
-    field: 1,
+const startupController = new StartupController(
+  new StartupService(startupsCollection),
+);
 
-  };
+export const seedStartups = functions.https.onRequest(async (req, res) => {
+  const initialTime = Date.now();
+  functions.logger.info("Seeding startups data...");
 
-  try {
-    const createUser = await admin.auth().createUser({
-      email: user.email,
-      password: user.password,
-      displayName: user.name,
-    });
-    await collectionUsers.doc(createUser.uid).set({
-      cpf: user.cpf, anyField: user.field,
-    });
-    res.send(`User created with ID: ${createUser.uid}`);
-  } catch (e) {
-    functions.logger.error("Error creating user:", e);
-    res.status(500).send("Error creating user");
+  if (req.method !== "POST") {
+    res.status(405).send("Method Not Allowed");
+    return;
   }
+
+  await startupController.seedStartups(req, res);
+
+  const endTime = Date.now();
+  const duration = (endTime - initialTime) / 1000;
+  functions.logger.info(`Data seeding completed in ${duration} seconds`);
 });
