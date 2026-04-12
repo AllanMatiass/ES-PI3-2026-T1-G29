@@ -1,4 +1,4 @@
-import { Startup } from "../@types/startupTypes";
+import { Startup } from "../models/startupModels";
 import { startupsData } from "../utils/startups";
 import * as admin from "firebase-admin";
 
