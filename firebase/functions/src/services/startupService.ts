@@ -1,5 +1,6 @@
 // Autor: Allan Giovanni Matias Paes
-import { Startup } from "../models/startupModels";
+import { logger } from "firebase-functions";
+import { Startup, StartupResponseDTO } from "../models/startupModels";
 import { startupsData } from "../utils/startups";
 import * as admin from "firebase-admin";
 
@@ -24,5 +25,15 @@ export class StartupService {
         updatedAt: null,
       });
     }
+  }
+
+  async getAllStartups() {
+    const snapshot = await this.startupsCollection.get();
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      logger.info(`Fetched startup: ${data.name} (ID: ${doc.id})`);
+      logger.info(`Startup data: ${JSON.stringify(data)}`);
+      return { ...data, id: doc.id } as StartupResponseDTO;
+    });
   }
 }

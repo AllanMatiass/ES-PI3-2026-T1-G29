@@ -22,3 +22,5 @@ Future<Map<String, String>> login(String email, String senha) async {
     throw Exception(e.message ?? "Login error");
   }
 }
+
+bool isAuthenticated() => FirebaseAuth.instance.currentUser != null;
