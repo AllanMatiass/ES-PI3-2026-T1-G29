@@ -31,3 +31,23 @@ export const seedStartups = functions.https.onRequest(
 export const signup = functions.https.onRequest(async (req, res) => {
   await signupFunction(req, res);
 });
+
+export const getAllStartups = functions.https.onRequest(
+  withErrorHandler(async (req, res) => {
+    const initialTime = Date.now();
+    if (req.method !== "GET") {
+      throw new AppError({
+        message: "Método HTTP não permitido.",
+        statusCode: 405,
+      });
+    }
+
+    const startupController = new StartupController(
+      new StartupService(db.collection("startups")),
+    );
+
+    await startupController.getAllStartups(req, res);
+    const duration = (Date.now() - initialTime) / 1000;
+    functions.logger.info(`Done in ${duration}s`);
+  }, false),
+);

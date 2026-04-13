@@ -17,4 +17,13 @@ export class StartupController {
       message: "Startups data created successfully",
     });
   }
+
+  async getAllStartups(req: Request, res: Response) {
+    const startups = await this.startupService.getAllStartups();
+
+    res.send({
+      success: true,
+      data: startups,
+    });
+  }
 }
