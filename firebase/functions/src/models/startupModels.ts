@@ -74,3 +74,7 @@ export interface Startup {
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
 }
+
+export interface StartupResponseDTO extends Startup {
+  id: string;
+}
