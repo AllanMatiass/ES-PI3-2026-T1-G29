@@ -92,3 +92,41 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ],
               ),
+              const SizedBox(height: 32),
+              const Text(
+                'Criar conta',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Preencha seus dados para começar',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF59627A),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFormLabel('Nome completo', required: true),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: _buildInputDecoration('João Silva'),
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Informe seu nome completo';
+                            }
+                            return null;
+                          },
+                        ),
