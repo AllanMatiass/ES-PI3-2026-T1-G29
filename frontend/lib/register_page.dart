@@ -130,3 +130,17 @@ class _RegisterPageState extends State<RegisterPage> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 18),
+                        _buildFormLabel('CPF', required: true),
+                        TextFormField(
+                          controller: _cpfController,
+                          decoration: _buildInputDecoration('000.000.000-00'),
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Informe seu CPF';
+                            }
+                            return null;
+                          },
+                        ),
