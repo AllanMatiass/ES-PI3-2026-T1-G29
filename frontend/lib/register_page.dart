@@ -39,3 +39,17 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
   }
+    Widget _buildFormLabel(String label, {bool required = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        required ? '$label *' : label,
+        style: const TextStyle(
+          fontSize: 14,
+          color: Color(0xFF556179),
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
