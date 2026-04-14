@@ -144,3 +144,54 @@ class _RegisterPageState extends State<RegisterPage> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 18),
+                        _buildFormLabel('Telefone'),
+                        TextFormField(
+                          controller: _phoneController,
+                          decoration: _buildInputDecoration('(00) 00000-0000'),
+                          keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 18),
+                        _buildFormLabel('Email', required: true),
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: _buildInputDecoration('seu@email.com'),
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Informe seu email';
+                            }
+                            if (!RegExp(r"^[\w-.]+@([\w-]+\.)+[\w-]{2,4}").hasMatch(value)) {
+                              return 'Email inválido';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 18),
+                        _buildFormLabel('Senha', required: true),
+                        TextFormField(
+                          controller: _passwordController,
+                          decoration: _buildInputDecoration('Mínimo 8 caracteres').copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: const Color(0xFF6B7280),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ),
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          validator: (value) {
+                            if (value == null || value.length < 8) {
+                              return 'A senha deve ter pelo menos 8 caracteres';
+                            }
+                            return null;
+                          },
+                        ),
