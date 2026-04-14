@@ -1,208 +1,281 @@
 // Autor: Allan Giovanni Matias Paes
-import {
-  StartupStatus,
-  Startup,
-  StartupSector,
-  StartupStage,
-} from "../models/startupModels";
+
+import { StartupDocument } from "../startups/types";
 
 // Dados de startups para serem usados no processo de seed,
 // permitindo a criação de dados iniciais no Firestore
 // para testes e desenvolvimento.
 
-export const startupsData: Startup[] = [
+export const startupsData: (StartupDocument & { id: string })[] = [
   {
+    id: "biochip-campus",
+    name: "BioChip Campus",
+    stage: "nova",
+    shortDescription:
+      "Sensores portateis para analises laboratoriais didaticas.",
+    description:
+      "A BioChip Campus simula kits de diagnostico rapido para laboratorios universitarios, conectando sensores de baixo custo a um aplicativo de acompanhamento.",
+    executivesSummary:
+      "Startup em fase de ideacao com foco em prototipagem de sensores educacionais e validacao com cursos da area de saude.",
+    capitalRaisedCents: 1850000,
+    totalTokensIssued: 100000,
+    currentTokenPriceCents: 125,
+    founders: [
+      {
+        name: "Ana Ribeiro",
+        role: "CEO",
+        equityPercent: 48,
+        bio: "Responsavel por estrategia e parcerias academicas.",
+      },
+      {
+        name: "Lucas Moreira",
+        role: "CTO",
+        equityPercent: 37,
+        bio: "Responsavel por hardware e integracao mobile.",
+      },
+      {
+        name: "Mescla Labs",
+        role: "Reserva estrategica",
+        equityPercent: 15,
+      },
+    ],
+    externalMembers: [
+      {
+        name: "Dra. Helena Costa",
+        role: "Mentora",
+        organization: "PUC-Campinas",
+      },
+    ],
+    demoVideos: ["https://example.com/videos/biochip-campus-demo"],
+    pitchDeckUrl: "https://example.com/decks/biochip-campus.pdf",
+    coverImageUrl:
+      "https://images.unsplash.com/photo-1581093458791-9d15482442f6",
+    tags: ["healthtech", "iot", "educacao"],
+  },
+  {
+    id: "rota-verde",
+    name: "Rota Verde",
+    stage: "em_operacao",
+    shortDescription: "Otimizacao de rotas sustentaveis para entregas urbanas.",
+    description:
+      "A Rota Verde usa dados de distancia, emissao estimada e ocupacao de entregadores para sugerir rotas urbanas com menor impacto ambiental.",
+    executivesSummary:
+      "Startup em operacao piloto com pequenos comercios locais e validacao de indicadores de economia de combustivel.",
+    capitalRaisedCents: 7400000,
+    totalTokensIssued: 250000,
+    currentTokenPriceCents: 310,
+    founders: [
+      { name: "Beatriz Santos", role: "CEO", equityPercent: 42 },
+      { name: "Rafael Almeida", role: "COO", equityPercent: 28 },
+      { name: "Carla Nogueira", role: "CTO", equityPercent: 20 },
+      { name: "Reserva de incentivos", role: "Pool", equityPercent: 10 },
+    ],
+    externalMembers: [
+      { name: "Marcos Lima", role: "Conselheiro", organization: "Mescla" },
+      {
+        name: "Patricia Gomes",
+        role: "Mentora",
+        organization: "Rede de Logistica",
+      },
+    ],
+    demoVideos: ["https://example.com/videos/rota-verde-demo"],
+    pitchDeckUrl: "https://example.com/decks/rota-verde.pdf",
+    coverImageUrl:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+    tags: ["logtech", "sustentabilidade", "mobilidade"],
+  },
+  {
+    id: "mentorai",
+    name: "MentorAI",
+    stage: "em_expansao",
+    shortDescription:
+      "Triagem inteligente para programas de mentoria universitarios.",
+    description:
+      "A MentorAI organiza perfis de estudantes e mentores para recomendar encontros com base em objetivos, disponibilidade e historico de acompanhamento.",
+    executivesSummary:
+      "Startup em expansao com uso simulado em programas de pre-aceleracao e potencial de integracao a plataformas educacionais.",
+    capitalRaisedCents: 12350000,
+    totalTokensIssued: 500000,
+    currentTokenPriceCents: 525,
+    founders: [
+      { name: "Diego Martins", role: "CEO", equityPercent: 36 },
+      { name: "Juliana Vieira", role: "CPO", equityPercent: 24 },
+      { name: "Felipe Andrade", role: "CTO", equityPercent: 25 },
+      {
+        name: "Investidores simulados",
+        role: "Participacao externa",
+        equityPercent: 15,
+      },
+    ],
+    externalMembers: [
+      {
+        name: "Sofia Pereira",
+        role: "Conselheira",
+        organization: "Ecossistema Mescla",
+      },
+    ],
+    demoVideos: ["https://example.com/videos/mentorai-demo"],
+    pitchDeckUrl: "https://example.com/decks/mentorai.pdf",
+    coverImageUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978",
+    tags: ["edtech", "ia", "mentoria"],
+  },
+  {
+    id: "ecotech",
     name: "EcoTech",
-    description: "Soluções sustentáveis para o agro",
-    executiveSummary:
-      "Plataforma para otimização sustentável de recursos agrícolas",
-    stage: StartupStage.NEW,
-    status: StartupStatus.ACTIVE,
-    sector: StartupSector.AGRIBUSINESS,
-    foundationDate: new Date("2026-01-10"),
-    estimatedValuation: 500000,
-
-    corporateStructure: {
-      partners: [
-        { name: "João Silva", equityPercentage: 50, investedCapital: 0 },
-        { name: "Maria Rita", equityPercentage: 50, investedCapital: 0 },
-      ],
-    },
-
-    tokens: {
-      totalSupply: 100000,
-      circulatingSupply: 50000,
-    },
-
-    externalParticipants: {
-      mentors: ["Prof. Carlos"],
-      advisors: [],
-      others: [],
-    },
-
-    media: {
-      demoVideo: "link.com/eco",
-    },
-
-    documents: {
-      businessPlan: null,
-      presentations: [],
-      publicDocuments: [],
-    },
+    stage: "nova",
+    shortDescription: "Soluções sustentáveis para o agro.",
+    description:
+      "Plataforma para otimização sustentável de recursos agrícolas utilizando IoT e análise de dados.",
+    executivesSummary:
+      "Focada em reduzir o desperdício de água e defensivos em pequenas e médias propriedades.",
+    capitalRaisedCents: 50000000,
+    totalTokensIssued: 100000,
+    currentTokenPriceCents: 500,
+    founders: [
+      {
+        name: "João Silva",
+        role: "CEO",
+        equityPercent: 50,
+        bio: "Especialista em agronomia sustentável.",
+      },
+      {
+        name: "Maria Rita",
+        role: "COO",
+        equityPercent: 50,
+        bio: "Gestora de operações com foco em sustentabilidade.",
+      },
+    ],
+    externalMembers: [
+      { name: "Prof. Carlos", role: "Mentor", organization: "AgroTech Hub" },
+    ],
+    demoVideos: ["https://example.com/videos/ecotech-demo"],
+    coverImageUrl:
+      "https://images.unsplash.com/photo-1464226184884-fa280b87c399",
+    tags: ["agronegocio", "sustentabilidade", "iot"],
   },
-
   {
+    id: "healthtrack",
     name: "HealthTrack",
-    description: "Monitoramento remoto de pacientes",
-    executiveSummary:
-      "Sistema de telemonitoramento com foco em prevenção de doenças",
-    stage: StartupStage.OPERATING,
-    status: StartupStatus.ACTIVE,
-    sector: StartupSector.HEALTHCARE,
-    foundationDate: new Date("2025-11-03"),
-    estimatedValuation: 2000000,
-
-    corporateStructure: {
-      partners: [
-        { name: "Pedro Alves", equityPercentage: 100, investedCapital: 50000 },
-      ],
-    },
-
-    tokens: {
-      totalSupply: 500000,
-      circulatingSupply: 200000,
-    },
-
-    externalParticipants: {
-      mentors: ["Dra. Ana Gomes"],
-      advisors: [],
-      others: [],
-    },
-
-    media: {
-      demoVideo: "link.com/health",
-    },
-
-    documents: {
-      businessPlan: null,
-      presentations: [],
-      publicDocuments: [],
-    },
+    stage: "em_operacao",
+    shortDescription: "Monitoramento remoto de pacientes.",
+    description:
+      "Sistema de telemonitoramento com foco em prevenção de doenças crônicas através de wearables.",
+    executivesSummary:
+      "Reduzindo reinternações hospitalares através de acompanhamento contínuo e preventivo.",
+    capitalRaisedCents: 200000000,
+    totalTokensIssued: 500000,
+    currentTokenPriceCents: 400,
+    founders: [
+      {
+        name: "Pedro Alves",
+        role: "CEO",
+        equityPercent: 100,
+        bio: "Médico com visão tecnológica.",
+      },
+    ],
+    externalMembers: [
+      {
+        name: "Dra. Ana Gomes",
+        role: "Mentora",
+        organization: "Health Innovation Lab",
+      },
+    ],
+    demoVideos: ["https://example.com/videos/healthtrack-demo"],
+    coverImageUrl:
+      "https://images.unsplash.com/photo-1576091160550-2173dba999ef",
+    tags: ["healthtech", "monitoramento", "prevencao"],
   },
-
   {
+    id: "eduverse",
     name: "EduVerse",
-    description: "Realidade virtual para escolas",
-    executiveSummary: "Plataforma educacional imersiva com uso de VR",
-    stage: StartupStage.EXPANDING,
-    status: StartupStatus.ACTIVE,
-    sector: StartupSector.EDUCATION,
-    foundationDate: new Date("2025-08-21"),
-    estimatedValuation: 5000000,
-
-    corporateStructure: {
-      partners: [
-        { name: "Lucas", equityPercentage: 60, investedCapital: 75000 },
-        { name: "Sofia", equityPercentage: 40, investedCapital: 75000 },
-      ],
-    },
-
-    tokens: {
-      totalSupply: 1000000,
-      circulatingSupply: 400000,
-    },
-
-    externalParticipants: {
-      mentors: [],
-      advisors: ["Marcos"],
-      others: [],
-    },
-
-    media: {
-      demoVideo: "link.com/edu",
-    },
-
-    documents: {
-      businessPlan: null,
-      presentations: [],
-      publicDocuments: [],
-    },
+    stage: "em_expansao",
+    shortDescription: "Realidade virtual para escolas.",
+    description:
+      "Plataforma educacional imersiva com uso de realidade virtual para simulações científicas e históricas.",
+    executivesSummary:
+      "Transformando a educação básica com laboratórios virtuais de alto impacto visual e didático.",
+    capitalRaisedCents: 500000000,
+    totalTokensIssued: 1000000,
+    currentTokenPriceCents: 500,
+    founders: [
+      {
+        name: "Lucas",
+        role: "CTO",
+        equityPercent: 60,
+        bio: "Desenvolvedor de engines 3D.",
+      },
+      {
+        name: "Sofia",
+        role: "CEO",
+        equityPercent: 40,
+        bio: "Pedagoga especialista em tecnologia.",
+      },
+    ],
+    externalMembers: [
+      { name: "Marcos", role: "Adviser", organization: "VR Association" },
+    ],
+    demoVideos: ["https://example.com/videos/eduverse-demo"],
+    coverImageUrl:
+      "https://images.unsplash.com/photo-1478479405421-ce83c92fb3ba",
+    tags: ["edtech", "realidade-virtual", "inovacao"],
   },
-
   {
+    id: "finai",
     name: "FinAI",
-    description: "IA para finanças pessoais universitárias",
-    executiveSummary: "Assistente financeiro com IA para estudantes",
-    stage: StartupStage.NEW,
-    status: StartupStatus.ACTIVE,
-    sector: StartupSector.FINANCE,
-    foundationDate: new Date("2026-02-05"),
-    estimatedValuation: 800000,
-
-    corporateStructure: {
-      partners: [
-        { name: "Julia", equityPercentage: 70, investedCapital: 7000 },
-        { name: "Rafael", equityPercentage: 30, investedCapital: 3000 },
-      ],
-    },
-
-    tokens: {
-      totalSupply: 200000,
-      circulatingSupply: 50000,
-    },
-
-    externalParticipants: {
-      mentors: ["Prof. Roberto"],
-      advisors: [],
-      others: [],
-    },
-
-    media: {
-      demoVideo: "link.com/fin",
-    },
-
-    documents: {
-      businessPlan: null,
-      presentations: [],
-      publicDocuments: [],
-    },
+    stage: "nova",
+    shortDescription: "IA para finanças pessoais universitárias.",
+    description:
+      "Assistente financeiro com IA para estudantes universitários, ajudando na gestão de bolsas e gastos mensais.",
+    executivesSummary:
+      "Democratizando o planejamento financeiro para a nova geração de universitários.",
+    capitalRaisedCents: 80000000,
+    totalTokensIssued: 200000,
+    currentTokenPriceCents: 400,
+    founders: [
+      {
+        name: "Julia",
+        role: "CEO",
+        equityPercent: 70,
+        bio: "Ex-gestora de investimentos.",
+      },
+      {
+        name: "Rafael",
+        role: "CTO",
+        equityPercent: 30,
+        bio: "Engenheiro de dados.",
+      },
+    ],
+    externalMembers: [
+      { name: "Prof. Roberto", role: "Mentor", organization: "Finance School" },
+    ],
+    demoVideos: ["https://example.com/videos/finai-demo"],
+    coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
+    tags: ["fintech", "ia", "estudantes"],
   },
-
   {
+    id: "logissmart",
     name: "LogisSmart",
-    description: "Otimização de rotas de entrega",
-    executiveSummary: "Sistema inteligente de roteirização logística",
-    stage: StartupStage.OPERATING,
-    status: StartupStatus.ACTIVE,
-    sector: StartupSector.LOGISTICS,
-    foundationDate: new Date("2025-10-12"),
-    estimatedValuation: 3000000,
-
-    corporateStructure: {
-      partners: [
-        { name: "Thiago Neves", equityPercentage: 100, investedCapital: 80000 },
-      ],
-    },
-
-    tokens: {
-      totalSupply: 800000,
-      circulatingSupply: 300000,
-    },
-
-    externalParticipants: {
-      mentors: [],
-      advisors: [],
-      others: [],
-    },
-
-    media: {
-      demoVideo: "link.com/logis",
-    },
-
-    documents: {
-      businessPlan: null,
-      presentations: [],
-      publicDocuments: [],
-    },
+    stage: "em_operacao",
+    shortDescription: "Otimização de rotas de entrega.",
+    description:
+      "Sistema inteligente de roteirização logística que otimiza o 'last mile' para pequenos e-commerces.",
+    executivesSummary:
+      "Reduzindo o tempo de entrega e o custo de frete em até 30% através de algoritmos genéticos.",
+    capitalRaisedCents: 300000000,
+    totalTokensIssued: 800000,
+    currentTokenPriceCents: 375,
+    founders: [
+      {
+        name: "Thiago Neves",
+        role: "CEO",
+        equityPercent: 100,
+        bio: "Logístico com 15 anos de mercado.",
+      },
+    ],
+    externalMembers: [],
+    demoVideos: ["https://example.com/videos/logissmart-demo"],
+    coverImageUrl:
+      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d",
+    tags: ["logtech", "otimizacao", "entrega"],
   },
 ];
