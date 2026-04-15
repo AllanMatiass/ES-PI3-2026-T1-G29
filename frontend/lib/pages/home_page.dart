@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/startup_service.dart';
@@ -43,10 +44,12 @@ class _HomePageState extends State<HomePage> {
             onPressed: () async {
               await AuthService.signOut();
               if (context.mounted) {
-                Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/', (route) => false);
               }
             },
-          )
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -58,7 +61,10 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 'Olá, ${widget.userName}',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             Expanded(
@@ -71,13 +77,19 @@ class _HomePageState extends State<HomePage> {
                     return ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: [
-                        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.2,
+                        ),
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
                               children: [
-                                const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red,
+                                  size: 48,
+                                ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'Erro ao carregar startups: ${snapshot.error}',
@@ -99,8 +111,12 @@ class _HomePageState extends State<HomePage> {
                     return ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: [
-                        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-                        const Center(child: Text('Nenhuma startup encontrada.')),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.2,
+                        ),
+                        const Center(
+                          child: Text('Nenhuma startup encontrada.'),
+                        ),
                       ],
                     );
                   }
@@ -114,7 +130,10 @@ class _HomePageState extends State<HomePage> {
                       final startup = startups[index];
                       return Card(
                         elevation: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 8.0,
+                          horizontal: 4.0,
+                        ),
                         child: ListTile(
                           leading: startup.coverImageUrl != null
                               ? ClipRRect(
@@ -124,8 +143,12 @@ class _HomePageState extends State<HomePage> {
                                     width: 50,
                                     height: 50,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        const Icon(Icons.business, size: 50),
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(
+                                              Icons.business,
+                                              size: 50,
+                                            ),
                                   ),
                                 )
                               : const Icon(Icons.business, size: 50),
@@ -181,11 +204,7 @@ class _HomePageState extends State<HomePage> {
           child: Card(
             margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
             child: ListTile(
-              leading: Container(
-                width: 50,
-                height: 50,
-                color: Colors.white,
-              ),
+              leading: Container(width: 50, height: 50, color: Colors.white),
               title: Container(
                 width: double.infinity,
                 height: 16.0,
@@ -195,11 +214,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 8),
-                  Container(
-                    width: 100,
-                    height: 12.0,
-                    color: Colors.white,
-                  ),
+                  Container(width: 100, height: 12.0, color: Colors.white),
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,

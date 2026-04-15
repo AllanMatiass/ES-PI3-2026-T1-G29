@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
@@ -11,7 +12,10 @@ class AuthService {
     _httpClient = client;
   }
 
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
     try {
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
@@ -30,19 +34,12 @@ class AuthService {
         "success": true,
         "uid": user.uid,
         "name": user.displayName ?? '',
-        "token": token!
+        "token": token!,
       };
     } on FirebaseAuthException catch (e) {
-
-      return {
-        "success": false,
-        "error": e.message ?? "Erro no login"
-      };
+      return {"success": false, "error": e.message ?? "Erro no login"};
     } catch (e) {
-      return {
-        "success": false,
-        "error": e.toString()
-      };
+      return {"success": false, "error": e.toString()};
     }
   }
 
@@ -63,43 +60,44 @@ class AuthService {
             "name": name,
             "email": email,
             "phone": phone.replaceAll(RegExp(r'\D'), ''),
-            "password": password
-          }
+            "password": password,
+          },
         }),
       );
 
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        if (responseData['result'] != null && responseData['result']['success'] == true) {
-          return {
-            "success": true,
-            "data": responseData['result']['data']
-          };
+        if (responseData['result'] != null &&
+            responseData['result']['success'] == true) {
+          return {"success": true, "data": responseData['result']['data']};
         } else {
-          final phoneAlreadyExist = responseData['result']?['error']?['code'] == 'auth/phone-number-already-exists';
+          final phoneAlreadyExist =
+              responseData['result']?['error']?['code'] ==
+              'auth/phone-number-already-exists';
           return {
             "success": false,
-            "error": phoneAlreadyExist ? 'Telefone já cadastrado no sistema' : responseData['result']?['error']?['message']  ?? 'Erro desconhecido'
+            "error": phoneAlreadyExist
+                ? 'Telefone já cadastrado no sistema'
+                : responseData['result']?['error']?['message'] ??
+                      'Erro desconhecido',
           };
         }
       } else {
         return {
           "success": false,
-          "error": responseData['result']?['error']?['message'] ?? 'Erro na requisição: ${response.statusCode}'
+          "error":
+              responseData['result']?['error']?['message'] ??
+              'Erro na requisição: ${response.statusCode}',
         };
       }
     } catch (e) {
-
-      return {
-        "success": false,
-        "error": "Falha na conexão: $e"
-      };
+      return {"success": false, "error": "Falha na conexão: $e"};
     }
   }
 
   static bool isAuthenticated() => FirebaseAuth.instance.currentUser != null;
-  
+
   static User? getCurrentUser() => FirebaseAuth.instance.currentUser;
 
   static Future<void> signOut() => FirebaseAuth.instance.signOut();

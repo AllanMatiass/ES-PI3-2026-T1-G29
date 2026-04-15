@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { QuestionVisibility, StartupStage } from "../types";
 
 export const allowedStages: StartupStage[] = [
