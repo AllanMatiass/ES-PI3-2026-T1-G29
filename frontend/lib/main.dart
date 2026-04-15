@@ -1,8 +1,14 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/login_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/firebase_options.dart';
+import 'package:frontend/register_page.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }
 
 class MyApp extends StatelessWidget {
@@ -16,7 +22,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00A84E)),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: const RegisterPage(),
+      routes: {'/register': (context) => const RegisterPage()},
     );
   }
 }
