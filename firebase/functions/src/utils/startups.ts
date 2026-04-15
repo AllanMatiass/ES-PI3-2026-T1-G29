@@ -15,7 +15,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
       "Sensores portateis para analises laboratoriais didaticas.",
     description:
       "A BioChip Campus simula kits de diagnostico rapido para laboratorios universitarios, conectando sensores de baixo custo a um aplicativo de acompanhamento.",
-    executivesSummary:
+    executiveSummary:
       "Startup em fase de ideacao com foco em prototipagem de sensores educacionais e validacao com cursos da area de saude.",
     capitalRaisedCents: 1850000,
     totalTokensIssued: 100000,
@@ -59,7 +59,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Otimizacao de rotas sustentaveis para entregas urbanas.",
     description:
       "A Rota Verde usa dados de distancia, emissao estimada e ocupacao de entregadores para sugerir rotas urbanas com menor impacto ambiental.",
-    executivesSummary:
+    executiveSummary:
       "Startup em operacao piloto com pequenos comercios locais e validacao de indicadores de economia de combustivel.",
     capitalRaisedCents: 7400000,
     totalTokensIssued: 250000,
@@ -92,7 +92,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
       "Triagem inteligente para programas de mentoria universitarios.",
     description:
       "A MentorAI organiza perfis de estudantes e mentores para recomendar encontros com base em objetivos, disponibilidade e historico de acompanhamento.",
-    executivesSummary:
+    executiveSummary:
       "Startup em expansao com uso simulado em programas de pre-aceleracao e potencial de integracao a plataformas educacionais.",
     capitalRaisedCents: 12350000,
     totalTokensIssued: 500000,
@@ -126,7 +126,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Soluções sustentáveis para o agro.",
     description:
       "Plataforma para otimização sustentável de recursos agrícolas utilizando IoT e análise de dados.",
-    executivesSummary:
+    executiveSummary:
       "Focada em reduzir o desperdício de água e defensivos em pequenas e médias propriedades.",
     capitalRaisedCents: 50000000,
     totalTokensIssued: 100000,
@@ -160,7 +160,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Monitoramento remoto de pacientes.",
     description:
       "Sistema de telemonitoramento com foco em prevenção de doenças crônicas através de wearables.",
-    executivesSummary:
+    executiveSummary:
       "Reduzindo reinternações hospitalares através de acompanhamento contínuo e preventivo.",
     capitalRaisedCents: 200000000,
     totalTokensIssued: 500000,
@@ -192,7 +192,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Realidade virtual para escolas.",
     description:
       "Plataforma educacional imersiva com uso de realidade virtual para simulações científicas e históricas.",
-    executivesSummary:
+    executiveSummary:
       "Transformando a educação básica com laboratórios virtuais de alto impacto visual e didático.",
     capitalRaisedCents: 500000000,
     totalTokensIssued: 1000000,
@@ -226,7 +226,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "IA para finanças pessoais universitárias.",
     description:
       "Assistente financeiro com IA para estudantes universitários, ajudando na gestão de bolsas e gastos mensais.",
-    executivesSummary:
+    executiveSummary:
       "Democratizando o planejamento financeiro para a nova geração de universitários.",
     capitalRaisedCents: 80000000,
     totalTokensIssued: 200000,
@@ -259,7 +259,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Otimização de rotas de entrega.",
     description:
       "Sistema inteligente de roteirização logística que otimiza o 'last mile' para pequenos e-commerces.",
-    executivesSummary:
+    executiveSummary:
       "Reduzindo o tempo de entrega e o custo de frete em até 30% através de algoritmos genéticos.",
     capitalRaisedCents: 300000000,
     totalTokensIssued: 800000,
