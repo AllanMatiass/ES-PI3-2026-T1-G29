@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { setGlobalOptions } from "firebase-functions/v2";
 
 setGlobalOptions({ maxInstances: 10 });

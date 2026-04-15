@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 export type ApiResponse<T> = {
   success: boolean;
   data?: T;

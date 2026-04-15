@@ -1,3 +1,5 @@
+// Autor: Allan Giovanni Matias Paes
+
 class Validators {
   static String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
@@ -26,7 +28,7 @@ class Validators {
     }
 
     List<int> digits = cpf.split('').map(int.parse).toList();
-    
+
     // First digit
     int sum = 0;
     for (int i = 0; i < 9; i++) {

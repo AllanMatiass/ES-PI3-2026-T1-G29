@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 enum StartupStage {
   nova,
   em_operacao,

@@ -1,3 +1,4 @@
+// Autor: Pedro Romanato & Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/pages/register_page.dart';
@@ -40,7 +41,8 @@ class _LoginPageState extends State<LoginPage> {
       if (result['success']) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => HomePage(userName: result['name'] ?? 'Usuário'),
+            builder: (context) =>
+                HomePage(userName: result['name'] ?? 'Usuário'),
           ),
         );
       } else {
@@ -70,16 +72,17 @@ class _LoginPageState extends State<LoginPage> {
                 Image.asset(
                   'assets/images/logo.jpeg',
                   height: 120,
-                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.business, size: 100, color: Colors.green),
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.business,
+                    size: 100,
+                    color: Colors.green,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 const Text(
                   'Invista em startups promissoras',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF59627A),
-                  ),
+                  style: TextStyle(fontSize: 16, color: Color(0xFF59627A)),
                 ),
                 const SizedBox(height: 48),
                 const Text(
@@ -99,7 +102,10 @@ class _LoginPageState extends State<LoginPage> {
                     hintStyle: const TextStyle(color: Color(0xFF9AA3AE)),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: Colors.grey.shade200),
@@ -109,7 +115,9 @@ class _LoginPageState extends State<LoginPage> {
                       borderSide: BorderSide(color: Colors.grey.shade200),
                     ),
                   ),
-                  validator: (value) => value == null || value.isEmpty ? 'E-mail é obrigatório' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'E-mail é obrigatório'
+                      : null,
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -143,7 +151,10 @@ class _LoginPageState extends State<LoginPage> {
                     hintStyle: const TextStyle(color: Color(0xFF9AA3AE)),
                     filled: true,
                     fillColor: const Color(0xFFF8FAFC),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: Colors.grey.shade200),
@@ -154,13 +165,18 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                         color: const Color(0xFF9AA3AE),
                       ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
-                  validator: (value) => value == null || value.isEmpty ? 'Senha é obrigatória' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Senha é obrigatória'
+                      : null,
                 ),
                 const SizedBox(height: 48),
                 ElevatedButton(
@@ -169,21 +185,28 @@ class _LoginPageState extends State<LoginPage> {
                     backgroundColor: const Color(0xFF00A84E),
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     elevation: 0,
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           'Entrar',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
                 const SizedBox(height: 24),
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const RegisterPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterPage(),
+                      ),
                     );
                   },
                   child: RichText(

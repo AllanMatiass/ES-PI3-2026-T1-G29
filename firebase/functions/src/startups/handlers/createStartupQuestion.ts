@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
