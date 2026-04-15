@@ -3,8 +3,10 @@ import { allowedStages } from "../shared/constants";
 import { requireAuthenticatedUser } from "../../shared/auth";
 import { listStartupItems } from "../repositories/startupRepository";
 import { normalizeString } from "../../shared/validation";
-import { StartupStage } from "../types";
+import { StartupListItem, StartupStage } from "../types";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
+import { ListStartupsRequest } from "../types/dtos";
+import { RecordFunctionResponse } from "../../shared/types";
 
 /**
  * Lista as startups cadastradas no catalogo do MesclaInvest.
@@ -22,50 +24,53 @@ import { withCallHandler } from "../../shared/middlewares/errorHandler";
  * - `data`: lista resumida de startups para uso em telas de catalogo.
  */
 export const listStartups = onCall(
-  withCallHandler(async (request) => {
-    requireAuthenticatedUser(request);
+  withCallHandler<ListStartupsRequest, RecordFunctionResponse<StartupListItem>>(
+    async (request) => {
+      requireAuthenticatedUser(request);
 
-    const stage = normalizeString(request.data?.stage);
-    const search = normalizeString(request.data?.search)?.toLocaleLowerCase(
-      "pt-BR",
-    );
-
-    if (stage && !allowedStages.includes(stage as StartupStage)) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Filtro stage invalido. Use nova, em_operacao ou em_expansao.",
+      const stage = normalizeString(request.data?.stage);
+      const search = normalizeString(request.data?.search)?.toLocaleLowerCase(
+        "pt-BR",
       );
-    }
 
-    const startups = (await listStartupItems()).filter((startup) => {
-      if (stage && startup.stage !== stage) {
-        return false;
+      if (stage && !allowedStages.includes(stage as StartupStage)) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Filtro stage invalido. Use nova, em_operacao ou em_expansao.",
+        );
       }
 
-      if (!search) {
-        return true;
-      }
+      const startupsArray = (await listStartupItems()).filter((startup) => {
+        if (stage && startup.stage !== stage) {
+          return false;
+        }
 
-      const searchable = [
-        startup.name,
-        startup.shortDescription,
-        startup.stage,
-        ...startup.tags,
-      ]
-        .join(" ")
-        .toLocaleLowerCase("pt-BR");
+        if (!search) {
+          return true;
+        }
 
-      return searchable.includes(search);
-    });
+        const searchable = [
+          startup.name,
+          startup.shortDescription,
+          startup.stage,
+          ...startup.tags,
+        ]
+          .join(" ")
+          .toLocaleLowerCase("pt-BR");
 
-    return {
-      count: startups.length,
-      filters: {
-        availableStages: allowedStages,
-        stage: stage ?? null,
-        search: search ?? null,
-      },
-      data: startups,
-    };
-  }),
+        return searchable.includes(search);
+      });
+      const startups = Object.fromEntries(startupsArray.map((s) => [s.id, s]));
+
+      return {
+        count: startupsArray.length,
+        filters: {
+          availableStages: allowedStages,
+          stage: stage ?? null,
+          search: search ?? null,
+        },
+        data: startups,
+      };
+    },
+  ),
 );
