@@ -1,8 +1,11 @@
 // Autor: Vinícius Castro & Allan Giovanni Matias Paes
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/firebase_options.dart';
+import 'package:frontend/pages/forgot_password_page.dart';
+import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/pages/login_page.dart';
 import 'package:frontend/pages/register_page.dart';
 
@@ -24,6 +27,8 @@ class MesclaInvest extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var userName = FirebaseAuth.instance.currentUser?.displayName;
+
     return MaterialApp(
       title: 'Mescla Invest',
       debugShowCheckedModeBanner: false,
@@ -32,10 +37,11 @@ class MesclaInvest extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Inter', // Assuming Inter or standard sans-serif
       ),
-      home: const LoginPage(),
+      home: HomePage(userName: userName ?? 'Desconhecido'),
       routes: {
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
+        '/forgotPassword': (context) => const ForgotPasswordPage()
       },
     );
   }

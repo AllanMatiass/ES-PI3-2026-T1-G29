@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
               if (context.mounted) {
                 Navigator.of(
                   context,
-                ).pushNamedAndRemoveUntil('/', (route) => false);
+                ).pushNamedAndRemoveUntil('/login', (route) => false);
               }
             },
           ),
