@@ -18,10 +18,8 @@ export const seedStartupCatalog = onCall(
     const startupIds = await seedDemoStartups();
 
     return {
-      data: {
-        count: startupIds.length,
-        ids: startupIds,
-      },
+      count: startupIds.length,
+      ids: startupIds,
     };
   }),
 );

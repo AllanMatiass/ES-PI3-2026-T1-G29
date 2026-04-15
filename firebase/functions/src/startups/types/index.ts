@@ -1,4 +1,5 @@
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
+import { StartupQuestionCreateInput } from "./dtos";
 
 /**
  * Representa os estágios de maturidade aceitos para uma startup.
@@ -83,29 +84,17 @@ export type StartupDocument = {
   pitchDeckUrl?: string;
   coverImageUrl?: string;
   tags: string[];
-  createdAt: Timestamp;
   updatedAt?: Timestamp;
 };
 
-/**
- * Documento de pergunta armazenado na subcoleção da startup.
- *
- * As perguntas ficam em `startups/{startupId}/questions/{questionId}` para
- * manter o histórico associado ao projeto. A resposta é opcional porque a
- * pergunta pode ser criada antes de alguém respondê-la.
- */
-export type StartupQuestionCreateInput = {
-  authorId: string;
-  text: string;
-  visibility: QuestionVisibility;
-  createdAt: FieldValue;
+export type StartupQuestionDocument = StartupQuestionCreateInput & {
+  answers: StartupQuestionAnswer[];
 };
 
-export type StartupQuestionDocument =  StartupQuestionCreateInput & {
-  answer?: string;
-  answeredAt?: Timestamp;
+export type StartupQuestionAnswer = {
+  answer: string;
+  answeredAt: Timestamp;
 };
-
 /**
  * Versão resumida de uma startup usada na listagem do catálogo.
  *

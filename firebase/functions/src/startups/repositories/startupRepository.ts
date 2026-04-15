@@ -1,11 +1,8 @@
 import { FieldValue } from "firebase-admin/firestore";
-import {
-  StartupDocument,
-  StartupListItem,
-  StartupQuestionDocument,
-} from "../types";
+import { StartupDocument, StartupListItem } from "../types";
 import { db } from "../../shared/firebase";
 import { startupsData } from "../../utils/startups";
+import { StartupDocumentDTO, StartupQuestionCreateInput } from "../types/dtos";
 
 const startupsCollection = db.collection("startups");
 
@@ -33,14 +30,14 @@ export async function listStartupItems(): Promise<StartupListItem[]> {
 
 export async function getStartupById(
   startupId: string,
-): Promise<StartupDocument | undefined> {
+): Promise<StartupDocumentDTO | undefined> {
   const startupSnapshot = await startupsCollection.doc(startupId).get();
 
   if (!startupSnapshot.exists) {
     return undefined;
   }
 
-  return startupSnapshot.data() as StartupDocument;
+  return startupSnapshot.data() as StartupDocumentDTO;
 }
 
 export async function userIsInvestor(
@@ -78,11 +75,10 @@ export async function listPublicQuestions(startupId: string) {
 }
 
 export async function createQuestion(
-  startupId: string,
-  question: StartupQuestionDocument,
+  question: StartupQuestionCreateInput,
 ): Promise<string> {
   const questionRef = await startupsCollection
-    .doc(startupId)
+    .doc(question.startupId)
     .collection("questions")
     .add(question);
 
