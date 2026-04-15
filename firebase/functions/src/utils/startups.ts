@@ -1,12 +1,13 @@
 // Autor: Allan Giovanni Matias Paes
 
-import { StartupDocument } from "../startups/types";
+import { FieldValue } from "firebase-admin/firestore";
+import { CreateStartupDocumentDTO } from "../startups/types/dtos";
 
 // Dados de startups para serem usados no processo de seed,
 // permitindo a criação de dados iniciais no Firestore
 // para testes e desenvolvimento.
 
-export const startupsData: (StartupDocument & { id: string })[] = [
+export const startupsData: CreateStartupDocumentDTO[] = [
   {
     id: "biochip-campus",
     name: "BioChip Campus",
@@ -51,6 +52,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1581093458791-9d15482442f6",
     tags: ["healthtech", "iot", "educacao"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "rota-verde",
@@ -83,6 +85,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
     tags: ["logtech", "sustentabilidade", "mobilidade"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "mentorai",
@@ -118,6 +121,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     pitchDeckUrl: "https://example.com/decks/mentorai.pdf",
     coverImageUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978",
     tags: ["edtech", "ia", "mentoria"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "ecotech",
@@ -152,6 +156,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1464226184884-fa280b87c399",
     tags: ["agronegocio", "sustentabilidade", "iot"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "healthtrack",
@@ -184,6 +189,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1576091160550-2173dba999ef",
     tags: ["healthtech", "monitoramento", "prevencao"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "eduverse",
@@ -218,6 +224,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1478479405421-ce83c92fb3ba",
     tags: ["edtech", "realidade-virtual", "inovacao"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "finai",
@@ -251,6 +258,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     demoVideos: ["https://example.com/videos/finai-demo"],
     coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
     tags: ["fintech", "ia", "estudantes"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "logissmart",
@@ -277,5 +285,6 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d",
     tags: ["logtech", "otimizacao", "entrega"],
+    createdAt: FieldValue.serverTimestamp(),
   },
 ];

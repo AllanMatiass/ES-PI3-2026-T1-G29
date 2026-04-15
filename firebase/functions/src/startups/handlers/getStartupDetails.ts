@@ -7,6 +7,10 @@ import {
   userIsInvestor,
 } from "../repositories/startupRepository";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
+import {
+  GetStartupDetailsRequest,
+  GetStartupDetailsResponse,
+} from "../types/dtos";
 
 /**
  * Busca os dados completos de uma startup especifica.
@@ -21,26 +25,26 @@ import { withCallHandler } from "../../shared/middlewares/errorHandler";
  * - perguntas publicas e flags de acesso para novos investidores.
  */
 export const getStartupDetails = onCall(
-  withCallHandler(async (request) => {
-    const user = requireAuthenticatedUser(request);
+  withCallHandler<GetStartupDetailsRequest, GetStartupDetailsResponse>(
+    async (request) => {
+      const user = requireAuthenticatedUser(request);
 
-    const startupId = normalizeString(request.data?.id);
+      const startupId = normalizeString(request.data?.id);
 
-    if (!startupId) {
-      throw new HttpsError("invalid-argument", "Informe o id da startup.");
-    }
+      if (!startupId) {
+        throw new HttpsError("invalid-argument", "Informe o id da startup.");
+      }
 
-    const startup = await getStartupById(startupId);
+      const startup = await getStartupById(startupId);
 
-    if (!startup) {
-      throw new HttpsError("not-found", "Startup nao encontrada.");
-    }
+      if (!startup) {
+        throw new HttpsError("not-found", "Startup não encontrada.");
+      }
 
-    const isInvestor = await userIsInvestor(startupId, user.uid);
-    const questions = await listPublicQuestions(startupId);
+      const isInvestor = await userIsInvestor(startupId, user.uid);
+      const questions = await listPublicQuestions(startupId);
 
-    return {
-      data: {
+      return {
         id: startupId,
         ...startup,
         createdAt: startup.createdAt?.toDate().toISOString() ?? null,
@@ -51,7 +55,7 @@ export const getStartupDetails = onCall(
           canTradeTokens: isInvestor,
           canSendPrivateQuestions: isInvestor,
         },
-      },
-    };
-  }),
+      };
+    },
+  ),
 );
