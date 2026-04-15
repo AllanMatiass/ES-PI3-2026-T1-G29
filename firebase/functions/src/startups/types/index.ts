@@ -73,7 +73,7 @@ export type StartupDocument = {
   stage: StartupStage;
   shortDescription: string;
   description: string;
-  executivesSummary: string;
+  executiveSummary: string;
   capitalRaisedCents: number;
   totalTokensIssued: number;
   currentTokenPriceCents: number;
@@ -83,7 +83,7 @@ export type StartupDocument = {
   pitchDeckUrl?: string;
   coverImageUrl?: string;
   tags: string[];
-  createdAt?: Timestamp;
+  createdAt: Timestamp;
   updatedAt?: Timestamp;
 };
 
@@ -94,14 +94,16 @@ export type StartupDocument = {
  * manter o histórico associado ao projeto. A resposta é opcional porque a
  * pergunta pode ser criada antes de alguém respondê-la.
  */
-export type StartupQuestionDocument = {
+export type StartupQuestionCreateInput = {
   authorId: string;
-  authorEmail?: string;
   text: string;
   visibility: QuestionVisibility;
+  createdAt: FieldValue;
+};
+
+export type StartupQuestionDocument =  StartupQuestionCreateInput & {
   answer?: string;
   answeredAt?: Timestamp;
-  createdAt: FieldValue;
 };
 
 /**
