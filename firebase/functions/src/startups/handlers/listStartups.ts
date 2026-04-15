@@ -7,6 +7,7 @@ import { StartupListItem, StartupStage } from "../types";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { ListStartupsRequest } from "../types/dtos";
 import { RecordFunctionResponse } from "../../shared/types";
+import { logger } from "firebase-functions";
 
 /**
  * Lista as startups cadastradas no catalogo do MesclaInvest.
@@ -62,7 +63,7 @@ export const listStartups = onCall(
       });
       const startups = Object.fromEntries(startupsArray.map((s) => [s.id, s]));
 
-      return {
+      const res = {
         count: startupsArray.length,
         filters: {
           availableStages: allowedStages,
@@ -71,6 +72,8 @@ export const listStartups = onCall(
         },
         data: startups,
       };
+      logger.info(`Startups: ${res} `);
+      return res;
     },
   ),
 );
