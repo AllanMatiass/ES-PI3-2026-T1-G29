@@ -1,3 +1,4 @@
+// Autor: Vinícius Castro & Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/validators.dart';
@@ -53,13 +54,15 @@ class _RegisterPageState extends State<RegisterPage> {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Wait a bit to show success message then navigate
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (context) => HomePage(userName: result['data']['name'] ?? _nameController.text),
+              builder: (context) => HomePage(
+                userName: result['data']['name'] ?? _nameController.text,
+              ),
             ),
             (route) => false,
           );
@@ -179,10 +182,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 8),
               const Text(
                 'Preencha seus dados para começar',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF59627A),
-                ),
+                style: TextStyle(fontSize: 15, color: Color(0xFF59627A)),
               ),
               const SizedBox(height: 30),
               Expanded(
@@ -198,7 +198,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _nameController,
                           decoration: _buildInputDecoration('João Silva'),
                           textInputAction: TextInputAction.next,
-                          validator: (value) => value == null || value.isEmpty ? 'Nome é obrigatório' : null,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Nome é obrigatório'
+                              : null,
                         ),
                         const SizedBox(height: 18),
                         _buildFormLabel('CPF', required: true),
@@ -231,19 +233,24 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildFormLabel('Senha', required: true),
                         TextFormField(
                           controller: _passwordController,
-                          decoration: _buildInputDecoration('Mínimo 8 caracteres').copyWith(
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                color: const Color(0xFF6B7280),
+                          decoration:
+                              _buildInputDecoration(
+                                'Mínimo 8 caracteres',
+                              ).copyWith(
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                          ),
                           obscureText: _obscurePassword,
                           textInputAction: TextInputAction.done,
                           validator: (value) {
@@ -267,7 +274,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             onPressed: _isLoading ? null : _handleRegister,
                             child: _isLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
                                 : const Text(
                                     'Criar conta',
                                     style: TextStyle(

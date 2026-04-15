@@ -39,6 +39,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   cloud_firestore: ^6.3.0
   http: ^1.2.1
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

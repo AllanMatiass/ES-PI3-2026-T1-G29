@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import * as logger from "firebase-functions/logger";
 import {
   HttpsError,
