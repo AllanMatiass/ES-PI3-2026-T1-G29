@@ -47,9 +47,7 @@ export const getStartupDetails = onCall(
 
       return {
         id: startupId,
-        ...startup,
-        createdAt: startup.createdAt?.toDate().toISOString() ?? null,
-        updatedAt: startup.updatedAt?.toDate().toISOString() ?? null,
+        data: startup,
         publicQuestions: questions,
         access: {
           isInvestor,

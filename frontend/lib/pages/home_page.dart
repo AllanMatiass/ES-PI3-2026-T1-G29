@@ -74,6 +74,9 @@ class _HomePageState extends State<HomePage> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return _buildSkeletonLoading();
                   } else if (snapshot.hasError) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      Navigator.of(context).pushNamed('/login');
+                    });
                     return ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: [
