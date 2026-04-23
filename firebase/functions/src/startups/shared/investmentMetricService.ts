@@ -1,7 +1,7 @@
 // Autor: Allan Giovanni Matias Paes
 import { HttpsError } from "firebase-functions/https";
 import { getStartupById, getStartupValuationById } from "../repositories/startupRepository";
-import { RISK_CONFIG } from "../../utils/investmentConfig";
+import { RETURN_CONFIG, RISK_CONFIG } from "../shared/constants";
 
 export class InvestmentMetricService {
     async getStartupValuation(startupId: string): Promise<number> {
@@ -43,5 +43,36 @@ export class InvestmentMetricService {
             mentorsScore * RISK_CONFIG.weights.mentors;
 
         return Math.round(risk * RISK_CONFIG.scale.max);
+    }
+    
+    async expectedReturn(startupId: string): Promise<{
+        range: string;
+        expected: number;
+    }> {
+        const risk = await this.calculateRisk(startupId);
+
+        const profile = this.getRiskProfile(risk);
+        const probabilities = RETURN_CONFIG.probabilities[profile];
+        const outcome = RETURN_CONFIG.outcome;
+
+        let expected = 0;
+
+        for (let i = 0; i < outcome.length; i++) {
+            expected += outcome[i].multiple * probabilities[i];
+        }
+
+        const min = outcome[0].multiple;
+        const max = outcome[outcome.length - 1].multiple;
+
+        return {
+            range: `${min}x a ${max}x`,
+            expected: Number(expected.toFixed(2))
+        };
+    }
+
+    getRiskProfile(risk: number): 'lowRisk' | 'mediumRisk' | 'highRisk' {
+        if (risk <= 3) return 'lowRisk';
+        if (risk <= 6) return 'mediumRisk';
+        return 'highRisk';
     }
 }
