@@ -22,9 +22,7 @@ export type GetStartupDetailsRequest = {
 
 export type GetStartupDetailsResponse = {
   id: string;
-  // campos do startup
-  createdAt: string | null;
-  updatedAt: string | null;
+  data: StartupDocumentDTO;
   publicQuestions: QuestionResponseDTO[];
   access: {
     isInvestor: boolean;
