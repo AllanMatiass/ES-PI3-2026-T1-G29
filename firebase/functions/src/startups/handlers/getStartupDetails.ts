@@ -1,17 +1,16 @@
 // Autor: Allan Giovanni Matias Paes
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { requireAuthenticatedUser } from "../../shared/auth";
+// import { requireAuthenticatedUser } from "../../shared/auth";
 import { normalizeString } from "../../shared/validation";
-import {
-  getStartupById,
-  listPublicQuestions,
-  userIsInvestor,
-} from "../repositories/startupRepository";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import {
   GetStartupDetailsRequest,
   GetStartupDetailsResponse,
+  StartupDetails,
 } from "../types/dtos";
+import { InvestmentMetricService } from "../shared/investmentMetricService";
+
+const investmentMetricService = new InvestmentMetricService();
 
 /**
  * Busca os dados completos de uma startup especifica.
@@ -28,7 +27,7 @@ import {
 export const getStartupDetails = onCall(
   withCallHandler<GetStartupDetailsRequest, GetStartupDetailsResponse>(
     async (request) => {
-      const user = requireAuthenticatedUser(request);
+      // const user = requireAuthenticatedUser(request);
 
       const startupId = normalizeString(request.data?.id);
 
@@ -36,20 +35,33 @@ export const getStartupDetails = onCall(
         throw new HttpsError("invalid-argument", "Informe o id da startup.");
       }
 
-      const startup = await getStartupById(startupId);
+      const userId = request.auth?.uid ?? "anonymous";
 
-      if (!startup) {
-        throw new HttpsError("not-found", "Startup não encontrada.");
-      }
+      const {
+        startup,
+        risk,
+        expectedReturn,
+        riskLabel,
+        horizon,
+        valuation,
+        isInvestor,
+        questions,
+      } = await investmentMetricService.getStartupMetrics(startupId, userId);
 
-      const isInvestor = await userIsInvestor(startupId, user.uid);
-      const questions = await listPublicQuestions(startupId);
+      const data: StartupDetails = {
+        startup,
+        valuation,
+        expectedReturn,
+        horizon,
+        risk: {
+          score: risk,
+          label: riskLabel,
+        },
+      };
 
       return {
         id: startupId,
-        ...startup,
-        createdAt: startup.createdAt?.toDate().toISOString() ?? null,
-        updatedAt: startup.updatedAt?.toDate().toISOString() ?? null,
+        details: data,
         publicQuestions: questions,
         access: {
           isInvestor,
