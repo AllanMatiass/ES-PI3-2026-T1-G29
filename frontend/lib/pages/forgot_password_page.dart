@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -102,12 +104,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         );
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Email de recuperação enviado!')),
+                          const SnackBar(
+                              content: Text(
+                                  'Email de recuperação enviado! '
+                                  'Considere verificar sua caixa de Spam.'
+                              )),
                         );
                         Navigator.of(context).pushNamed('/login');
                       } catch (e) {
+                        print('Error on password recovery: ' + e.toString());
+                        // log(e.toString());
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Erro: ${e.toString()}')),
+                          SnackBar(content: Text('Erro ao enviar link de recuperação de senha.')),
                         );
                       }
                     },

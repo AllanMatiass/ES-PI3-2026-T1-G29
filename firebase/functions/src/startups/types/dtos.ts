@@ -1,6 +1,11 @@
 // Autor: Allan Giovanni Matias Paes
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
-import { QuestionVisibility, StartupDocument, StartupQuestionAnswer } from ".";
+import {
+  QuestionVisibility,
+  StartupDocument,
+  StartupQuestionAnswer,
+  StartupRiskLabel,
+} from ".";
 
 export type CreateStartupDocumentDTO = StartupDocument & {
   id: string;
@@ -20,11 +25,27 @@ export type GetStartupDetailsRequest = {
   id: string;
 };
 
+export type ExpectedReturn = {
+  range: string;
+  expected: number;
+};
+
+export type Risk = {
+  score: number;
+  label: StartupRiskLabel;
+};
+
+export type StartupDetails = {
+  startup: StartupDocument;
+  valuation: number;
+  risk: Risk;
+  expectedReturn: ExpectedReturn;
+  horizon: string;
+};
+
 export type GetStartupDetailsResponse = {
   id: string;
-  // campos do startup
-  createdAt: string | null;
-  updatedAt: string | null;
+  details: StartupDetails;
   publicQuestions: QuestionResponseDTO[];
   access: {
     isInvestor: boolean;
