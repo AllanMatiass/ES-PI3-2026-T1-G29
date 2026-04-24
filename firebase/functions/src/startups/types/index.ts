@@ -16,6 +16,9 @@ import { StartupQuestionCreateInput } from "./dtos";
  */
 export type StartupStage = "nova" | "em_operacao" | "em_expansao";
 
+export type StartupRiskLabel = "Risco Baixo" | "Risco Médio" | "Risco Alto";
+export type StartupRiskCode = "lowRisk" | "mediumRisk" | "highRisk";
+
 /**
  * Define o nível de visibilidade de uma pergunta enviada à startup.
  *

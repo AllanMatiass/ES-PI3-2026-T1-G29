@@ -109,12 +109,14 @@ export async function seedDemoStartups(): Promise<string[]> {
   return startupsData.map((startup) => startup.id);
 }
 
-export async function getStartupValuationById(startupId: string): Promise<number | undefined>{
+export async function getStartupValuationById(
+  startupId: string,
+): Promise<number | undefined> {
   const startupSnapshot = await startupsCollection.doc(startupId).get();
-    if (!startupSnapshot.exists) {
-      return undefined;
-    }
+  if (!startupSnapshot.exists) {
+    return undefined;
+  }
 
-    const startup = startupSnapshot.data() as StartupDocument;
-    return startup.currentTokenPriceCents * startup.totalTokensIssued;
+  const startup = startupSnapshot.data() as StartupDocument;
+  return startup.currentTokenPriceCents * startup.totalTokensIssued;
 }
