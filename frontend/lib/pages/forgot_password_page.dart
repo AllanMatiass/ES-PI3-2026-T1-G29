@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 
@@ -94,7 +95,22 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 child: SizedBox(
                   width: 300,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      try {
+                        await FirebaseAuth.instance.sendPasswordResetEmail(
+                          email: _emailController.text.trim(),
+                        );
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Email de recuperação enviado!')),
+                        );
+                        Navigator.of(context).pushNamed('/login');
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erro: ${e.toString()}')),
+                        );
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2E7D32),
                       foregroundColor: Colors.white,
