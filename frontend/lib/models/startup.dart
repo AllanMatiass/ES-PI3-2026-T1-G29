@@ -37,6 +37,7 @@ class StartupListItem {
   final int capitalRaisedCents;
   final int totalTokensIssued;
   final int currentTokenPriceCents;
+  final double? priceVariation;
   final String? coverImageUrl;
   final List<String> tags;
 
@@ -48,6 +49,7 @@ class StartupListItem {
     required this.capitalRaisedCents,
     required this.totalTokensIssued,
     required this.currentTokenPriceCents,
+    this.priceVariation,
     this.coverImageUrl,
     required this.tags,
   });
@@ -61,8 +63,11 @@ class StartupListItem {
       capitalRaisedCents: json['capitalRaisedCents'] as int,
       totalTokensIssued: json['totalTokensIssued'] as int,
       currentTokenPriceCents: json['currentTokenPriceCents'] as int,
+      priceVariation: (json['priceVariation'] ?? json['variation'] ?? json['percentChange'])?.toDouble(),
       coverImageUrl: json['coverImageUrl'] as String?,
       tags: List<String>.from(json['tags'] as List),
     );
   }
+
 }
+
