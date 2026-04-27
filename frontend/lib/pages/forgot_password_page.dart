@@ -1,3 +1,5 @@
+// Autor: Allan Giovanni Matias Paes & Pedro
+
 import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';

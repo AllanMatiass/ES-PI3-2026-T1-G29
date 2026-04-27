@@ -1,6 +1,6 @@
 // Autor: Allan Giovanni Matias Paes
 import { Timestamp } from "firebase-admin/firestore";
-import { StartupQuestionCreateInput } from "./dtos";
+import { StartupQuestionCreateInput, Variation } from "./dtos";
 
 /**
  * Representa os estágios de maturidade aceitos para uma startup.
@@ -87,6 +87,7 @@ export type StartupDocument = {
   demoVideos: string[]; // poderia ser enderecos URLs no Youtube ou firebase storage.
   pitchDeckUrl?: string;
   coverImageUrl?: string;
+  lastValuationCents?: number;
   tags: string[];
   updatedAt?: Timestamp;
 };
@@ -115,6 +116,8 @@ export type StartupListItem = {
   capitalRaisedCents: number;
   totalTokensIssued: number;
   currentTokenPriceCents: number;
-  coverImageUrl?: string;
+  priceVariation?: number | null;
+  coverImageUrl?: string | null;
   tags: string[];
+  variation: Variation;
 };
