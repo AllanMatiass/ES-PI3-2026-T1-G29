@@ -42,7 +42,9 @@ export const listStartups = onCall(
         );
       }
 
-      const startupsArray = (await listStartupItems()).filter((startup) => {
+      const startupsArray = (
+        (await listStartupItems()) as StartupListItem[]
+      ).filter((startup) => {
         if (stage && startup.stage !== stage) {
           return false;
         }
@@ -73,7 +75,7 @@ export const listStartups = onCall(
         },
         data: startups,
       };
-      logger.info(`Startups: ${res} `);
+      logger.info(`Startups: ${JSON.stringify(startups)}`);
       return res;
     },
   ),
