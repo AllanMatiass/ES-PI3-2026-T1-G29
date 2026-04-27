@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes & Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
@@ -44,7 +44,7 @@ class _CatalogPageState extends State<CatalogPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          'Catálogo de Startups',
+          'Investir',
           style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
         ),
         backgroundColor: Colors.white,
