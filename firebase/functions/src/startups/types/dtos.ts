@@ -35,6 +35,13 @@ export type Risk = {
   label: StartupRiskLabel;
 };
 
+export type VariationTrend = "up" | "down" | "stable";
+
+export type Variation = {
+  percentage: number;
+  trend: VariationTrend;
+};
+
 export type StartupDetails = {
   startup: StartupDocument;
   valuation: number;
