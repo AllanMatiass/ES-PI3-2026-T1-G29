@@ -13,15 +13,6 @@ import { QuestionVisibility, StartupQuestionDocument } from "../types";
 
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 
-/**
- * Cria uma pergunta para uma startup.
-...
- * - `visibility`: visibilidade opcional (`publica` ou `privada`).
- *
- * Perguntas publicas podem ser enviadas por qualquer usuario autenticado.
- * Perguntas privadas exigem que o usuario tenha um documento em:
- * `startups/{startupId}/investors/{uid}`.
- */
 export const createStartupQuestion = onCall(
   withCallHandler(async (request) => {
     const user = requireAuthenticatedUser(request);
