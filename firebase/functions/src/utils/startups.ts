@@ -20,6 +20,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Startup em fase de ideacao com foco em prototipagem de sensores educacionais e validacao com cursos da area de saude.",
     capitalRaisedCents: 1850000,
     totalTokensIssued: 100000,
+    circulatingTokens: 72000,
     currentTokenPriceCents: 125,
     founders: [
       {
@@ -65,6 +66,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Startup em operacao piloto com pequenos comercios locais e validacao de indicadores de economia de combustivel.",
     capitalRaisedCents: 7400000,
     totalTokensIssued: 250000,
+    circulatingTokens: 185000,
     currentTokenPriceCents: 310,
     founders: [
       { name: "Beatriz Santos", role: "CEO", equityPercent: 42 },
@@ -99,6 +101,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Startup em expansao com uso simulado em programas de pre-aceleracao e potencial de integracao a plataformas educacionais.",
     capitalRaisedCents: 12350000,
     totalTokensIssued: 500000,
+    circulatingTokens: 385000,
     currentTokenPriceCents: 525,
     founders: [
       { name: "Diego Martins", role: "CEO", equityPercent: 36 },
@@ -134,6 +137,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Focada em reduzir o desperdício de água e defensivos em pequenas e médias propriedades.",
     capitalRaisedCents: 50000000,
     totalTokensIssued: 100000,
+    circulatingTokens: 76000,
     currentTokenPriceCents: 500,
     founders: [
       {
@@ -169,6 +173,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Reduzindo reinternações hospitalares através de acompanhamento contínuo e preventivo.",
     capitalRaisedCents: 200000000,
     totalTokensIssued: 500000,
+    circulatingTokens: 412000,
     currentTokenPriceCents: 400,
     founders: [
       {
@@ -202,6 +207,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Transformando a educação básica com laboratórios virtuais de alto impacto visual e didático.",
     capitalRaisedCents: 500000000,
     totalTokensIssued: 1000000,
+    circulatingTokens: 780000,
     currentTokenPriceCents: 500,
     founders: [
       {
@@ -237,6 +243,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Democratizando o planejamento financeiro para a nova geração de universitários.",
     capitalRaisedCents: 80000000,
     totalTokensIssued: 200000,
+    circulatingTokens: 155000,
     currentTokenPriceCents: 400,
     founders: [
       {
@@ -271,6 +278,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Reduzindo o tempo de entrega e o custo de frete em até 30% através de algoritmos genéticos.",
     capitalRaisedCents: 300000000,
     totalTokensIssued: 800000,
+    circulatingTokens: 620000,
     currentTokenPriceCents: 375,
     founders: [
       {
