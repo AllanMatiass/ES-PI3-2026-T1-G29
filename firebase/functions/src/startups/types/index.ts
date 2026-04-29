@@ -82,6 +82,7 @@ export type StartupDocument = {
   capitalRaisedCents: number;
   totalTokensIssued: number;
   currentTokenPriceCents: number;
+  circulatingTokens: number;
   founders: Founder[];
   externalMembers: ExternalMember[];
   demoVideos: string[]; // poderia ser enderecos URLs no Youtube ou firebase storage.
