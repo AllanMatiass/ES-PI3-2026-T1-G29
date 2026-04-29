@@ -81,16 +81,16 @@ export async function listStartupQuestions(
   startupId: string,
   isInvestor: boolean,
 ): Promise<
-  Array{
-    id: String,
-    authorId: String,
-    authorEmail: String,
-    text: String,
-    visibility: String,
-    answer?: String,
-    answeredAt?: String,
-    createdAt: String,
-  }
+  Array<{
+    id: string;
+    authorId: string;
+    authorEmail?: string;
+    text: string;
+    visibility: string;
+    answer?: string;
+    answeredAt?: string;
+    createdAt: string;
+  }>
 > {
   const questionsSnapshot = await startupsCollection
     .doc(startupId)
@@ -98,8 +98,8 @@ export async function listStartupQuestions(
     .limit(100)
     .get();
 
-const questions = questionsSnapshot.docs
-    .map(doc)=> ({
+  const questions = questionsSnapshot.docs
+    .map((doc) => ({
       id: doc.id,
       authorId: doc.get("authorId"),
       authorEmail: doc.get("authorEmail"),
@@ -117,12 +117,12 @@ const questions = questionsSnapshot.docs
         return true;
       }
       return false;
-    });
+    })
     .sort((left, right) =>
       String(right.createdAt ?? "").localeCompare(String(left.createdAt ?? "")),
     );
 
-    return questions;
+  return questions;
 }
 
 export async function createQuestion(
