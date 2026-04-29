@@ -77,6 +77,54 @@ export async function listPublicQuestions(startupId: string) {
     );
 }
 
+export async function listStartupQuestions(
+  startupId: string,
+  isInvestor: boolean,
+): Promise<
+  Array{
+    id: String,
+    authorId: String,
+    authorEmail: String,
+    text: String,
+    visibility: String,
+    answer?: String,
+    answeredAt?: String,
+    createdAt: String,
+  }
+> {
+  const questionsSnapshot = await startupsCollection
+    .doc(startupId)
+    .collection("questions")
+    .limit(100)
+    .get();
+
+const questions = questionsSnapshot.docs
+    .map(doc)=> ({
+      id: doc.id,
+      authorId: doc.get("authorId"),
+      authorEmail: doc.get("authorEmail"),
+      text: doc.get("text"),
+      visibility: doc.get("visibility"),
+      answer: doc.get("answer") ?? null,
+      answeredAt: doc.get("answeredAt")?.toDate().toISOString() ?? null,
+      createdAt: doc.get("createdAt")?.toDate().toISOString() ?? null,
+    }))
+    .filter((question) => {
+      if (question.visibility === "publica") {
+        return true;
+      }
+      if (question.visibility === "privada" && isInvestor) {
+        return true;
+      }
+      return false;
+    });
+    .sort((left, right) =>
+      String(right.createdAt ?? "").localeCompare(String(left.createdAt ?? "")),
+    );
+
+    return questions;
+}
+
 export async function createQuestion(
   startupId: string,
   question: StartupQuestionDocument,
