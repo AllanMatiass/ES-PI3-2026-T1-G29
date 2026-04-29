@@ -1,4 +1,5 @@
 // Autor: Allan Giovanni Matias Paes
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/catalog_page.dart';
 import 'package:frontend/widgets/home_view.dart';
@@ -14,12 +15,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-
   late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    
+    // Inicializamos as páginas. 
+    // Nota: Removido WidgetsFlutterBinding.ensureInitialized() daqui, 
+    // pois ele só deve ser chamado no main().
     _pages = [
       HomeView(userName: widget.userName),
       CatalogPage(),
@@ -37,6 +41,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    
+    if (user == null) {
+      // Usamos Future.microtask para evitar erros de navegação durante o build
+      Future.microtask(() => Navigator.pushReplacementNamed(context, '/login'));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
