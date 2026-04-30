@@ -1,14 +1,21 @@
+// Autor: Allan Giovanni Matias Paes
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { isCPF } from "validation-br";
 import { auth } from "../../shared/firebase";
-import { isEmailValid, normalizeString } from "../../shared/validation";
+import {
+  isEmailValid,
+  normalizePhone,
+  normalizeString,
+} from "../../shared/validation";
 import {
   createUserProfile,
   getUserByCpf,
+  getUserByPhone,
 } from "../repositories/userRepository";
 import { SignupData } from "../types";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
+import { FieldValue } from "firebase-admin/firestore";
 
 /**
  * Realiza o cadastro de um novo usuario no MesclaInvest.
@@ -17,6 +24,7 @@ import { withCallHandler } from "../../shared/middlewares/errorHandler";
  * - `name`: Nome completo.
  * - `email`: E-mail valido.
  * - `cpf`: CPF valido (com ou sem mascara).
+ * - `phone`: Número de telefone
  * - `password`: Senha para login.
  *
  * A funcao valida os dados, cria o usuario no Firebase Auth e
@@ -29,21 +37,22 @@ export const signup = onCall(
     const name = normalizeString(data.name);
     const email = normalizeString(data.email);
     const cpf = normalizeString(data.cpf)?.replace(/\D/g, "");
+    const phone = normalizePhone(data.phone);
     const password = data.password;
 
-    if (!name || !email || !cpf || !password) {
+    if (!name || !email || !cpf || !phone || !password) {
       throw new HttpsError(
         "invalid-argument",
-        "Todos os campos sao obrigatorios: name, email, cpf, password.",
+        "Todos os campos são obrigatorios: name, email, cpf, phone, password.",
       );
     }
 
     if (!isEmailValid(email)) {
-      throw new HttpsError("invalid-argument", "E-mail invalido.");
+      throw new HttpsError("invalid-argument", "E-mail inválido.");
     }
 
     if (!isCPF(cpf)) {
-      throw new HttpsError("invalid-argument", "CPF invalido.");
+      throw new HttpsError("invalid-argument", "CPF inválido.");
     }
 
     if (password.length < 6) {
@@ -53,50 +62,48 @@ export const signup = onCall(
       );
     }
 
-    // Verifica se CPF ja existe (o Firebase Auth ja cuida do e-mail duplicado)
+    // Verifica se CPF ja existe
     const existingUserByCpf = await getUserByCpf(cpf);
     if (existingUserByCpf) {
-      throw new HttpsError("already-exists", "CPF ja cadastrado no sistema.");
+      throw new HttpsError("already-exists", "CPF já cadastrado no sistema.");
     }
 
-    try {
-      // 1. Criar usuario no Firebase Auth
-      const userRecord = await auth.createUser({
-        email,
-        password,
-        displayName: name,
-      });
-
-      // 2. Criar perfil no Firestore
-      await createUserProfile({
-        uid: userRecord.uid,
-        name,
-        email,
-        cpf,
-        walletBalance: 0,
-        createdAt: new Date(),
-      });
-
-      logger.info("Novo usuario cadastrado com sucesso.", {
-        uid: userRecord.uid,
-        email,
-      });
-
-      return {
-        data: {
-          uid: userRecord.uid,
-          name,
-          email,
-        },
-      };
-    } catch (error: any) {
-      logger.error("Erro ao realizar signup.", error);
-
-      if (error.code === "auth/email-already-exists") {
-        throw new HttpsError("already-exists", "E-mail ja cadastrado.");
-      }
-
-      throw new HttpsError("internal", "Erro interno ao processar cadastro.");
+    // Verifica se o Número já existe
+    const existingUserByPhone = await getUserByPhone(phone);
+    if (existingUserByPhone) {
+      throw new HttpsError(
+        "already-exists",
+        "Número de telefone já cadastrado",
+      );
     }
+
+    // 1. Criar usuario no Firebase Auth
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      phoneNumber: phone,
+      displayName: name,
+    });
+
+    // 2. Criar perfil no Firestore
+    await createUserProfile({
+      uid: userRecord.uid,
+      name,
+      email,
+      cpf,
+      walletBalance: 0,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    logger.info("Novo usuario cadastrado com sucesso.", {
+      uid: userRecord.uid,
+      email,
+    });
+
+    return {
+      uid: userRecord.uid,
+      name,
+      email,
+    };
   }),
 );

@@ -1,12 +1,13 @@
 // Autor: Allan Giovanni Matias Paes
 
-import { StartupDocument } from "../startups/types";
+import { FieldValue } from "firebase-admin/firestore";
+import { CreateStartupDocumentDTO } from "../startups/types/dtos";
 
 // Dados de startups para serem usados no processo de seed,
 // permitindo a criação de dados iniciais no Firestore
 // para testes e desenvolvimento.
 
-export const startupsData: (StartupDocument & { id: string })[] = [
+export const startupsData: CreateStartupDocumentDTO[] = [
   {
     id: "biochip-campus",
     name: "BioChip Campus",
@@ -15,10 +16,11 @@ export const startupsData: (StartupDocument & { id: string })[] = [
       "Sensores portateis para analises laboratoriais didaticas.",
     description:
       "A BioChip Campus simula kits de diagnostico rapido para laboratorios universitarios, conectando sensores de baixo custo a um aplicativo de acompanhamento.",
-    executivesSummary:
+    executiveSummary:
       "Startup em fase de ideacao com foco em prototipagem de sensores educacionais e validacao com cursos da area de saude.",
     capitalRaisedCents: 1850000,
     totalTokensIssued: 100000,
+    circulatingTokens: 72000,
     currentTokenPriceCents: 125,
     founders: [
       {
@@ -51,6 +53,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1581093458791-9d15482442f6",
     tags: ["healthtech", "iot", "educacao"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "rota-verde",
@@ -59,10 +62,11 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Otimizacao de rotas sustentaveis para entregas urbanas.",
     description:
       "A Rota Verde usa dados de distancia, emissao estimada e ocupacao de entregadores para sugerir rotas urbanas com menor impacto ambiental.",
-    executivesSummary:
+    executiveSummary:
       "Startup em operacao piloto com pequenos comercios locais e validacao de indicadores de economia de combustivel.",
     capitalRaisedCents: 7400000,
     totalTokensIssued: 250000,
+    circulatingTokens: 185000,
     currentTokenPriceCents: 310,
     founders: [
       { name: "Beatriz Santos", role: "CEO", equityPercent: 42 },
@@ -83,6 +87,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
     tags: ["logtech", "sustentabilidade", "mobilidade"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "mentorai",
@@ -92,10 +97,11 @@ export const startupsData: (StartupDocument & { id: string })[] = [
       "Triagem inteligente para programas de mentoria universitarios.",
     description:
       "A MentorAI organiza perfis de estudantes e mentores para recomendar encontros com base em objetivos, disponibilidade e historico de acompanhamento.",
-    executivesSummary:
+    executiveSummary:
       "Startup em expansao com uso simulado em programas de pre-aceleracao e potencial de integracao a plataformas educacionais.",
     capitalRaisedCents: 12350000,
     totalTokensIssued: 500000,
+    circulatingTokens: 385000,
     currentTokenPriceCents: 525,
     founders: [
       { name: "Diego Martins", role: "CEO", equityPercent: 36 },
@@ -118,6 +124,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     pitchDeckUrl: "https://example.com/decks/mentorai.pdf",
     coverImageUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978",
     tags: ["edtech", "ia", "mentoria"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "ecotech",
@@ -126,10 +133,11 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Soluções sustentáveis para o agro.",
     description:
       "Plataforma para otimização sustentável de recursos agrícolas utilizando IoT e análise de dados.",
-    executivesSummary:
+    executiveSummary:
       "Focada em reduzir o desperdício de água e defensivos em pequenas e médias propriedades.",
     capitalRaisedCents: 50000000,
     totalTokensIssued: 100000,
+    circulatingTokens: 76000,
     currentTokenPriceCents: 500,
     founders: [
       {
@@ -152,6 +160,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1464226184884-fa280b87c399",
     tags: ["agronegocio", "sustentabilidade", "iot"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "healthtrack",
@@ -160,10 +169,11 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Monitoramento remoto de pacientes.",
     description:
       "Sistema de telemonitoramento com foco em prevenção de doenças crônicas através de wearables.",
-    executivesSummary:
+    executiveSummary:
       "Reduzindo reinternações hospitalares através de acompanhamento contínuo e preventivo.",
     capitalRaisedCents: 200000000,
     totalTokensIssued: 500000,
+    circulatingTokens: 412000,
     currentTokenPriceCents: 400,
     founders: [
       {
@@ -184,6 +194,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1576091160550-2173dba999ef",
     tags: ["healthtech", "monitoramento", "prevencao"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "eduverse",
@@ -192,10 +203,11 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Realidade virtual para escolas.",
     description:
       "Plataforma educacional imersiva com uso de realidade virtual para simulações científicas e históricas.",
-    executivesSummary:
+    executiveSummary:
       "Transformando a educação básica com laboratórios virtuais de alto impacto visual e didático.",
     capitalRaisedCents: 500000000,
     totalTokensIssued: 1000000,
+    circulatingTokens: 780000,
     currentTokenPriceCents: 500,
     founders: [
       {
@@ -218,6 +230,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1478479405421-ce83c92fb3ba",
     tags: ["edtech", "realidade-virtual", "inovacao"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "finai",
@@ -226,10 +239,11 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "IA para finanças pessoais universitárias.",
     description:
       "Assistente financeiro com IA para estudantes universitários, ajudando na gestão de bolsas e gastos mensais.",
-    executivesSummary:
+    executiveSummary:
       "Democratizando o planejamento financeiro para a nova geração de universitários.",
     capitalRaisedCents: 80000000,
     totalTokensIssued: 200000,
+    circulatingTokens: 155000,
     currentTokenPriceCents: 400,
     founders: [
       {
@@ -251,6 +265,7 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     demoVideos: ["https://example.com/videos/finai-demo"],
     coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
     tags: ["fintech", "ia", "estudantes"],
+    createdAt: FieldValue.serverTimestamp(),
   },
   {
     id: "logissmart",
@@ -259,10 +274,11 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     shortDescription: "Otimização de rotas de entrega.",
     description:
       "Sistema inteligente de roteirização logística que otimiza o 'last mile' para pequenos e-commerces.",
-    executivesSummary:
+    executiveSummary:
       "Reduzindo o tempo de entrega e o custo de frete em até 30% através de algoritmos genéticos.",
     capitalRaisedCents: 300000000,
     totalTokensIssued: 800000,
+    circulatingTokens: 620000,
     currentTokenPriceCents: 375,
     founders: [
       {
@@ -277,5 +293,6 @@ export const startupsData: (StartupDocument & { id: string })[] = [
     coverImageUrl:
       "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d",
     tags: ["logtech", "otimizacao", "entrega"],
+    createdAt: FieldValue.serverTimestamp(),
   },
 ];

@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { CallableRequest, HttpsError } from "firebase-functions/https";
 
 export type AuthenticatedUser = {
