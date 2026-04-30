@@ -291,7 +291,6 @@ class _CatalogPageState extends State<CatalogPage> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    // ✅ NAVEGAÇÃO ADICIONADA AQUI
                     onPressed: () {
                       Navigator.push(
                         context,
