@@ -1,45 +1,60 @@
+// Autor: Allan Giovanni Matias Paes
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { requireAuthenticatedUser } from "../../shared/auth";
 import { normalizeString } from "../../shared/validation";
-import {
-  getStartupById,
-  listPublicQuestions,
-  userIsInvestor,
-} from "../repositories/startupRepository";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
+import {
+  GetStartupDetailsRequest,
+  GetStartupDetailsResponse,
+  StartupDetails,
+} from "../types/dtos";
+import { InvestmentMetricService } from "../shared/investmentMetricService";
+import { requireAuthenticatedUser } from "../../shared/auth";
+
+const investmentMetricService = new InvestmentMetricService();
 
 export const getStartupDetails = onCall(
-  withCallHandler(async (request) => {
-    const user = requireAuthenticatedUser(request);
+  withCallHandler<GetStartupDetailsRequest, GetStartupDetailsResponse>(
+    async (request) => {
+      const user = requireAuthenticatedUser(request);
 
-    const startupId = normalizeString(request.data?.id);
+      const startupId = normalizeString(request.data?.id);
 
-    if (!startupId) {
-      throw new HttpsError("invalid-argument", "Informe o id da startup.");
-    }
+      if (!startupId) {
+        throw new HttpsError("invalid-argument", "Informe o id da startup.");
+      }
 
-    const startup = await getStartupById(startupId);
+      const {
+        startup,
+        risk,
+        expectedReturn,
+        riskLabel,
+        horizon,
+        valuation,
+        isInvestor,
+        questions,
+      } = await investmentMetricService.getStartupMetrics(startupId, user.uid);
 
-    if (!startup) {
-      throw new HttpsError("not-found", "Startup nao encontrada.");
-    }
+      const data: StartupDetails = {
+        startup,
+        valuation,
+        expectedReturn,
+        horizon,
+        risk: {
+          score: risk,
+          label: riskLabel,
+        },
+      };
 
-    const isInvestor = await userIsInvestor(startupId, user.uid);
-    const questions = await listPublicQuestions(startupId);
-
-    return {
-      data: {
+      return {
         id: startupId,
-        ...startup,
-        createdAt: startup.createdAt?.toDate().toISOString() ?? null,
-        updatedAt: startup.updatedAt?.toDate().toISOString() ?? null,
+        details: data,
         publicQuestions: questions,
         access: {
           isInvestor,
           canTradeTokens: isInvestor,
           canSendPrivateQuestions: isInvestor,
         },
-      },
-    };
-  }),
+      };
+    },
+  ),
 );

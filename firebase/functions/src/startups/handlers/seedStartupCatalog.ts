@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { onCall } from "firebase-functions/v2/https";
 import { seedDemoStartups } from "../repositories/startupRepository";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
@@ -18,10 +19,8 @@ export const seedStartupCatalog = onCall(
     const startupIds = await seedDemoStartups();
 
     return {
-      data: {
-        count: startupIds.length,
-        ids: startupIds,
-      },
+      count: startupIds.length,
+      ids: startupIds,
     };
   }),
 );
