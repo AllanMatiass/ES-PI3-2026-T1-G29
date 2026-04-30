@@ -1,4 +1,6 @@
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+// Autor: Allan Giovanni Matias Paes
+import { Timestamp } from "firebase-admin/firestore";
+import { StartupQuestionCreateInput, Variation } from "./dtos";
 
 /**
  * Representa os estágios de maturidade aceitos para uma startup.
@@ -13,6 +15,9 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
  * comparação direta no Firestore e nas chamadas callable.
  */
 export type StartupStage = "nova" | "em_operacao" | "em_expansao";
+
+export type StartupRiskLabel = "Risco Baixo" | "Risco Médio" | "Risco Alto";
+export type StartupRiskCode = "lowRisk" | "mediumRisk" | "highRisk";
 
 /**
  * Define o nível de visibilidade de uma pergunta enviada à startup.
@@ -73,37 +78,29 @@ export type StartupDocument = {
   stage: StartupStage;
   shortDescription: string;
   description: string;
-  executivesSummary: string;
+  executiveSummary: string;
   capitalRaisedCents: number;
   totalTokensIssued: number;
   currentTokenPriceCents: number;
+  circulatingTokens: number;
   founders: Founder[];
   externalMembers: ExternalMember[];
   demoVideos: string[]; // poderia ser enderecos URLs no Youtube ou firebase storage.
   pitchDeckUrl?: string;
   coverImageUrl?: string;
+  lastValuationCents?: number;
   tags: string[];
-  createdAt?: Timestamp;
   updatedAt?: Timestamp;
 };
 
-/**
- * Documento de pergunta armazenado na subcoleção da startup.
- *
- * As perguntas ficam em `startups/{startupId}/questions/{questionId}` para
- * manter o histórico associado ao projeto. A resposta é opcional porque a
- * pergunta pode ser criada antes de alguém respondê-la.
- */
-export type StartupQuestionDocument = {
-  authorId: string;
-  authorEmail?: string;
-  text: string;
-  visibility: QuestionVisibility;
-  answer?: string;
-  answeredAt?: Timestamp;
-  createdAt: FieldValue;
+export type StartupQuestionDocument = StartupQuestionCreateInput & {
+  answers: StartupQuestionAnswer[];
 };
 
+export type StartupQuestionAnswer = {
+  answer: string;
+  answeredAt: Timestamp;
+};
 /**
  * Versão resumida de uma startup usada na listagem do catálogo.
  *
@@ -120,6 +117,8 @@ export type StartupListItem = {
   capitalRaisedCents: number;
   totalTokensIssued: number;
   currentTokenPriceCents: number;
-  coverImageUrl?: string;
+  priceVariation?: number | null;
+  coverImageUrl?: string | null;
   tags: string[];
+  variation: Variation;
 };

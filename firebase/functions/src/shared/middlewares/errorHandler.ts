@@ -1,9 +1,11 @@
+// Autor: Allan Giovanni Matias Paes
 import * as logger from "firebase-functions/logger";
 import {
   HttpsError,
   FunctionsErrorCode,
   CallableRequest,
 } from "firebase-functions/v2/https";
+import { ApiResponse } from "../types";
 
 /**
  * Mapeia códigos de erro do Firebase Functions para Status HTTP.
@@ -32,36 +34,60 @@ const errorCodeMap: Record<FunctionsErrorCode, number> = {
  * Wrapper para tratamento de erros em funções onCall (v2).
  * Captura erros, loga e garante que HttpsError seja retornado.
  */
-export function withCallHandler(
-  handler: (request: CallableRequest<any>) => Promise<any>,
+
+export function withCallHandler<T, R>(
+  handler: (request: CallableRequest<T>) => Promise<R>,
 ) {
-  return async (request: CallableRequest<any>): Promise<any> => {
+  return async (request: CallableRequest<T>): Promise<ApiResponse<R>> => {
     try {
-      return await handler(request);
-    } catch (err) {
+      const result = await handler(request);
+
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (err: unknown) {
       logger.error("Error caught in withCallHandler:", {
         uid: request.auth?.uid,
         data: request.data,
         error: err,
       });
 
+      //Firebase Auth error
+      if (typeof err === "object" && err !== null && "code" in err) {
+        const code = (err as { code: string }).code;
+
+        if (code.startsWith("auth/")) {
+          return {
+            success: false,
+            error: {
+              code,
+              message: "Erro de autenticação.",
+              status: 400,
+            },
+          };
+        }
+      }
+
+      // HttpsError
       if (err instanceof HttpsError) {
         return {
           success: false,
           error: {
-            status: errorCodeMap[err.code] || 500,
             code: err.code,
             message: err.message,
+            status: errorCodeMap[err.code] || 500,
           },
         };
       }
 
+      // fallback
       return {
         success: false,
         error: {
-          status: 500,
           code: "internal",
-          message: "Um erro interno inesperado ocorreu.",
+          message: "Erro interno inesperado.",
+          status: 500,
         },
       };
     }
