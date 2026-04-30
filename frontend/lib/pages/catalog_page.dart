@@ -436,7 +436,6 @@ class _CatalogPageState extends State<CatalogPage> {
       },
     );
   }
-
   Widget _buildErrorState(String error) {
     return Center(
       child: Padding(
