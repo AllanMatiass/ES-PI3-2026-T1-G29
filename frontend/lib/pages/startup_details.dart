@@ -113,7 +113,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
         final data = snapshot.data!;
 
         final double progressoBarra = data.totalTokens > 0
-            ? ((data.totalTokens - data.circulatingTokens) / data.totalTokens).clamp(0.0, 1.0)
+            ? (data.circulatingTokens / data.totalTokens).clamp(0.0, 1.0)
             : 0.0;
 
         final double percentualVendido = progressoBarra * 100;
@@ -254,12 +254,10 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // ✅ Exibe total emitido à esquerda
                             Text(
                               '${data.totalTokens} emitidos',
                               style: const TextStyle(fontSize: 12, color: Colors.grey),
                             ),
-                            // ✅ Exibe % vendida à direita
                             Text(
                               '${percentualVendido.toStringAsFixed(1)}% vendidos',
                               style: const TextStyle(fontSize: 12, color: Colors.grey),
