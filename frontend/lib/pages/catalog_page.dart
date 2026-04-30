@@ -1,8 +1,9 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes e Pedro Vinicius Romanato
 import 'package:flutter/material.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:frontend/pages/startup_details.dart';
 
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
@@ -106,10 +107,13 @@ class _CatalogPageState extends State<CatalogPage> {
                   }
 
                   var startups = snapshot.data!;
-                  
-                  // Apply Filters
+
                   if (_searchQuery.isNotEmpty) {
-                    startups = startups.where((s) => s.name.toLowerCase().contains(_searchQuery) || s.shortDescription.toLowerCase().contains(_searchQuery)).toList();
+                    startups = startups
+                        .where((s) =>
+                            s.name.toLowerCase().contains(_searchQuery) ||
+                            s.shortDescription.toLowerCase().contains(_searchQuery))
+                        .toList();
                   }
                   if (_selectedStage != null) {
                     startups = startups.where((s) => s.stage == _selectedStage).toList();
@@ -191,7 +195,8 @@ class _CatalogPageState extends State<CatalogPage> {
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => _buildLogoPlaceholder(80),
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildLogoPlaceholder(80),
                         )
                       : _buildLogoPlaceholder(80),
                 ),
@@ -206,10 +211,14 @@ class _CatalogPageState extends State<CatalogPage> {
                           Expanded(
                             child: Text(
                               startup.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFF1E293B)),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Color(0xFF1E293B)),
                             ),
                           ),
-                          if (startup.priceVariation != null) _buildVariationBadge(startup.priceVariation!),
+                          if (startup.priceVariation != null)
+                            _buildVariationBadge(startup.priceVariation!),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -257,11 +266,20 @@ class _CatalogPageState extends State<CatalogPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildInfoRow('Capital Levantado', _formatCurrency(startup.capitalRaisedCents), Icons.account_balance),
+                _buildInfoRow(
+                    'Capital Levantado',
+                    _formatCurrency(startup.capitalRaisedCents),
+                    Icons.account_balance),
                 const SizedBox(height: 12),
-                _buildInfoRow('Total de Tokens', startup.totalTokensIssued.toString(), Icons.token_outlined),
+                _buildInfoRow(
+                    'Total de Tokens',
+                    startup.totalTokensIssued.toString(),
+                    Icons.token_outlined),
                 const SizedBox(height: 12),
-                _buildInfoRow('Preço Atual do Token', _formatCurrency(startup.currentTokenPriceCents), Icons.monetization_on_outlined),
+                _buildInfoRow(
+                    'Preço Atual do Token',
+                    _formatCurrency(startup.currentTokenPriceCents),
+                    Icons.monetization_on_outlined),
               ],
             ),
           ),
@@ -273,14 +291,25 @@ class _CatalogPageState extends State<CatalogPage> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {},
+                    // ✅ NAVEGAÇÃO ADICIONADA AQUI
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              StartupDetailsPage(startupId: startup.id),
+                        ),
+                      );
+                    },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF00A84E),
                       side: const BorderSide(color: Color(0xFF00A84E)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Ver detalhes', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Ver detalhes',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -292,9 +321,11 @@ class _CatalogPageState extends State<CatalogPage> {
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Investir', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('Investir',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -323,7 +354,9 @@ class _CatalogPageState extends State<CatalogPage> {
         const SizedBox(width: 12),
         Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 14)),
         const Spacer(),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))),
+        Text(value,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))),
       ],
     );
   }
@@ -333,7 +366,9 @@ class _CatalogPageState extends State<CatalogPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isPositive ? const Color(0xFF00A84E).withOpacity(0.1) : Colors.red.withOpacity(0.1),
+        color: isPositive
+            ? const Color(0xFF00A84E).withOpacity(0.1)
+            : Colors.red.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -367,7 +402,8 @@ class _CatalogPageState extends State<CatalogPage> {
       ),
       child: Text(
         tag,
-        style: const TextStyle(color: Color(0xFF59627A), fontSize: 12, fontWeight: FontWeight.w500),
+        style: const TextStyle(
+            color: Color(0xFF59627A), fontSize: 12, fontWeight: FontWeight.w500),
       ),
     );
   }
