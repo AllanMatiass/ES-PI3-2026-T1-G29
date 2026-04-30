@@ -27,7 +27,7 @@ class MesclaInvest extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var userName = FirebaseAuth.instance.currentUser?.displayName;
+    final User? user = FirebaseAuth.instance.currentUser;
 
     return MaterialApp(
       title: 'Mescla Invest',
@@ -35,13 +35,16 @@ class MesclaInvest extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00A84E)),
         useMaterial3: true,
-        fontFamily: 'Inter', // Assuming Inter or standard sans-serif
+        fontFamily: 'Inter',
       ),
-      home: HomePage(userName: userName ?? 'Desconhecido'),
+      home: user == null 
+          ? const LoginPage() 
+          : HomePage(userName: user.displayName ?? 'Desconhecido'),
       routes: {
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
-        '/forgotPassword': (context) => const ForgotPasswordPage()
+        '/forgotPassword': (context) => const ForgotPasswordPage(),
+        '/home': (context) => HomePage(userName: FirebaseAuth.instance.currentUser?.displayName ?? 'Desconhecido'),
       },
     );
   }
