@@ -29,9 +29,6 @@ class StartupService {
       final body = jsonDecode(response.body);
       final result = body['result'];
 
-      // result is ApiResponse<RecordFunctionResponse<StartupListItem>>
-      // result = { success: true, data: { count: 8, filters: {...}, data: { startup_1: {...} } } }
-
       if (result == null ||
           result['success'] != true ||
           result['data'] == null) {
@@ -51,6 +48,25 @@ class StartupService {
       throw Exception(
         'Failed to load startups: ${response.statusCode} - ${response.body}',
       );
+    }
+  }
+
+  static Future<StartupData> getStartupDetails(String id) async {
+    const String url = 'https://getstartupdetails-obpz3whteq-uc.a.run.app';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"data": {"id": id}}),
+      );
+
+      if (response.statusCode == 200) {
+        return StartupData.fromJson(jsonDecode(response.body));
+      } else {
+        throw Exception('Erro ao carregar dados');
+      }
+    } catch (e) {
+      throw Exception('Erro de conexão: $e');
     }
   }
 }
