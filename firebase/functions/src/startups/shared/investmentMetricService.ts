@@ -170,21 +170,17 @@ export class InvestmentMetricService {
     const fromDate = new Date(range.from);
     const toDate = new Date(range.to);
 
-    // 🔥 1. pegar dados SEM limit
     const rawHistory = await getValuationHistory(
       startupId,
       fromDate,
       toDate,
-      null, // ⚠️ importante
+      null,
     );
 
-    // 🔥 2. agrupar corretamente
     const grouped = this.groupRawByInterval(rawHistory, interval);
 
-    // 🔥 3. aplicar limit DEPOIS
     const historyData = grouped.slice(-limit);
 
-    // 🔥 4. mapear
     const history = historyData.map((item, index) => {
       const price = item.value / startup.totalTokensIssued / 100;
 

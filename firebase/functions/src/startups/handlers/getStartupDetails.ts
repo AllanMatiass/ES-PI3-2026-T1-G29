@@ -8,14 +8,14 @@ import {
   GetStartupDetailsRequest,
 } from "../types/dtos";
 import { InvestmentMetricService } from "../shared/investmentMetricService";
-// import { requireAuthenticatedUser } from "../../shared/auth";
+import { requireAuthenticatedUser } from "../../shared/auth";
 
 const investmentMetricService = new InvestmentMetricService();
 
 export const getStartupDetails = onCall(
   withCallHandler<GetStartupDetailsRequest, GetStartupDetailsResponse>(
     async (request) => {
-      // const user = requireAuthenticatedUser(request);
+      const user = requireAuthenticatedUser(request);
 
       const startupId = normalizeString(request.data?.id);
       const options = request.data?.options;
@@ -36,8 +36,7 @@ export const getStartupDetails = onCall(
         priceHistory,
       } = await investmentMetricService.getStartupMetrics(
         startupId,
-        // user.uid,
-        "id",
+        user.uid,
         options ?? {},
       );
 
