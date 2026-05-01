@@ -3,7 +3,7 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { normalizeString } from "../../shared/validation";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import {
-  GetStartupDetailsRequest,
+  GetStartupIdRequest,
   GetStartupDetailsResponse,
   StartupDetails,
 } from "../types/dtos";
@@ -13,7 +13,7 @@ import { requireAuthenticatedUser } from "../../shared/auth";
 const investmentMetricService = new InvestmentMetricService();
 
 export const getStartupDetails = onCall(
-  withCallHandler<GetStartupDetailsRequest, GetStartupDetailsResponse>(
+  withCallHandler<GetStartupIdRequest, GetStartupDetailsResponse>(
     async (request) => {
       const user = requireAuthenticatedUser(request);
 
