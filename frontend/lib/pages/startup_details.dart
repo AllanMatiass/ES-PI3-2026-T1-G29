@@ -1,58 +1,12 @@
-//autor Pedro Vinicius Romanato - 25004075
+//Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../models/startup.dart';
 
-class StartupData {
-  final String nome;
-  final String segmento;
-  final String logoUrl;
-  final String resumo;
-  final String descricao;
-  final double retornoEsperado;
-  final String riscoLabel;
-  final String horizonte;
-  final int totalTokens;
-  final int circulatingTokens;
-  final List<dynamic> socios;
-  final List<String> tags;
+import '../services/startup_service.dart';
 
-  StartupData({
-    required this.nome,
-    required this.segmento,
-    required this.logoUrl,
-    required this.resumo,
-    required this.descricao,
-    required this.retornoEsperado,
-    required this.riscoLabel,
-    required this.horizonte,
-    required this.totalTokens,
-    required this.circulatingTokens,
-    required this.socios,
-    required this.tags,
-  });
-
-  factory StartupData.fromJson(Map<String, dynamic> json) {
-    final result = json['result']['data']['details'];
-    final startup = result['startup'];
-
-    return StartupData(
-      nome: startup['name'] ?? '',
-      segmento: (startup['tags'] as List).isNotEmpty ? startup['tags'][0] : 'Startup',
-      logoUrl: startup['coverImageUrl'] ?? '',
-      resumo: startup['shortDescription'] ?? '',
-      descricao: startup['description'] ?? '',
-      retornoEsperado: (result['expectedReturn']['expected'] as num).toDouble(),
-      riscoLabel: result['risk']['label'] ?? 'Médio',
-      horizonte: result['horizon'] ?? 'Longo prazo',
-      totalTokens: startup['totalTokensIssued'] ?? 0,
-      circulatingTokens: startup['circulatingTokens'] ?? 0, // ✅ lido do JSON
-      socios: startup['founders'] ?? [],
-      tags: List<String>.from(startup['tags'] ?? []),
-    );
-  }
-}
 
 class StartupDetailsPage extends StatefulWidget {
   final String startupId;
@@ -69,26 +23,12 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
   @override
   void initState() {
     super.initState();
-    startupDetails = fetchStartupDetails(widget.startupId);
+    setState(() {
+      startupDetails = fetchStartupDetails(widget.startupId);
+    });
   }
-
   Future<StartupData> fetchStartupDetails(String id) async {
-    const String url = 'https://getstartupdetails-obpz3whteq-uc.a.run.app';
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"data": {"id": id}}),
-      );
-
-      if (response.statusCode == 200) {
-        return StartupData.fromJson(jsonDecode(response.body));
-      } else {
-        throw Exception('Erro ao carregar dados');
-      }
-    } catch (e) {
-      throw Exception('Erro de conexão: $e');
-    }
+    return await StartupService.getStartupDetails(id);
   }
 
   String gerarIniciais(String nome) {
@@ -119,15 +59,15 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
         final double percentualVendido = progressoBarra * 100;
 
         Color corRisco = const Color.fromARGB(255, 255, 102, 0);
-        if (data.riscoLabel.toLowerCase().contains("baixo")) corRisco = Colors.green;
-        if (data.riscoLabel.toLowerCase().contains("alto")) corRisco = Colors.red;
+        if (data.riskLabel.toLowerCase().contains("baixo")) corRisco = Colors.green;
+        if (data.riskLabel.toLowerCase().contains("alto")) corRisco = Colors.red;
 
         return Scaffold(
           appBar: FixedHeader(
-            nome: data.nome,
-            segmento: data.segmento,
+            nome: data.name,
+            segmento: data.segment,
             logoPath: data.logoUrl,
-            resumo: data.resumo,
+            resumo: data.shortDescription,
           ),
           body: SingleChildScrollView(
             child: Padding(
@@ -139,7 +79,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                   Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
-                      color: data.retornoEsperado >= 0
+                      color: data.expectedReturn >= 0
                           ? const Color(0xFF25A830)
                           : Colors.redAccent,
                       borderRadius: BorderRadius.circular(15),
@@ -155,13 +95,13 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                         Row(
                           children: [
                             Icon(
-                                data.retornoEsperado >= 0
+                                data.expectedReturn >= 0
                                     ? Icons.trending_up
                                     : Icons.trending_down,
                                 color: Colors.white,
                                 size: 30),
                             const SizedBox(width: 8),
-                            Text('${data.retornoEsperado}x',
+                            Text('${data.expectedReturn}x',
                                 style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -192,7 +132,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                                       color: Color.fromARGB(179, 77, 75, 75),
                                       fontSize: 14)),
                               Text(
-                                data.riscoLabel.replaceAll("Risco ", ""),
+                                data.riskLabel.replaceAll("Risco ", ""),
                                 style: TextStyle(
                                     color: corRisco,
                                     fontWeight: FontWeight.bold,
@@ -217,7 +157,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                                       color: Color.fromARGB(179, 77, 75, 75),
                                       fontSize: 14)),
                               Text(
-                                data.horizonte.split(" ").first,
+                                data.horizon.split(" ").first,
                                 style: const TextStyle(
                                     color: Colors.black,
                                     fontWeight: FontWeight.bold,
@@ -269,7 +209,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                   ),
                   const SizedBox(height: 15),
 
-                  CardSobreStartup(descricao: data.descricao),
+                  CardSobreStartup(descricao: data.longDescription),
                   const SizedBox(height: 15),
 
                   // Tags
@@ -299,13 +239,13 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                             style: TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 20)),
                         const SizedBox(height: 15),
-                        ...data.socios.map((socio) => Padding(
+                        ...data.founders.map((founder) => Padding(
                               padding: const EdgeInsets.only(bottom: 15),
                               child: _buildSocioRow(
-                                gerarIniciais(socio['name']),
-                                socio['name'],
-                                socio['role'],
-                                "${socio['equityPercent']}%",
+                                gerarIniciais(founder.name),
+                                founder.name,
+                                founder.role,
+                                "${founder.equityPercent}%",
                               ),
                             )),
                       ],

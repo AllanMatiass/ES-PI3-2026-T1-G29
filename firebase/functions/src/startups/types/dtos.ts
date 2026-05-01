@@ -108,16 +108,6 @@ export type QuestionViewDTO = {
   createdAt: string;
 };
 
-/**
- * Versão pública (sem dados sensíveis)
- */
-export type PublicQuestionViewDTO = {
-  id: string;
-  text: string;
-  answers: AnswerViewDTO[];
-  createdAt: string;
-};
-
 export type GetStartupQuestionsResponse = {
   startupId: string;
   startupName: string;
@@ -135,7 +125,7 @@ export type GetStartupDetailsResponse = {
   id: string;
   details: StartupDetails;
   priceHistory: PriceHistoryResponse;
-  publicQuestions: PublicQuestionViewDTO[];
+  questions: QuestionViewDTO[];
   access: {
     isInvestor: boolean;
     canTradeTokens: boolean;
