@@ -1,6 +1,6 @@
 // Autor: Allan Giovanni Matias Paes
 import { Timestamp } from "firebase-admin/firestore";
-import { StartupQuestionCreateInput, Variation } from "./dtos";
+import { StartupQuestionCreateDTO, Variation } from "./dtos";
 
 /**
  * Representa os estágios de maturidade aceitos para uma startup.
@@ -93,7 +93,7 @@ export type StartupDocument = {
   updatedAt?: Timestamp;
 };
 
-export type StartupQuestionDocument = StartupQuestionCreateInput & {
+export type StartupQuestionDocument = StartupQuestionCreateDTO & {
   answers: StartupQuestionAnswer[];
 };
 

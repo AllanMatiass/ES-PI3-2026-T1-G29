@@ -9,38 +9,52 @@ import {
 } from "../repositories/startupRepository";
 
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
+import {
+  GetStartupIdRequest,
+  GetStartupQuestionsResponse,
+  QuestionViewDTO,
+} from "../types/dtos";
 
 export const getStartupQuestions = onCall(
-  withCallHandler(async (request) => {
-    const user = requireAuthenticatedUser(request);
-    const startupId = normalizeString(request.data?.startupId);
+  withCallHandler<GetStartupIdRequest, GetStartupQuestionsResponse>(
+    async (request) => {
+      const user = requireAuthenticatedUser(request);
+      const { id } = request.data;
 
-    if (!startupId) {
-      throw new HttpsError("invalid-argument", "Informe o startupId.");
-    }
+      const startupId = normalizeString(id);
 
-    const startup = await getStartupById(startupId);
-    if (!startup) {
-      throw new HttpsError("not-found", "Startup não encontrada.");
-    }
+      if (!startupId) {
+        throw new HttpsError("invalid-argument", "Informe o startupId.");
+      }
 
-    const isInvestor = await userIsInvestor(startupId, user.uid);
-    const questions = await listStartupQuestions(startupId, isInvestor);
+      const startup = await getStartupById(startupId);
 
-    logger.info("Perguntas listadas para startup.", {
-      startupId,
-      userId: user.uid,
-      isInvestor,
-      questionsCount: questions.length,
-    });
+      if (!startup) {
+        throw new HttpsError("not-found", "Startup não encontrada.");
+      }
 
-    return {
-      data: {
+      const isInvestor = await userIsInvestor(startupId, user.uid);
+
+      const rawQuestions = await listStartupQuestions(startupId, isInvestor);
+
+      const questions: QuestionViewDTO[] = rawQuestions.map((q) => ({
+        ...q,
+        startupId,
+      }));
+
+      logger.info("Perguntas listadas para startup.", {
+        startupId,
+        userId: user.uid,
+        isInvestor,
+        questionsCount: questions.length,
+      });
+
+      return {
         startupId,
         startupName: startup.name,
         isInvestor,
         questions,
-      },
-    };
-  }),
+      };
+    },
+  ),
 );
