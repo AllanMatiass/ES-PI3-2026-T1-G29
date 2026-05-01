@@ -1,11 +1,16 @@
 // Autor: Allan Giovanni Matias Paes
 import { FieldValue } from "firebase-admin/firestore";
-import { StartupDocument, StartupListItem } from "../types";
+import {
+  StartupDocument,
+  StartupListItem,
+  StartupQuestionAnswer,
+} from "../types";
 import { db } from "../../shared/firebase";
 import { startupsData } from "../../utils/startups";
 import {
+  QuestionViewDTO,
   StartupDocumentDTO,
-  StartupQuestionCreateInput,
+  StartupQuestionCreateDTO,
   Variation,
 } from "../types/dtos";
 
@@ -87,13 +92,21 @@ export async function listPublicQuestions(startupId: string) {
     .get();
 
   return questionsSnapshot.docs
-    .map((doc) => ({
-      id: doc.id,
-      text: doc.get("text"),
-      answer: doc.get("answer") ?? null,
-      answeredAt: doc.get("answeredAt")?.toDate().toISOString() ?? null,
-      createdAt: doc.get("createdAt")?.toDate().toISOString() ?? null,
-    }))
+    .map((doc) => {
+      const answers = doc.get("answers") ?? [];
+
+      return {
+        id: doc.id,
+        text: doc.get("text"),
+
+        answers: answers.map((a: StartupQuestionAnswer) => ({
+          answer: a.answer,
+          answeredAt: a.answeredAt?.toDate().toISOString() ?? null,
+        })),
+
+        createdAt: doc.get("createdAt")?.toDate().toISOString() ?? null,
+      };
+    })
     .sort((left, right) =>
       String(right.createdAt ?? "").localeCompare(String(left.createdAt ?? "")),
     );
@@ -102,18 +115,7 @@ export async function listPublicQuestions(startupId: string) {
 export async function listStartupQuestions(
   startupId: string,
   isInvestor: boolean,
-): Promise<
-  Array<{
-    id: string;
-    authorId: string;
-    authorEmail?: string;
-    text: string;
-    visibility: string;
-    answer?: string;
-    answeredAt?: string;
-    createdAt: string;
-  }>
-> {
+): Promise<QuestionViewDTO[]> {
   const questionsSnapshot = await startupsCollection
     .doc(startupId)
     .collection("questions")
@@ -121,23 +123,28 @@ export async function listStartupQuestions(
     .get();
 
   const questions = questionsSnapshot.docs
-    .map((doc) => ({
-      id: doc.id,
-      authorId: doc.get("authorId"),
-      authorEmail: doc.get("authorEmail"),
-      text: doc.get("text"),
-      visibility: doc.get("visibility"),
-      answer: doc.get("answer") ?? null,
-      answeredAt: doc.get("answeredAt")?.toDate().toISOString() ?? null,
-      createdAt: doc.get("createdAt")?.toDate().toISOString() ?? null,
-    }))
+    .map((doc) => {
+      const answers = doc.get("answers") ?? [];
+
+      return {
+        id: doc.id,
+        startupId,
+        authorId: doc.get("authorId"),
+        authorEmail: doc.get("authorEmail"),
+        text: doc.get("text"),
+        visibility: doc.get("visibility"),
+
+        answers: answers.map((a: StartupQuestionAnswer) => ({
+          answer: a.answer,
+          answeredAt: a.answeredAt?.toDate().toISOString() ?? null,
+        })),
+
+        createdAt: doc.get("createdAt")?.toDate().toISOString() ?? null,
+      };
+    })
     .filter((question) => {
-      if (question.visibility === "publica") {
-        return true;
-      }
-      if (question.visibility === "privada" && isInvestor) {
-        return true;
-      }
+      if (question.visibility === "publica") return true;
+      if (question.visibility === "privada" && isInvestor) return true;
       return false;
     })
     .sort((left, right) =>
@@ -148,12 +155,12 @@ export async function listStartupQuestions(
 }
 
 export async function createQuestion(
-  question: StartupQuestionCreateInput,
+  question: StartupQuestionCreateDTO,
 ): Promise<string> {
   const questionRef = await startupsCollection
     .doc(question.startupId)
     .collection("questions")
-    .add(question);
+    .add({ ...question, answers: [] });
 
   return questionRef.id;
 }
