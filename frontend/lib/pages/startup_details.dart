@@ -1,12 +1,10 @@
 //Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../models/startup.dart';
-
 import '../services/startup_service.dart';
-
+import '../widgets/price_chart.dart';
+import './faq_page.dart';
 
 class StartupDetailsPage extends StatefulWidget {
   final String startupId;
@@ -27,6 +25,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
       startupDetails = fetchStartupDetails(widget.startupId);
     });
   }
+
   Future<StartupData> fetchStartupDetails(String id) async {
     return await StartupService.getStartupDetails(id);
   }
@@ -45,7 +44,8 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
       future: startupDetails,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         } else if (snapshot.hasError) {
           return Scaffold(body: Center(child: Text('Erro: ${snapshot.error}')));
         }
@@ -63,11 +63,12 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
         if (data.riskLabel.toLowerCase().contains("alto")) corRisco = Colors.red;
 
         return Scaffold(
+          backgroundColor: const Color(0xFFF5F5F5),
           appBar: FixedHeader(
-            nome: data.name,
-            segmento: data.segment,
+            name: data.name,
+            segment: data.segment,
             logoPath: data.logoUrl,
-            resumo: data.shortDescription,
+            shortDescription: data.shortDescription,
           ),
           body: SingleChildScrollView(
             child: Padding(
@@ -109,7 +110,8 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                           ],
                         ),
                         const Text('ao ano',
-                            style: TextStyle(color: Colors.white70, fontSize: 11)),
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -172,6 +174,46 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
 
                   const SizedBox(height: 15),
 
+                  // Gráfico de Preço
+                  PriceHistoryChart(
+                    startupId: data.id,
+                    initialHistory: data.history,
+                    currency: data.meta.currency,
+                  ),
+                  const SizedBox(height: 15),
+
+                  // Métricas de Mercado
+                  Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Métricas de Mercado',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18)),
+                        const SizedBox(height: 15),
+                        _buildMarketMetric('Valuation Atual',
+                            '${data.meta.currency} ${(data.valuation / 100).toStringAsFixed(2)}'),
+                        const Divider(height: 30),
+                        Row(
+                          children: [
+                            Expanded(
+                                child: _buildMarketMetric('Preço Médio',
+                                    '${data.meta.currency} ${data.summary.averagePrice.toStringAsFixed(2)}')),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: _buildMarketMetric('Variação',
+                                    '${(data.history.isNotEmpty ? data.history.last.variationPercent ?? 0 : 0).toStringAsFixed(2)}%')),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+
                   Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
@@ -196,11 +238,13 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                           children: [
                             Text(
                               '${data.totalTokens} emitidos',
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
                             ),
                             Text(
                               '${percentualVendido.toStringAsFixed(1)}% vendidos',
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -251,7 +295,35 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
+
+                  // Botão FAQ
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FAQPage(
+                            questions: data.questions,
+                            startupName: data.name,
+                            logoUrl: data.logoUrl,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.question_answer_outlined),
+                    label: const Text('FAQ da Startup',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF00A84E),
+                      side: const BorderSide(color: Color(0xFF00A84E), width: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
 
                   ElevatedButton(
                     onPressed: () {},
@@ -263,8 +335,8 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                           borderRadius: BorderRadius.circular(15)),
                     ),
                     child: const Text('Investir agora',
-                        style:
-                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -279,25 +351,41 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(6)),
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(6)),
       child: Text(label,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+    );
+  }
+
+  Widget _buildMarketMetric(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+        const SizedBox(height: 4),
+        Text(value,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: Colors.black)),
+      ],
     );
   }
 }
 
 class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String nome;
-  final String segmento;
+  final String name;
+  final String segment;
   final String logoPath;
-  final String resumo;
+  final String shortDescription;
 
   const FixedHeader(
       {super.key,
-      required this.nome,
-      required this.segmento,
+      required this.name,
+      required this.segment,
       required this.logoPath,
-      required this.resumo});
+      required this.shortDescription});
 
   @override
   Widget build(BuildContext context) {
@@ -339,19 +427,19 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(nome,
+                    Text(name,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 4),
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8F5E9),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        segmento,
+                        segment,
                         style: const TextStyle(
                           color: Color(0xFF00A84E),
                           fontWeight: FontWeight.bold,
@@ -365,18 +453,20 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(resumo,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: Colors.grey)),
+          Text(
+            shortDescription,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey),
+          ),
         ],
       ),
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(170);
+  Size get preferredSize => const Size.fromHeight(200);
 }
 
 class CardSobreStartup extends StatefulWidget {
