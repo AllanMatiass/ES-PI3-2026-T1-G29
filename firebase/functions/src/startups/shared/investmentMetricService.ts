@@ -4,7 +4,7 @@ import {
   getStartupById,
   getStartupValuationById,
   getValuationHistory,
-  listPublicQuestions,
+  listStartupQuestions,
   userIsInvestor,
 } from "../repositories/startupRepository";
 import { DEFAULT_RANGE, RETURN_CONFIG, RISK_CONFIG } from "../shared/constants";
@@ -116,16 +116,16 @@ export class InvestmentMetricService {
     options: PriceHistoryOptions,
   ) {
     const startup = await this._fetchStartupOrThrow(startupId);
+    const isInvestor = await userIsInvestor(startupId, userId);
 
     const risk = this.calculateRiskFromStartup(startup);
     const expectedReturn = this.calculateExpectedReturnFromRisk(risk);
     const riskLabel = this.getRiskProfile(risk);
     const horizon = this.getHorizon(startup.stage);
 
-    const [valuation, isInvestor, questions, priceHistory] = await Promise.all([
+    const [valuation, questions, priceHistory] = await Promise.all([
       getStartupValuationById(startupId),
-      userIsInvestor(startupId, userId),
-      listPublicQuestions(startupId),
+      listStartupQuestions(startupId, isInvestor),
       this.getStartupPriceHistory(
         startupId,
         options.historyRange ?? DEFAULT_RANGE,
