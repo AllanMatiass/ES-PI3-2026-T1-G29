@@ -55,7 +55,7 @@ export const getStartupDetails = onCall(
         id: startupId,
         details: data,
         priceHistory,
-        publicQuestions: questions,
+        questions: questions,
         access: {
           isInvestor,
           canTradeTokens: isInvestor,
