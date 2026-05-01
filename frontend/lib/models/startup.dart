@@ -209,7 +209,7 @@ class Question {
   final String startupId;
   final String authorId;
   final String authorEmail;
-  final bool visibility;
+  final String visibility;
   final String text;
   final List<Answer> answers;
   final DateTime createdAt;
@@ -305,7 +305,7 @@ class StartupData {
   final PriceMeta meta;
 
   // 🔹 interação
-  final List<Question> publicQuestions;
+  final List<Question> questions;
   final Access access;
 
   StartupData({
@@ -335,7 +335,7 @@ class StartupData {
     required this.history,
     required this.summary,
     required this.meta,
-    required this.publicQuestions,
+    required this.questions,
     required this.access,
   });
 
@@ -392,7 +392,7 @@ class StartupData {
       meta: PriceMeta.fromJson(priceHistory['meta']),
 
       // interação
-      publicQuestions: (data['questions'] as List? ?? [])
+      questions: (data['questions'] as List? ?? [])
           .map((e) => Question.fromJson(e))
           .toList(),
       access: Access.fromJson(data['access']),
