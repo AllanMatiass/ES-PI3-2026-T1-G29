@@ -1,5 +1,5 @@
 // Autor: Allan Giovanni Matias Paes
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import {
   StartupDocument,
   StartupListItem,
@@ -168,24 +168,39 @@ export async function createQuestion(
 export async function seedDemoStartups(): Promise<string[]> {
   const batch = db.batch();
 
+  const valuationPromises: Promise<void>[] = [];
+
   for (const startup of startupsData) {
     const { id, ...data } = startup;
     const startupRef = startupsCollection.doc(id);
+
+    const valuation = data.currentTokenPriceCents * data.totalTokensIssued;
 
     batch.set(
       startupRef,
       {
         ...data,
-        lastValuationCents:
-          data.currentTokenPriceCents * data.totalTokensIssued,
+        lastValuationCents: valuation,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       },
       { merge: true },
     );
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+
+      const simulatedValuation = valuation * (1 + (Math.random() - 0.5) * 0.2); // variação ±20%
+
+      valuationPromises.push(
+        saveValuationSnapshot(id, Math.round(simulatedValuation), date),
+      );
+    }
   }
 
   await batch.commit();
+  await Promise.all(valuationPromises);
 
   return startupsData.map((startup) => startup.id);
 }
@@ -224,11 +239,36 @@ export async function getPreviousStartupValuation(
 export async function saveValuationSnapshot(
   startupId: string,
   valuation: number,
+  createdAt?: Date,
 ) {
-  await startupsCollection.doc(startupId).collection("valuations").add({
-    value: valuation,
-    createdAt: FieldValue.serverTimestamp(),
-  });
+  await startupsCollection
+    .doc(startupId)
+    .collection("valuations")
+    .add({
+      value: valuation,
+      createdAt: createdAt ?? FieldValue.serverTimestamp(),
+    });
+}
+
+export async function getValuationHistory(
+  startupId: string,
+  from: Date,
+  to: Date,
+  limit?: number | null,
+) {
+  const snapshot = await startupsCollection
+    .doc(startupId)
+    .collection("valuations")
+    .where("createdAt", ">=", from)
+    .where("createdAt", "<=", to)
+    .orderBy("createdAt", "asc")
+    .limit(limit ?? 12)
+    .get();
+
+  return snapshot.docs.map((doc) => ({
+    value: doc.get("value") as number,
+    createdAt: doc.get("createdAt") as Timestamp,
+  }));
 }
 
 export async function updateStartupValuation(
@@ -246,6 +286,7 @@ export async function updateStartupValuation(
     startup.currentTokenPriceCents * startup.totalTokensIssued;
 
   const newValuation = newTokenPriceCents * startup.totalTokensIssued;
+  await saveValuationSnapshot(startupId, newValuation);
 
   await ref.update({
     currentTokenPriceCents: newTokenPriceCents,
