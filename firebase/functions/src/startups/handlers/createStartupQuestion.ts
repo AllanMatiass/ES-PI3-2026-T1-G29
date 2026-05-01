@@ -1,5 +1,5 @@
 // Autor: Allan Giovanni Matias Paes
-import { FieldValue } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { allowedVisibilities } from "../shared/constants";
@@ -13,10 +13,10 @@ import {
 import { QuestionVisibility } from "../types";
 
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-import { QuestionResponseDTO, StartupQuestionCreateInput } from "../types/dtos";
+import { QuestionResponseDTO, StartupQuestionCreateDTO } from "../types/dtos";
 
 export const createStartupQuestion = onCall(
-  withCallHandler<StartupQuestionCreateInput, QuestionResponseDTO>(
+  withCallHandler<StartupQuestionCreateDTO, QuestionResponseDTO>(
     async (request) => {
       const user = requireAuthenticatedUser(request);
 
@@ -44,7 +44,6 @@ export const createStartupQuestion = onCall(
 
       if (visibility === "privada") {
         const isInvestor = await userIsInvestor(startupId, user.uid);
-
         if (!isInvestor) {
           throw new HttpsError(
             "permission-denied",
@@ -53,12 +52,13 @@ export const createStartupQuestion = onCall(
         }
       }
 
-      const question: StartupQuestionCreateInput = {
+      const question: StartupQuestionCreateDTO = {
         startupId: startupId,
         authorId: user.uid,
+        authorEmail: user.email ?? "Desconhecido",
         text,
         visibility: visibility as QuestionVisibility,
-        createdAt: FieldValue.serverTimestamp(),
+        createdAt: Timestamp.now(),
       };
 
       const questionId = await createQuestion(question);
@@ -71,9 +71,11 @@ export const createStartupQuestion = onCall(
 
       return {
         id: questionId,
+        authorId: "abc",
         startupId,
         text,
         visibility,
+        answers: [],
         createdAt: question.createdAt,
       };
     },
