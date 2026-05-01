@@ -3,21 +3,22 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { normalizeString } from "../../shared/validation";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import {
-  GetStartupIdRequest,
   GetStartupDetailsResponse,
   StartupDetails,
+  GetStartupDetailsRequest,
 } from "../types/dtos";
 import { InvestmentMetricService } from "../shared/investmentMetricService";
-import { requireAuthenticatedUser } from "../../shared/auth";
+// import { requireAuthenticatedUser } from "../../shared/auth";
 
 const investmentMetricService = new InvestmentMetricService();
 
 export const getStartupDetails = onCall(
-  withCallHandler<GetStartupIdRequest, GetStartupDetailsResponse>(
+  withCallHandler<GetStartupDetailsRequest, GetStartupDetailsResponse>(
     async (request) => {
-      const user = requireAuthenticatedUser(request);
+      // const user = requireAuthenticatedUser(request);
 
       const startupId = normalizeString(request.data?.id);
+      const options = request.data?.options;
 
       if (!startupId) {
         throw new HttpsError("invalid-argument", "Informe o id da startup.");
@@ -32,7 +33,13 @@ export const getStartupDetails = onCall(
         valuation,
         isInvestor,
         questions,
-      } = await investmentMetricService.getStartupMetrics(startupId, user.uid);
+        priceHistory,
+      } = await investmentMetricService.getStartupMetrics(
+        startupId,
+        // user.uid,
+        "id",
+        options ?? {},
+      );
 
       const data: StartupDetails = {
         startup,
@@ -48,6 +55,7 @@ export const getStartupDetails = onCall(
       return {
         id: startupId,
         details: data,
+        priceHistory,
         publicQuestions: questions,
         access: {
           isInvestor,

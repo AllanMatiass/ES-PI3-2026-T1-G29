@@ -8,7 +8,7 @@ import {
 } from ".";
 
 /* =====================================================
-   📦 DOCUMENTOS / BANCO
+  DOCUMENTOS / BANCO
 ===================================================== */
 
 export type CreateStartupDocumentDTO = StartupDocument & {
@@ -35,12 +35,12 @@ export type QuestionResponseDTO = {
   authorId: string;
   text: string;
   visibility: QuestionVisibility;
-  answers: StartupQuestionAnswer[]; // 🔥 múltiplas respostas
+  answers: StartupQuestionAnswer[];
   createdAt: Timestamp | FieldValue;
 };
 
 /* =====================================================
-   🧠 TIPOS DE NEGÓCIO
+  TIPOS DE NEGÓCIO
 ===================================================== */
 
 export type ListStartupsRequest = {
@@ -50,6 +50,16 @@ export type ListStartupsRequest = {
 
 export type GetStartupIdRequest = {
   id: string;
+};
+
+export type PriceHistoryOptions = {
+  historyRange?: { from: string; to: string };
+  historyInterval?: PriceHistoryInterval;
+  historyLimit?: number;
+};
+
+export type GetStartupDetailsRequest = GetStartupIdRequest & {
+  options?: PriceHistoryOptions | null;
 };
 
 export type ExpectedReturn = {
@@ -78,7 +88,8 @@ export type StartupDetails = {
 };
 
 /* =====================================================
-   🌐 DTOs DE RESPOSTA (API)
+  
+DTOs DE RESPOSTA (API)
 ===================================================== */
 
 export type AnswerViewDTO = {
@@ -93,7 +104,7 @@ export type QuestionViewDTO = {
   authorEmail: string;
   text: string;
   visibility: QuestionVisibility;
-  answers: AnswerViewDTO[]; // 🔥 padrão correto
+  answers: AnswerViewDTO[];
   createdAt: string;
 };
 
@@ -114,13 +125,62 @@ export type GetStartupQuestionsResponse = {
   questions: QuestionViewDTO[];
 };
 
+export type PriceHistoryResponse = {
+  history: PriceHistoryItem[];
+  summary: PriceHistorySummary;
+  meta: PriceHistoryMeta;
+};
+
 export type GetStartupDetailsResponse = {
   id: string;
   details: StartupDetails;
-  publicQuestions: PublicQuestionViewDTO[]; // 🔥 corrigido
+  priceHistory: PriceHistoryResponse;
+  publicQuestions: PublicQuestionViewDTO[];
   access: {
     isInvestor: boolean;
     canTradeTokens: boolean;
     canSendPrivateQuestions: boolean;
   };
+};
+
+/* =====================================================
+  HISTÓRICO DE PREÇOS
+===================================================== */
+
+export type PriceHistoryInterval = "monthly" | "semestrely" | "yearly" | "ytd";
+
+export type GetStartupPriceHistoryRequest = {
+  id: string;
+  range: {
+    from: string; // ISO date
+    to: string; // ISO date
+  };
+  interval: PriceHistoryInterval;
+  limit?: number;
+};
+
+export type PriceHistoryItem = {
+  timestamp: string; // ISO date
+  price: number;
+  variation: number | null;
+  variationPercent: number | null;
+};
+
+export type PriceHistorySummary = {
+  currentPrice: number;
+  highestPrice: number;
+  lowestPrice: number;
+  averagePrice: number;
+};
+
+export type PriceHistoryMeta = {
+  count: number;
+  currency: string;
+  interval: PriceHistoryInterval;
+};
+
+export type GetStartupPriceHistoryResponse = {
+  history: PriceHistoryItem[];
+  summary: PriceHistorySummary;
+  meta: PriceHistoryMeta;
 };
