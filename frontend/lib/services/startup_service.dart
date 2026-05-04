@@ -146,5 +146,58 @@ class StartupService {
       if (client == null) httpClient.close();
     }
   }
+
+  static const String _createQuestionUrl =
+      'https://createstartupquestion-obpz3whteq-uc.a.run.app';
+
+  static Future<Question> createQuestion({
+    required String startupId,
+    required String text,
+    required String visibility,
+    http.Client? client,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final token = await user.getIdToken();
+    final httpClient = client ?? http.Client();
+
+    try {
+      final response = await httpClient.post(
+        Uri.parse(_createQuestionUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "data": {
+            "startupId": startupId,
+            "text": text,
+            "visibility": visibility,
+          }
+        }),
+      );
+
+      final body = jsonDecode(response.body);
+      final result = body['result'];
+
+      if (response.statusCode == 200 &&
+          result != null &&
+          result['success'] == true) {
+        return Question.fromJson(result['data']);
+      } else {
+        final error = result?['error'];
+        final message =
+            error?['message'] ?? 'Erro desconhecido ao criar pergunta';
+        throw Exception(message);
+      }
+    } catch (e) {
+      throw Exception('Erro ao criar pergunta: $e');
+    } finally {
+      if (client == null) httpClient.close();
+    }
   }
+}
 

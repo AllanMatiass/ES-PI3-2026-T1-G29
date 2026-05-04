@@ -1,6 +1,4 @@
 // Autor: Allan Giovanni Matias Paes
-import 'package:flutter/material.dart';
-
 import  './firebase.dart';
 
 enum StartupStage {
@@ -189,7 +187,7 @@ class ExternalMember {
 
 class Answer {
   final String answer;
-  final DateTime answeredAt;
+  final FirestoreTimestamp answeredAt;
 
   Answer({
     required this.answer,
@@ -199,7 +197,7 @@ class Answer {
   factory Answer.fromJson(Map<String, dynamic> json) {
     return Answer(
       answer: json['answer'] ?? '',
-      answeredAt: DateTime.parse(json['answeredAt']),
+      answeredAt: FirestoreTimestamp.fromJson(json['answeredAt']),
     );
   }
 }
@@ -208,11 +206,11 @@ class Question {
   final String id;
   final String startupId;
   final String authorId;
-  final String authorEmail;
+  final String? authorEmail;
   final String visibility;
   final String text;
   final List<Answer> answers;
-  final DateTime createdAt;
+  final FirestoreTimestamp createdAt;
 
   Question({
     required this.id,
@@ -220,7 +218,7 @@ class Question {
     required this.answers,
     required this.createdAt,
     required this.startupId,
-    required this.authorEmail,
+    this.authorEmail,
     required this.authorId,
     required this.visibility
   });
@@ -236,7 +234,7 @@ class Question {
       answers: (json['answers'] as List? ?? [])
           .map((e) => Answer.fromJson(e))
           .toList(),
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: FirestoreTimestamp.fromJson(json['createdAt']),
     );
   }
 }
