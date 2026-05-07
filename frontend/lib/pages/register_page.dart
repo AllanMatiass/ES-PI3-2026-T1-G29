@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/validators.dart';
 import 'package:frontend/pages/home_page.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});

@@ -40,3 +40,15 @@ export async function getUserByPhone(
 
   return snapshot.docs[0].data() as UserProfile;
 }
+
+export async function getUserById(
+  id: string,
+): Promise<UserProfile | undefined> {
+  const snapshot = await usersCollection.doc(id).get();
+
+  if (!snapshot.exists) return undefined;
+
+  return {
+    ...snapshot.data(),
+  } as UserProfile;
+}
