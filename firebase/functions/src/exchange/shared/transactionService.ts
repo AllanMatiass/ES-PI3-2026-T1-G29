@@ -51,6 +51,8 @@ export class TransactionService {
       seller: finalSeller,
       qtdTokens,
       tokenPriceCents,
+      transactionType:
+        finalSeller.type == "USER" ? "USER_TRADE" : "BUY_FROM_STARTUP",
       totalCents: qtdTokens * tokenPriceCents,
     };
 

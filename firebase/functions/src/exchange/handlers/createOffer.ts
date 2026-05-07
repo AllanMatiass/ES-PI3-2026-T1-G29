@@ -1,19 +1,22 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-import { CreateOfferRequestDTO, OfferIdDTO } from "../types/dtos";
+import { CreateOfferRequestDTO, OfferResponseDTO } from "../types/dtos";
 import { validateTransactionData } from "../utils";
-import { db } from "../../shared/firebase";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 import { Offer } from "../types";
+// import { requireAuthenticatedUser } from "../../shared/auth";
+import { addOffer } from "../repositories/offerRepository";
 
 /**
- * Cria uma oferta de venda de tokens de uma startup para um usuário específico.
+ * Cria uma oferta de venda de tokens de uma startup.
+ * A oferta pode ser direcionada a um comprador específico ou aberta ao mercado.
  *
- * @param request - Dados da oferta (startupId, buyerId, sellerId, qtdTokens, tokenPriceCents, expiresAt)
- * @returns O ID da oferta criada.
+ * @param request - Dados da oferta (startupId, sellerId, qtdTokens, tokenPriceCents, buyerId?, expiresAt?)
+ * @returns Os dados da oferta criada, incluindo o ID.
  */
 export const createOffer = onCall(
-  withCallHandler<CreateOfferRequestDTO, OfferIdDTO>(async (request) => {
+  withCallHandler<CreateOfferRequestDTO, OfferResponseDTO>(async (request) => {
+    // requireAuthenticatedUser(request);
     const {
       startupId,
       buyerId,
@@ -23,20 +26,13 @@ export const createOffer = onCall(
       expiresAt,
     } = request.data;
 
-    // 1. Verificar autenticação básica
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Usuário não autenticado.");
-    }
-
-    // 2. Validar se os dados obrigatórios foram fornecidos
-    if (!startupId || !buyerId || !sellerId || !qtdTokens || !tokenPriceCents) {
+    if (!startupId || !sellerId || !qtdTokens || !tokenPriceCents) {
       throw new HttpsError(
         "invalid-argument",
-        "Dados insuficientes para criar a oferta (startupId, buyerId, sellerId, qtdTokens e tokenPriceCents são obrigatórios).",
+        "Dados insuficientes (startupId, sellerId, qtdTokens, tokenPriceCents).",
       );
     }
 
-    // 3. Validação robusta dos dados da transação (existência de usuários e startup)
     const { buyerUser, sellerUser, startup } = await validateTransactionData({
       buyerId,
       sellerId,
@@ -45,13 +41,10 @@ export const createOffer = onCall(
       tokenPriceCents,
     });
 
-    // 4. Construção do objeto de Oferta seguindo os tipos definidos em exchange/types
-    const offerData: Omit<Offer, "createdAt"> = {
+    const now = Timestamp.now();
+
+    const offerData: Offer = {
       startupId,
-      buyer: {
-        id: buyerId,
-        name: buyerUser.name,
-      },
       seller: {
         id: sellerId,
         name: sellerUser?.name || startup.name,
@@ -61,28 +54,32 @@ export const createOffer = onCall(
       tokenPriceCents,
       totalCents: qtdTokens * tokenPriceCents,
       status: "OPEN",
+      transactionType: "USER_TRADE",
+      createdAt: now,
     };
 
-    // 5. Tratar data de expiração se fornecida
+    if (buyerUser && buyerId) {
+      offerData.buyer = {
+        id: buyerId,
+        name: buyerUser.name,
+      };
+    }
+
     if (expiresAt) {
       const expirationDate = new Date(expiresAt);
+
       if (isNaN(expirationDate.getTime())) {
         throw new HttpsError("invalid-argument", "Data de expiração inválida.");
       }
+
       offerData.expiresAt = Timestamp.fromDate(expirationDate);
     }
 
-    // 6. Persistência no Firestore
-    // As ofertas são armazenadas em uma subcoleção da startup, seguindo o padrão das transações.
-    const offerRef = await db
-      .collection("startups")
-      .doc(startupId)
-      .collection("offers")
-      .add({
-        ...offerData,
-        createdAt: FieldValue.serverTimestamp(),
-      });
+    const offerRef = await addOffer(offerData);
 
-    return { id: offerRef.id };
+    return {
+      id: offerRef.id,
+      ...offerData,
+    };
   }),
 );
