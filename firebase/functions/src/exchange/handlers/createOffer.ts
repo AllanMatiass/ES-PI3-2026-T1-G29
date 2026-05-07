@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
+import { requireAuthenticatedUser } from "../../shared/auth";
 import { CreateOfferRequestDTO, OfferResponseDTO } from "../types/dtos";
 import { validateTransactionData } from "../utils";
 import { Timestamp } from "firebase-admin/firestore";
@@ -9,6 +10,7 @@ import { WalletTokenPosition } from "../../auth/types";
 
 export const createOffer = onCall(
   withCallHandler<CreateOfferRequestDTO, OfferResponseDTO>(async (request) => {
+    requireAuthenticatedUser(request);
     const {
       startupId,
       buyerId,

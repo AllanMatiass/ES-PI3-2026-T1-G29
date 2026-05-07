@@ -4,12 +4,14 @@ import { TransactionService } from "../shared/transactionService";
 import { HttpsError } from "firebase-functions/v2/https";
 import { GetStartupTransactionsRequestDTO } from "../types/dtos";
 import { Transaction } from "../types";
+import { requireAuthenticatedUser } from "../../shared/auth";
 
 const transactionService = new TransactionService();
 
 export const getStartupTransactionsHandler = onCall(
   withCallHandler<GetStartupTransactionsRequestDTO, Transaction[]>(
     async (request) => {
+      requireAuthenticatedUser(request);
       const { startupId, limit } = request.data;
 
       if (!startupId) {
