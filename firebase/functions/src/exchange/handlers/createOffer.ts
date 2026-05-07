@@ -4,19 +4,11 @@ import { CreateOfferRequestDTO, OfferResponseDTO } from "../types/dtos";
 import { validateTransactionData } from "../utils";
 import { Timestamp } from "firebase-admin/firestore";
 import { Offer } from "../types";
-// import { requireAuthenticatedUser } from "../../shared/auth";
-import { addOffer } from "../repositories/offerRepository";
+import { db } from "../../shared/firebase";
+import { WalletTokenPosition } from "../../auth/types";
 
-/**
- * Cria uma oferta de venda de tokens de uma startup.
- * A oferta pode ser direcionada a um comprador específico ou aberta ao mercado.
- *
- * @param request - Dados da oferta (startupId, sellerId, qtdTokens, tokenPriceCents, buyerId?, expiresAt?)
- * @returns Os dados da oferta criada, incluindo o ID.
- */
 export const createOffer = onCall(
   withCallHandler<CreateOfferRequestDTO, OfferResponseDTO>(async (request) => {
-    // requireAuthenticatedUser(request);
     const {
       startupId,
       buyerId,
@@ -41,45 +33,97 @@ export const createOffer = onCall(
       tokenPriceCents,
     });
 
+    const offerRef = db.collection("offers").doc();
+
     const now = Timestamp.now();
 
-    const offerData: Offer = {
-      startupId,
-      seller: {
-        id: sellerId,
-        name: sellerUser?.name || startup.name,
-        type: sellerUser ? "USER" : "STARTUP",
-      },
-      qtdTokens,
-      tokenPriceCents,
-      totalCents: qtdTokens * tokenPriceCents,
-      status: "OPEN",
-      transactionType: "USER_TRADE",
-      createdAt: now,
-    };
+    await db.runTransaction(async (tx) => {
+      const sellerRef = db.collection("users").doc(sellerId);
 
-    if (buyerUser && buyerId) {
-      offerData.buyer = {
-        id: buyerId,
-        name: buyerUser.name,
-      };
-    }
+      const sellerSnap = await tx.get(sellerRef);
 
-    if (expiresAt) {
-      const expirationDate = new Date(expiresAt);
-
-      if (isNaN(expirationDate.getTime())) {
-        throw new HttpsError("invalid-argument", "Data de expiração inválida.");
+      if (!sellerSnap.exists) {
+        throw new HttpsError("not-found", "Vendedor não encontrado.");
       }
 
-      offerData.expiresAt = Timestamp.fromDate(expirationDate);
-    }
+      const sellerData = sellerSnap.data();
+      const wallet = sellerData?.wallet;
 
-    const offerRef = await addOffer(offerData);
+      const position = wallet.positions?.find(
+        (p: WalletTokenPosition) => p.startupId === startupId,
+      );
+
+      if (!position) {
+        throw new HttpsError(
+          "failed-precondition",
+          "O vendedor não possui tokens desta startup.",
+        );
+      }
+
+      const availableTokens = position.qtdTokens - position.lockedTokens;
+
+      if (availableTokens < qtdTokens) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Quantidade de tokens insuficiente para criar a oferta.",
+        );
+      }
+
+      position.lockedTokens += qtdTokens;
+
+      tx.update(sellerRef, {
+        wallet,
+      });
+
+      // Criar oferta
+      const offerData: Offer = {
+        startupId,
+        startupName: startup.name,
+
+        seller: {
+          id: sellerId,
+          name: sellerUser?.name || startup.name,
+          type: sellerUser ? "USER" : "STARTUP",
+        },
+
+        qtdTokens,
+        tokenPriceCents,
+        totalCents: qtdTokens * tokenPriceCents,
+
+        status: "OPEN",
+        transactionType: "USER_TRADE",
+
+        createdAt: now,
+      };
+
+      if (buyerUser && buyerId) {
+        offerData.buyer = {
+          id: buyerId,
+          name: buyerUser.name,
+        };
+      }
+
+      if (expiresAt) {
+        const expirationDate = new Date(expiresAt);
+
+        if (isNaN(expirationDate.getTime())) {
+          throw new HttpsError(
+            "invalid-argument",
+            "Data de expiração inválida.",
+          );
+        }
+
+        offerData.expiresAt = Timestamp.fromDate(expirationDate);
+      }
+
+      tx.set(offerRef, offerData);
+    });
+
+    const offerSnapshot = await offerRef.get();
 
     return {
       id: offerRef.id,
-      ...offerData,
+      ...(offerSnapshot.data() as Offer),
     };
   }),
 );

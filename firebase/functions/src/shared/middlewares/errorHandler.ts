@@ -80,7 +80,7 @@ export function withCallHandler<T, R>(
           },
         };
       }
-
+      logger.error(`Erro: ${err}`);
       // fallback
       return {
         success: false,
