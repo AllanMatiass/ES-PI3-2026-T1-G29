@@ -3,7 +3,7 @@ import { getUserById } from "../auth/repositories/userRepository";
 import { getStartupById } from "../startups/repositories/startupRepository";
 
 type ValidateTransactionParams = {
-  buyerId: string;
+  buyerId?: string;
   sellerId?: string;
   startupId: string;
   qtdTokens: number;
@@ -17,16 +17,11 @@ export async function validateTransactionData({
   qtdTokens,
   tokenPriceCents,
 }: ValidateTransactionParams) {
-  // 🔹 validações síncronas
-  if (!buyerId) {
-    throw new HttpsError("invalid-argument", "Buyer inválido.");
-  }
-
   if (!startupId) {
     throw new HttpsError("invalid-argument", "Startup inválida.");
   }
 
-  if (sellerId && buyerId === sellerId) {
+  if (buyerId && sellerId && buyerId === sellerId) {
     throw new HttpsError(
       "invalid-argument",
       "Buyer e seller não podem ser iguais.",
@@ -41,14 +36,13 @@ export async function validateTransactionData({
     throw new HttpsError("invalid-argument", "Preço do token inválido.");
   }
 
-  // 🔹 validações assíncronas
   const [buyerUser, startup, sellerUser] = await Promise.all([
-    getUserById(buyerId),
+    buyerId ? getUserById(buyerId) : Promise.resolve(undefined),
     getStartupById(startupId),
     sellerId ? getUserById(sellerId) : Promise.resolve(undefined),
   ]);
 
-  if (!buyerUser) {
+  if (buyerId && !buyerUser) {
     throw new HttpsError("not-found", "Comprador não encontrado.");
   }
 
