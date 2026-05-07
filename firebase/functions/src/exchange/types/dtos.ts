@@ -35,4 +35,15 @@ export type OfferIdDTO = {
   id: string;
 };
 
+export type GetOffersRequestDTO = {
+  startupId?: string;
+  limit?: number;
+  lastOfferId?: string;
+};
+
+export type PaginatedOffersResponseDTO = {
+  offers: OfferWithId[];
+  lastOfferId: string | null;
+};
+
 export type OfferResponseDTO = OfferWithId;

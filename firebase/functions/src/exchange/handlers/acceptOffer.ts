@@ -9,11 +9,13 @@ import { upsertStartupInvestor } from "../../startups/shared/upsertInvestor";
 import { db } from "../../shared/firebase";
 import { WalletTokenPosition } from "../../auth/types";
 import { TransactionService } from "../shared/transactionService";
+import { requireAuthenticatedUser } from "../../shared/auth";
 
 const transactionService = new TransactionService();
 
 export const acceptOffer = onCall(
   withCallHandler<AcceptOfferRequestDTO, TransactionIdDTO>(async (request) => {
+    requireAuthenticatedUser(request);
     const offerId = normalizeString(request.data?.offerId);
     const buyerId = normalizeString(request.data?.buyerId);
 
