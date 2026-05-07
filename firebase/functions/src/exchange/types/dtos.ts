@@ -16,3 +16,16 @@ export type GetStartupTransactionsRequestDTO = {
   startupId: string;
   limit?: number;
 };
+
+export type CreateOfferRequestDTO = {
+  startupId: string;
+  buyerId: string;
+  sellerId: string;
+  qtdTokens: number;
+  tokenPriceCents: number;
+  expiresAt?: string | null;
+};
+
+export type OfferIdDTO = {
+  id: string;
+};

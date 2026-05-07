@@ -12,7 +12,6 @@ export type TransactionSeller = {
 };
 
 export type Transaction = {
-  id: string;
   startupId: string;
   buyer: TransactionAgent;
   seller: TransactionSeller;
@@ -20,4 +19,11 @@ export type Transaction = {
   tokenPriceCents: number;
   totalCents: number;
   createdAt: Timestamp;
+};
+
+export type OfferStatus = "OPEN" | "ACCEPTED" | "CANCELLED";
+
+export type Offer = Transaction & {
+  expiresAt?: Timestamp;
+  status: OfferStatus;
 };
