@@ -90,6 +90,7 @@ export const signup = onCall(
       uid: userRecord.uid,
       name,
       email,
+      phone,
       cpf,
       walletBalance: 0,
       createdAt: FieldValue.serverTimestamp(),

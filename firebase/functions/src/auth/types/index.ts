@@ -2,14 +2,15 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
 export type UserProfile = {
-  uid: string;
   name: string;
   email: string;
+  phone: string;
   cpf: string;
   walletBalance: number;
 };
 
 export type UserCreateDTO = UserProfile & {
+  uid: string;
   createdAt: FieldValue;
 };
 
