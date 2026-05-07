@@ -122,3 +122,21 @@ export type StartupListItem = {
   tags: string[];
   variation: Variation;
 };
+
+export type StartupInvestor = {
+  userId: string;
+  userName: string;
+
+  startupId: string;
+  startupName: string;
+
+  totalTokens: number;
+  totalInvestedCents: number;
+
+  averagePriceCents: number;
+
+  firstInvestmentAt: Timestamp;
+  lastInvestmentAt: Timestamp;
+
+  updatedAt: Timestamp;
+};
