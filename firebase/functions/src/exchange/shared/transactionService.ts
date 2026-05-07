@@ -1,4 +1,4 @@
-import * as transactionRepository from "../../repositories/transactionRepository";
+import * as transactionRepository from "../repositories/transactionRepository";
 import { getStartupById } from "../../startups/repositories/startupRepository";
 import { HttpsError } from "firebase-functions/v2/https";
 import { Transaction } from "../types";
@@ -22,7 +22,7 @@ export class TransactionService {
     if (seller?.id === buyer.id) {
       throw new HttpsError(
         "invalid-argument",
-        "Buyer e seller não podem ser iguais.",
+        "Comprador e Vendedor não podem ser iguais.",
       );
     }
 
@@ -45,7 +45,7 @@ export class TransactionService {
       };
     }
 
-    const transactionData: Omit<Transaction, "id" | "createdAt"> = {
+    const transactionData: Omit<Transaction, "createdAt"> = {
       startupId,
       buyer,
       seller: finalSeller,

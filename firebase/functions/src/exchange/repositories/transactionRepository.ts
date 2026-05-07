@@ -1,12 +1,12 @@
-import { db } from "../firebase";
-import { Transaction } from "../exchange/types";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { db } from "../../firebase";
+import { Transaction } from "../types";
 
 const transactionCollection = (startupId: string) =>
   db.collection("startups").doc(startupId).collection("transactions");
 
 export async function createTransaction(
-  transaction: Omit<Transaction, "id" | "createdAt">,
+  transaction: Omit<Transaction, "createdAt">,
 ): Promise<string> {
   const docRef = await transactionCollection(transaction.startupId).add({
     ...transaction,
