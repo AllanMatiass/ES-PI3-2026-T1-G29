@@ -1,4 +1,4 @@
-import { TransactionAgent } from ".";
+import { OfferWithId, TransactionAgent } from ".";
 
 export type RegisterTransactionRequestDTO = {
   startupId: string;
@@ -19,13 +19,20 @@ export type GetStartupTransactionsRequestDTO = {
 
 export type CreateOfferRequestDTO = {
   startupId: string;
-  buyerId: string;
+  buyerId?: string;
   sellerId: string;
   qtdTokens: number;
   tokenPriceCents: number;
   expiresAt?: string | null;
 };
 
+export type AcceptOfferRequestDTO = {
+  offerId: string;
+  buyerId: string;
+};
+
 export type OfferIdDTO = {
   id: string;
 };
+
+export type OfferResponseDTO = OfferWithId;

@@ -11,6 +11,8 @@ export type TransactionSeller = {
   type: "USER" | "STARTUP";
 };
 
+export type TransactionType = "BUY_FROM_STARTUP" | "USER_TRADE";
+
 export type Transaction = {
   startupId: string;
   buyer: TransactionAgent;
@@ -18,12 +20,20 @@ export type Transaction = {
   qtdTokens: number;
   tokenPriceCents: number;
   totalCents: number;
+  transactionType: TransactionType;
   createdAt: Timestamp;
 };
 
-export type OfferStatus = "OPEN" | "ACCEPTED" | "CANCELLED";
+export type OfferStatus = "OPEN" | "ACCEPTED" | "CANCELLED" | "EXPIRED";
 
-export type Offer = Transaction & {
+export type Offer = Omit<Transaction, "buyer"> & {
+  buyer?: TransactionAgent;
   expiresAt?: Timestamp;
   status: OfferStatus;
+  acceptedAt?: Timestamp;
+  cancelledAt?: Timestamp;
+};
+
+export type OfferWithId = Offer & {
+  id: string;
 };
