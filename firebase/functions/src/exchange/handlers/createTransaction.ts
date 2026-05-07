@@ -4,12 +4,14 @@ import { TransactionService } from "../shared/transactionService";
 import { RegisterTransactionRequestDTO, TransactionIdDTO } from "../types/dtos";
 import { normalizeString } from "../../shared/validation";
 import { TransactionAgent } from "../types";
+import { requireAuthenticatedUser } from "../../shared/auth";
 
 const transactionService = new TransactionService();
 
 export const createTransaction = onCall(
   withCallHandler<RegisterTransactionRequestDTO, TransactionIdDTO>(
     async (request) => {
+      requireAuthenticatedUser(request);
       const { startupId, buyer, seller, qtdTokens, tokenPriceCents } =
         request.data;
 
