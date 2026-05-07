@@ -50,10 +50,14 @@ export function validatePriceHistoryOptions(options: PriceHistoryOptions) {
 
   // limit
   if (options.historyLimit != null) {
-    if (typeof options.historyLimit !== "number" || options.historyLimit <= 0) {
+    if (
+      typeof options.historyLimit !== "number" ||
+      options.historyLimit <= 0 ||
+      options.historyLimit > 50
+    ) {
       throw new HttpsError(
         "invalid-argument",
-        "historyLimit deve ser um número positivo.",
+        "historyLimit deve ser um número positivo até 50.",
       );
     }
   }
