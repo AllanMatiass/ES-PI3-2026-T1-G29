@@ -1,7 +1,7 @@
 import { db } from "../../firebase";
 import { Offer, OfferWithId } from "../types";
 
-const offerCollection = db.collection("offer");
+const offerCollection = db.collection("offers");
 
 export async function addOffer(data: Offer) {
   return await offerCollection.add(data);

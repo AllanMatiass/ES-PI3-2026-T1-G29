@@ -15,7 +15,7 @@ import {
 } from "../repositories/userRepository";
 import { SignupData } from "../types";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-import { FieldValue } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 /**
  * Realiza o cadastro de um novo usuario no MesclaInvest.
@@ -92,8 +92,13 @@ export const signup = onCall(
       email,
       phone,
       cpf,
-      walletBalance: 0,
-      createdAt: FieldValue.serverTimestamp(),
+      wallet: {
+        balanceInCents: 0,
+        totalInvestedCents: 0,
+        updatedAt: Timestamp.now(),
+        positions: [],
+      },
+      createdAt: Timestamp.now(),
     });
 
     logger.info("Novo usuario cadastrado com sucesso.", {

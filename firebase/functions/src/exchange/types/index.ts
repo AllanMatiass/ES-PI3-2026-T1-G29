@@ -15,6 +15,7 @@ export type TransactionType = "BUY_FROM_STARTUP" | "USER_TRADE";
 
 export type Transaction = {
   startupId: string;
+  startupName: string;
   buyer: TransactionAgent;
   seller: TransactionSeller;
   qtdTokens: number;
