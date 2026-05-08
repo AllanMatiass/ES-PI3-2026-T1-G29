@@ -8,8 +8,9 @@ class StartupService {
   static const String _listUrl =
       'https://liststartups-obpz3whteq-uc.a.run.app/';
 
-  static Future<List<StartupListItem>> listStartups({http.Client? client}) async {
-    final user = FirebaseAuth.instance.currentUser;
+  static Future<List<StartupListItem>> listStartups({http.Client? client, FirebaseAuth? auth}) async {
+    final firebaseAuth = auth ?? FirebaseAuth.instance;
+    final user = firebaseAuth.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }
@@ -56,8 +57,9 @@ class StartupService {
     }
   }
 
-  static Future<StartupData> getStartupDetails(String id, {http.Client? client}) async {
-    final user = FirebaseAuth.instance.currentUser;
+  static Future<StartupData> getStartupDetails(String id, {http.Client? client, FirebaseAuth? auth}) async {
+    final firebaseAuth = auth ?? FirebaseAuth.instance;
+    final user = firebaseAuth.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }
@@ -94,8 +96,10 @@ class StartupService {
     Map<String, String>? historyRange,
     int? historyLimit,
     http.Client? client,
+    FirebaseAuth? auth,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
+    final firebaseAuth = auth ?? FirebaseAuth.instance;
+    final user = firebaseAuth.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }
@@ -155,8 +159,10 @@ class StartupService {
     required String text,
     required String visibility,
     http.Client? client,
+    FirebaseAuth? auth,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
+    final firebaseAuth = auth ?? FirebaseAuth.instance;
+    final user = firebaseAuth.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }
