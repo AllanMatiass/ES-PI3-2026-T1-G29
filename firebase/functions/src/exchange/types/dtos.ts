@@ -38,7 +38,6 @@ export type GetStartupTransactionsRequestDTO = {
 
 export type CreateOfferRequestDTO = {
   startupId: string;
-  sellerId: string;
   qtdTokens: number;
   tokenPriceCents: number;
   expiresAt?: string | null;
@@ -77,3 +76,21 @@ export type PaginatedOffersResponseDTO = {
 };
 
 export type OfferResponseDTO = OfferWithId;
+
+export type MyOfferDTO = {
+  id: string;
+  startupId: string;
+  startupName: string;
+  status: string;
+  initialQtdTokens: number;
+  remainingQtdTokens: number;
+  soldQtdTokens: number;
+  tokenPriceCents: number;
+  totalEarnedCents: number;
+  createdAt: string;
+  expiresAt?: string | null;
+};
+
+export type GetMyOffersResponseDTO = {
+  offers: MyOfferDTO[];
+};

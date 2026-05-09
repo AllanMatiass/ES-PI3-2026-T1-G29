@@ -6,6 +6,7 @@ import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/user_service.dart';
 import 'package:frontend/services/startup_service.dart';
+import 'package:frontend/pages/my_offers_page.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:intl/intl.dart';
 
@@ -212,7 +213,13 @@ class _HomeViewState extends State<HomeView> {
           offset: const Offset(0, 56),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           onSelected: (value) async {
-            if (value == 'logout') {
+            if (value == 'offers') {
+              if (mounted) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const MyOffersView()),
+                );
+              }
+            } else if (value == 'logout') {
               await AuthService.signOut();
               if (mounted) {
                 Navigator.of(context)
@@ -221,6 +228,16 @@ class _HomeViewState extends State<HomeView> {
             }
           },
           itemBuilder: (context) => [
+            const PopupMenuItem<String>(
+              value: 'offers',
+              child: Row(
+                children: [
+                  Icon(Icons.local_offer_outlined, color: Color(0xFF1E293B), size: 20),
+                  SizedBox(width: 12),
+                  Text('Minhas Ofertas'),
+                ],
+              ),
+            ),
             const PopupMenuItem<String>(
               value: 'logout',
               child: Row(

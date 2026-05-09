@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-// import { requireAuthenticatedUser } from "../../shared/auth";
+import { requireAuthenticatedUser } from "../../shared/auth";
 import { CreateOfferRequestDTO, OfferResponseDTO } from "../types/dtos";
 import { validateTransactionData } from "../utils";
 import { Timestamp } from "firebase-admin/firestore";
@@ -12,14 +12,13 @@ import {
 
 export const createOffer = onCall(
   withCallHandler<CreateOfferRequestDTO, OfferResponseDTO>(async (request) => {
-    // requireAuthenticatedUser(request);
-    const { startupId, sellerId, qtdTokens, tokenPriceCents, expiresAt } =
-      request.data;
+    const sellerId = requireAuthenticatedUser(request).uid;
+    const { startupId, qtdTokens, tokenPriceCents, expiresAt } = request.data;
 
-    if (!startupId || !sellerId || !qtdTokens || !tokenPriceCents) {
+    if (!startupId || !qtdTokens || !tokenPriceCents) {
       throw new HttpsError(
         "invalid-argument",
-        "Dados insuficientes (startupId, sellerId, qtdTokens, tokenPriceCents).",
+        "Dados insuficientes (startupId, qtdTokens, tokenPriceCents).",
       );
     }
 
@@ -31,6 +30,11 @@ export const createOffer = onCall(
     });
 
     const now = Timestamp.now();
+
+    const sellerPosition = sellerUser?.wallet?.positions?.find(
+      (p) => p.startupId === startupId,
+    );
+    const averageAcquisitionPriceCents = sellerPosition?.averagePriceCents || 0;
 
     // Criar oferta data
     const offerData: Offer = {
@@ -44,6 +48,8 @@ export const createOffer = onCall(
       },
 
       qtdTokens,
+      initialQtdTokens: qtdTokens,
+      averageAcquisitionPriceCents,
       tokenPriceCents,
       totalCents: qtdTokens * tokenPriceCents,
 

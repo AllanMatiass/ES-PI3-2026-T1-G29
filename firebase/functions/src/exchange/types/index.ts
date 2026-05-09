@@ -30,6 +30,8 @@ export type TransactionWithId = Transaction & {
 export type OfferStatus = "OPEN" | "ACCEPTED" | "CANCELLED" | "EXPIRED";
 
 export type Offer = Omit<Transaction, "buyer" | "participants"> & {
+  initialQtdTokens: number;
+  averageAcquisitionPriceCents: number;
   buyer?: TransactionParticipant;
   expiresAt?: Timestamp;
   status: OfferStatus;

@@ -75,6 +75,20 @@ export async function updateOffer(id: string, data: Partial<Offer>) {
   await offerCollection.doc(id).update(data);
 }
 
+export async function getOffersBySellerId(
+  sellerId: string,
+): Promise<OfferWithId[]> {
+  const snapshot = await offerCollection
+    .where("seller.id", "==", sellerId)
+    .orderBy("createdAt", "desc")
+    .get();
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...(doc.data() as Offer),
+  }));
+}
+
 export async function listOffers(
   startupId?: string,
   limit = 20,

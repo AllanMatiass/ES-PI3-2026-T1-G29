@@ -2,6 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:frontend/services/offer_service.dart';
+import 'package:frontend/widgets/create_offer_dialog.dart';
+import 'package:frontend/pages/my_offers_page.dart';
+import 'package:frontend/pages/buy_offer_page.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
@@ -122,6 +125,17 @@ class _OffersViewState extends State<OffersView> {
           'Ofertas Abertas',
           style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt, color: Color(0xFF1E293B)),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const MyOffersView()),
+              );
+            },
+            tooltip: 'Minhas Ofertas',
+          ),
+        ],
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -157,6 +171,19 @@ class _OffersViewState extends State<OffersView> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await showDialog<bool>(
+            context: context,
+            builder: (context) => const CreateOfferDialog(),
+          );
+          if (result == true) {
+            _loadMoreOffers(refresh: true);
+          }
+        },
+        backgroundColor: const Color(0xFF00A84E),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -305,8 +332,15 @@ class _OffersViewState extends State<OffersView> {
                 ],
               ),
               ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement accept offer
+                onPressed: () async {
+                  final result = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (context) => BuyOfferPage(offer: offer),
+                    ),
+                  );
+                  if (result == true) {
+                    _loadMoreOffers(refresh: true);
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00A84E),
@@ -316,7 +350,7 @@ class _OffersViewState extends State<OffersView> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Aceitar'),
+                child: const Text('Comprar'),
               ),
             ],
           ),
