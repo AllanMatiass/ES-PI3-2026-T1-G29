@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/validators.dart';
 import 'package:frontend/pages/home_page.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -18,6 +19,14 @@ class _RegisterPageState extends State<RegisterPage> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final cpfMask = MaskTextInputFormatter(
+    mask: '###.###.###-##',
+    filter: { "#": RegExp(r'[0-9]') },
+  );
+  final phoneMask = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: { "#": RegExp(r'[0-9]') },
+  );
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -205,6 +214,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 18),
                         _buildFormLabel('CPF', required: true),
                         TextFormField(
+                          inputFormatters: [cpfMask],
                           controller: _cpfController,
                           decoration: _buildInputDecoration('000.000.000-00'),
                           keyboardType: TextInputType.number,
@@ -214,6 +224,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 18),
                         _buildFormLabel('Telefone', required: true),
                         TextFormField(
+                          inputFormatters: [phoneMask],
                           controller: _phoneController,
                           decoration: _buildInputDecoration('(00) 00000-0000'),
                           keyboardType: TextInputType.phone,

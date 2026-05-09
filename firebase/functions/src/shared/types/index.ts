@@ -21,7 +21,3 @@ export type FunctionResponse = {
 export type RecordFunctionResponse<T> = FunctionResponse & {
   data: Record<string, T>;
 };
-
-export type SingleFunctionResponse<T> = FunctionResponse & {
-  data: T;
-};

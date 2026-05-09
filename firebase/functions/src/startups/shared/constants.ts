@@ -55,3 +55,12 @@ export const RETURN_CONFIG = {
     highRisk: [0.6, 0.3, 0.1],
   },
 };
+
+const now = new Date();
+
+export const DEFAULT_RANGE = {
+  from: new Date(new Date().setMonth(now.getMonth() - 12))
+    .toISOString()
+    .split("T")[0],
+  to: now.toISOString().split("T")[0],
+};

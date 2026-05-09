@@ -55,9 +55,10 @@ export function withCallHandler<T, R>(
 
       //Firebase Auth error
       if (typeof err === "object" && err !== null && "code" in err) {
-        const code = (err as { code: string }).code;
+        const code = (err as { code: unknown }).code;
 
-        if (code.startsWith("auth/")) {
+        // Adiciona a validação typeof code === "string"
+        if (typeof code === "string" && code.startsWith("auth/")) {
           return {
             success: false,
             error: {
@@ -80,7 +81,7 @@ export function withCallHandler<T, R>(
           },
         };
       }
-
+      logger.error(`Error: ${err}`);
       // fallback
       return {
         success: false,

@@ -1,11 +1,16 @@
 // Autor: Allan Giovanni Matias Paes
-import { FieldValue } from "firebase-admin/firestore";
-import { StartupDocument, StartupListItem } from "../types";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import {
+  StartupDocument,
+  StartupListItem,
+  StartupQuestionAnswer,
+} from "../types";
 import { db } from "../../shared/firebase";
 import { startupsData } from "../../utils/startups";
 import {
+  QuestionViewDTO,
   StartupDocumentDTO,
-  StartupQuestionCreateInput,
+  StartupQuestionCreateDTO,
   Variation,
 } from "../types/dtos";
 
@@ -65,6 +70,20 @@ export async function getStartupById(
   return startupSnapshot.data() as StartupDocumentDTO;
 }
 
+export async function getStartupsByIds(
+  startupIds: string[],
+): Promise<(StartupDocumentDTO | undefined)[]> {
+  if (startupIds.length === 0) return [];
+
+  const refs = startupIds.map((id) => startupsCollection.doc(id));
+  const snapshots = await db.getAll(...refs);
+
+  return snapshots.map((snap) => {
+    if (!snap.exists) return undefined;
+    return snap.data() as StartupDocumentDTO;
+  });
+}
+
 export async function userIsInvestor(
   startupId: string,
   uid: string,
@@ -87,25 +106,75 @@ export async function listPublicQuestions(startupId: string) {
     .get();
 
   return questionsSnapshot.docs
-    .map((doc) => ({
-      id: doc.id,
-      text: doc.get("text"),
-      answer: doc.get("answer") ?? null,
-      answeredAt: doc.get("answeredAt")?.toDate().toISOString() ?? null,
-      createdAt: doc.get("createdAt")?.toDate().toISOString() ?? null,
-    }))
+    .map((doc) => {
+      const answers = doc.get("answers") ?? [];
+
+      return {
+        id: doc.id,
+        text: doc.get("text"),
+
+        answers: answers.map((a: StartupQuestionAnswer) => ({
+          answer: a.answer,
+          answeredAt: a.answeredAt?.toDate().toISOString() ?? null,
+        })),
+
+        createdAt: doc.get("createdAt")?.toDate().toISOString() ?? null,
+      };
+    })
     .sort((left, right) =>
       String(right.createdAt ?? "").localeCompare(String(left.createdAt ?? "")),
     );
 }
 
+export async function listStartupQuestions(
+  startupId: string,
+  isInvestor: boolean,
+): Promise<QuestionViewDTO[]> {
+  const questionsSnapshot = await startupsCollection
+    .doc(startupId)
+    .collection("questions")
+    .limit(100)
+    .get();
+
+  const questions = questionsSnapshot.docs
+    .map((doc) => {
+      const answers = doc.get("answers") ?? [];
+
+      return {
+        id: doc.id,
+        startupId,
+        authorId: doc.get("authorId"),
+        authorEmail: doc.get("authorEmail"),
+        text: doc.get("text"),
+        visibility: doc.get("visibility"),
+
+        answers: answers.map((a: StartupQuestionAnswer) => ({
+          answer: a.answer,
+          answeredAt: a.answeredAt?.toDate().toISOString() ?? null,
+        })),
+
+        createdAt: doc.get("createdAt")?.toDate().toISOString() ?? null,
+      };
+    })
+    .filter((question) => {
+      if (question.visibility === "publica") return true;
+      if (question.visibility === "privada" && isInvestor) return true;
+      return false;
+    })
+    .sort((left, right) =>
+      String(right.createdAt ?? "").localeCompare(String(left.createdAt ?? "")),
+    );
+
+  return questions;
+}
+
 export async function createQuestion(
-  question: StartupQuestionCreateInput,
+  question: StartupQuestionCreateDTO,
 ): Promise<string> {
   const questionRef = await startupsCollection
     .doc(question.startupId)
     .collection("questions")
-    .add(question);
+    .add({ ...question, answers: [] });
 
   return questionRef.id;
 }
@@ -113,24 +182,39 @@ export async function createQuestion(
 export async function seedDemoStartups(): Promise<string[]> {
   const batch = db.batch();
 
+  const valuationPromises: Promise<void>[] = [];
+
   for (const startup of startupsData) {
     const { id, ...data } = startup;
     const startupRef = startupsCollection.doc(id);
+
+    const valuation = data.currentTokenPriceCents * data.totalTokensIssued;
 
     batch.set(
       startupRef,
       {
         ...data,
-        lastValuationCents:
-          data.currentTokenPriceCents * data.totalTokensIssued,
+        lastValuationCents: valuation,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       },
       { merge: true },
     );
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+
+      const simulatedValuation = valuation * (1 + (Math.random() - 0.5) * 0.2); // variação ±20%
+
+      valuationPromises.push(
+        saveValuationSnapshot(id, Math.round(simulatedValuation), date),
+      );
+    }
   }
 
   await batch.commit();
+  await Promise.all(valuationPromises);
 
   return startupsData.map((startup) => startup.id);
 }
@@ -169,11 +253,36 @@ export async function getPreviousStartupValuation(
 export async function saveValuationSnapshot(
   startupId: string,
   valuation: number,
+  createdAt?: Date,
 ) {
-  await startupsCollection.doc(startupId).collection("valuations").add({
-    value: valuation,
-    createdAt: FieldValue.serverTimestamp(),
-  });
+  await startupsCollection
+    .doc(startupId)
+    .collection("valuations")
+    .add({
+      value: valuation,
+      createdAt: createdAt ?? FieldValue.serverTimestamp(),
+    });
+}
+
+export async function getValuationHistory(
+  startupId: string,
+  from: Date,
+  to: Date,
+  limit?: number | null,
+) {
+  const snapshot = await startupsCollection
+    .doc(startupId)
+    .collection("valuations")
+    .where("createdAt", ">=", from)
+    .where("createdAt", "<=", to)
+    .orderBy("createdAt", "asc")
+    .limit(limit ?? 12)
+    .get();
+
+  return snapshot.docs.map((doc) => ({
+    value: doc.get("value") as number,
+    createdAt: doc.get("createdAt") as Timestamp,
+  }));
 }
 
 export async function updateStartupValuation(
@@ -191,6 +300,7 @@ export async function updateStartupValuation(
     startup.currentTokenPriceCents * startup.totalTokensIssued;
 
   const newValuation = newTokenPriceCents * startup.totalTokensIssued;
+  await saveValuationSnapshot(startupId, newValuation);
 
   await ref.update({
     currentTokenPriceCents: newTokenPriceCents,
