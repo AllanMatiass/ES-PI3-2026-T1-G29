@@ -24,6 +24,11 @@ export type RegisterTransactionRequestDTO = {
 
 export type TransactionIdDTO = IdDTO;
 
+export type AcceptOfferResponseDTO = {
+  transactionId: string;
+  remainingTokens: number;
+};
+
 export type OfferIdDTO = IdDTO;
 
 export type GetStartupTransactionsRequestDTO = {
@@ -41,6 +46,7 @@ export type CreateOfferRequestDTO = {
 
 export type AcceptOfferRequestDTO = {
   offerId: string;
+  qtdTokens: number;
 };
 
 export type GetOffersRequestDTO = {
