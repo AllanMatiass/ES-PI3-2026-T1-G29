@@ -5,8 +5,10 @@ import { CreateOfferRequestDTO, OfferResponseDTO } from "../types/dtos";
 import { validateTransactionData } from "../utils";
 import { Timestamp } from "firebase-admin/firestore";
 import { Offer } from "../types";
-import { db } from "../../shared/firebase";
-import { WalletTokenPosition } from "../../auth/types";
+import {
+  createOfferInTransaction,
+  getOfferById,
+} from "../repositories/offerRepository";
 
 export const createOffer = onCall(
   withCallHandler<CreateOfferRequestDTO, OfferResponseDTO>(async (request) => {
@@ -35,97 +37,54 @@ export const createOffer = onCall(
       tokenPriceCents,
     });
 
-    const offerRef = db.collection("offers").doc();
-
     const now = Timestamp.now();
 
-    await db.runTransaction(async (tx) => {
-      const sellerRef = db.collection("users").doc(sellerId);
+    // Criar oferta data
+    const offerData: Offer = {
+      startupId,
+      startupName: startup.name,
 
-      const sellerSnap = await tx.get(sellerRef);
+      seller: {
+        id: sellerId,
+        name: sellerUser?.name || startup.name,
+        type: sellerUser ? "USER" : "STARTUP",
+      },
 
-      if (!sellerSnap.exists) {
-        throw new HttpsError("not-found", "Vendedor não encontrado.");
-      }
+      qtdTokens,
+      tokenPriceCents,
+      totalCents: qtdTokens * tokenPriceCents,
 
-      const sellerData = sellerSnap.data();
-      const wallet = sellerData?.wallet;
+      status: "OPEN",
+      transactionType: "USER_TRADE",
 
-      const position = wallet.positions?.find(
-        (p: WalletTokenPosition) => p.startupId === startupId,
-      );
-
-      if (!position) {
-        throw new HttpsError(
-          "failed-precondition",
-          "O vendedor não possui tokens desta startup.",
-        );
-      }
-
-      const availableTokens = position.qtdTokens - position.lockedTokens;
-
-      if (availableTokens < qtdTokens) {
-        throw new HttpsError(
-          "failed-precondition",
-          "Quantidade de tokens insuficiente para criar a oferta.",
-        );
-      }
-
-      position.lockedTokens += qtdTokens;
-
-      tx.update(sellerRef, {
-        wallet,
-      });
-
-      // Criar oferta
-      const offerData: Offer = {
-        startupId,
-        startupName: startup.name,
-
-        seller: {
-          id: sellerId,
-          name: sellerUser?.name || startup.name,
-          type: sellerUser ? "USER" : "STARTUP",
-        },
-
-        qtdTokens,
-        tokenPriceCents,
-        totalCents: qtdTokens * tokenPriceCents,
-
-        status: "OPEN",
-        transactionType: "USER_TRADE",
-
-        createdAt: now,
-      };
-
-      if (buyerUser && buyerId) {
-        offerData.buyer = {
-          id: buyerId,
-          name: buyerUser.name,
-        };
-      }
-
-      if (expiresAt) {
-        const expirationDate = new Date(expiresAt);
-
-        if (isNaN(expirationDate.getTime())) {
-          throw new HttpsError(
-            "invalid-argument",
-            "Data de expiração inválida.",
-          );
-        }
-
-        offerData.expiresAt = Timestamp.fromDate(expirationDate);
-      }
-
-      tx.set(offerRef, offerData);
-    });
-
-    const offerSnapshot = await offerRef.get();
-
-    return {
-      id: offerRef.id,
-      ...(offerSnapshot.data() as Offer),
+      createdAt: now,
     };
+
+    if (buyerUser && buyerId) {
+      offerData.buyer = {
+        id: buyerId,
+        name: buyerUser.name,
+      };
+    }
+
+    if (expiresAt) {
+      const expirationDate = new Date(expiresAt);
+
+      if (isNaN(expirationDate.getTime())) {
+        throw new HttpsError("invalid-argument", "Data de expiração inválida.");
+      }
+
+      offerData.expiresAt = Timestamp.fromDate(expirationDate);
+    }
+
+    const offerId = await createOfferInTransaction(sellerId, offerData);
+
+    const offer = await getOfferById(offerId);
+
+    if (!offer) {
+      throw new HttpsError("internal", "Erro ao recuperar oferta criada.");
+    }
+
+    return offer;
   }),
 );
