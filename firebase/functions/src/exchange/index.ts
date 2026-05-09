@@ -3,3 +3,4 @@ export { getStartupTransactionsHandler as getStartupTransactions } from "./handl
 export { createOffer } from "./handlers/createOffer";
 export { acceptOffer } from "./handlers/acceptOffer";
 export { getOffers } from "./handlers/getOffers";
+export { getInvestorDashboard } from "./handlers/getInvestorDashboard";

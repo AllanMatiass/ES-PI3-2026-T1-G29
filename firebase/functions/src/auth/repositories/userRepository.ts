@@ -7,7 +7,7 @@ import {
   UserCreateDTO,
   UserProfile,
   Wallet,
-  WalletTokenPosition,
+  WalletTokenPositionDTO,
 } from "../types";
 
 const usersCollection = db.collection("users");
@@ -79,8 +79,12 @@ export async function getUserById(
 
 function createPosition(
   params: Omit<UpdateWalletParams, "userId">,
-): WalletTokenPosition {
+): WalletTokenPositionDTO {
   const investedCents = params.qtdTokens * params.tokenPriceCents;
+  const currentValueCents = params.qtdTokens * params.currentTokenPriceCents;
+  const profitCents = currentValueCents - investedCents;
+  const profitPercentage =
+    investedCents <= 0 ? 0 : (profitCents / investedCents) * 100;
 
   return {
     startupId: params.startupId,
@@ -92,15 +96,21 @@ function createPosition(
     averagePriceCents: params.tokenPriceCents,
     investedCents,
 
+    currentTokenPriceCents: params.currentTokenPriceCents,
+    currentValueCents,
+    profitCents,
+    profitPercentage,
+
     updatedAt: Timestamp.now(),
   };
 }
 
 function updatePosition(
-  position: WalletTokenPosition,
+  position: WalletTokenPositionDTO,
   qtdTokens: number,
   tokenPriceCents: number,
-): WalletTokenPosition {
+  currentTokenPriceCents: number,
+): WalletTokenPositionDTO {
   const totalTokens = position.qtdTokens + qtdTokens;
 
   const newInvestment = qtdTokens * tokenPriceCents;
@@ -109,6 +119,11 @@ function updatePosition(
 
   const averagePriceCents = investedCents / totalTokens;
 
+  const currentValueCents = totalTokens * currentTokenPriceCents;
+  const profitCents = currentValueCents - investedCents;
+  const profitPercentage =
+    investedCents <= 0 ? 0 : (profitCents / investedCents) * 100;
+
   return {
     ...position,
 
@@ -116,6 +131,10 @@ function updatePosition(
     investedCents,
 
     averagePriceCents: Math.round(averagePriceCents),
+    currentTokenPriceCents,
+    currentValueCents,
+    profitCents,
+    profitPercentage,
 
     updatedAt: Timestamp.now(),
   };
@@ -150,7 +169,9 @@ export async function updateWallet({
     throw new Error("Usuário não encontrado.");
   }
 
-  const positions = [...(user.wallet.positions ?? [])];
+  const positions: WalletTokenPositionDTO[] = [
+    ...(user.wallet.positions ?? []),
+  ];
 
   const index = positions.findIndex((p) => p.startupId === params.startupId);
 
@@ -161,6 +182,7 @@ export async function updateWallet({
       positions[index],
       params.qtdTokens,
       params.tokenPriceCents,
+      params.currentTokenPriceCents,
     );
   }
 

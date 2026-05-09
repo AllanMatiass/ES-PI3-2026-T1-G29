@@ -33,7 +33,7 @@ class UserService {
             responseData['result']['success'] == true) {
           return {
             "success": true,
-            "data": UserData.fromJson(responseData),
+            "data": UserProfile.fromJson(responseData),
           };
         } else {
           return {

@@ -2,8 +2,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/user.dart';
+import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/user_service.dart';
+import 'package:frontend/services/startup_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:intl/intl.dart';
 
@@ -22,7 +24,8 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  UserData? _userData;
+  UserProfile? _userData;
+  Map<String, StartupListItem> _startupsMap = {};
   bool _isLoading = true;
   String? _error;
   bool _isBalanceVisible = true;
@@ -53,23 +56,29 @@ class _HomeViewState extends State<HomeView> {
     }
 
     try {
-      // Forçamos a renovação do token para garantir que não esteja expirado
       final token = await user.getIdToken(true);
       
       if (token == null) {
         throw Exception("Falha ao obter token de acesso");
       }
 
-      final result = await UserService.getUserData(user.uid, token);
+      // Load user data and startups in parallel
+      final results = await Future.wait([
+        UserService.getUserData(user.uid, token),
+        StartupService.listStartups(),
+      ]);
+
+      final userResult = results[0] as Map<String, dynamic>;
+      final startupsList = results[1] as List<StartupListItem>;
 
       if (mounted) {
         setState(() {
-          if (result['success']) {
-            _userData = result['data'];
+          if (userResult['success']) {
+            _userData = userResult['data'];
+            _startupsMap = {for (var s in startupsList) s.id: s};
           } else {
-            _error = result['error'];
-            // Se o erro for relacionado a autenticação (401 ou 403), redirecionamos
-            if (result['code'] == 'unauthenticated' || result['code'] == 'permission-denied') {
+            _error = userResult['error'];
+            if (userResult['code'] == 'unauthenticated' || userResult['code'] == 'permission-denied') {
               AuthService.signOut();
               Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
             }
@@ -87,7 +96,7 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  String _formatCents(int cents) {
+  String _formatCents(double cents) {
     return _currencyFormat.format(cents / 100);
   }
 
@@ -335,6 +344,15 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildInvestmentsList() {
     return Column(
       children: _userData!.wallet.positions.map((position) {
+        final startup = _startupsMap[position.startupId];
+        final currentPriceCents = startup?.currentTokenPriceCents.toDouble() ?? 0.0;
+        
+        final currentValueCents = position.qtdTokens * currentPriceCents;
+        final profitCents = currentValueCents - position.investedCents;
+        final profitPercentage = position.investedCents <= 0
+            ? 0.0
+            : (profitCents / position.investedCents) * 100;
+
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
@@ -350,57 +368,78 @@ class _HomeViewState extends State<HomeView> {
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.business, color: Color(0xFF64748B)),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      position.startupName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    Text(
-                      '${position.qtdTokens} tokens',
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              Row(
                 children: [
-                  Text(
-                    _formatCents(position.investedCents),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF00A84E),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.business, color: Color(0xFF64748B)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          position.startupName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        Text(
+                          '${position.qtdTokens} tokens',
+                          style: const TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const Text(
-                    'Valor atual',
-                    style: TextStyle(
-                      color: Color(0xFF64748B),
-                      fontSize: 12,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: (profitCents >= 0 ? const Color(0xFF00A84E) : const Color(0xFFEF4444)).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Text(
+                      '${profitCents >= 0 ? '+' : ''}${profitPercentage.toStringAsFixed(0)}%',
+                      style: TextStyle(
+                        color: profitCents >= 0 ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildInvestmentDetail('Investido', _formatCents(position.investedCents)),
+                  _buildInvestmentDetail('Valor atual', _formatCents(currentValueCents)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildInvestmentDetail(
+                    'Lucro',
+                    '${profitCents >= 0 ? '+' : ''}${_formatCents(profitCents)}',
+                    valueColor: profitCents >= 0 ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
                   ),
                 ],
               ),
@@ -408,6 +447,27 @@ class _HomeViewState extends State<HomeView> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildInvestmentDetail(String label, String value, {Color? valueColor}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: valueColor ?? const Color(0xFF1E293B),
+          ),
+        ),
+      ],
     );
   }
 
