@@ -17,15 +17,14 @@ import { Wallet, WalletTokenPositionDTO } from "../../auth/types";
 import { TransactionService } from "../shared/transactionService";
 import { Offer } from "../types";
 
-// import { requireAuthenticatedUser } from "../../shared/auth";
+import { requireAuthenticatedUser } from "../../shared/auth";
 
 const transactionService = new TransactionService();
 
 export const acceptOffer = onCall(
   withCallHandler<AcceptOfferRequestDTO, AcceptOfferResponseDTO>(
     async (request) => {
-      // const buyerId = requireAuthenticatedUser(request).uid;
-      const buyerId = "mZ7eEGjtx2dXZu3w8lB28sTXGkf2";
+      const buyerId = requireAuthenticatedUser(request).uid;
 
       const offerId = normalizeString(request.data?.offerId);
       const qtdTokens = request.data.qtdTokens;
@@ -371,6 +370,8 @@ export const acceptOffer = onCall(
         if (isFullAcceptance) {
           tx.update(offerRef, {
             status: "ACCEPTED",
+            qtdTokens: 0,
+            totalCents: 0,
 
             acceptedAt: now,
 
