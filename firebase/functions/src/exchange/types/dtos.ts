@@ -28,7 +28,6 @@ export type CreateOfferRequestDTO = {
 
 export type AcceptOfferRequestDTO = {
   offerId: string;
-  buyerId: string;
 };
 
 export type OfferIdDTO = {

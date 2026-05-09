@@ -14,7 +14,7 @@ const usersCollection = db.collection("users");
 
 //
 // ==========================
-// USERS
+// USER
 // ==========================
 //
 
@@ -77,18 +77,6 @@ export async function getUserById(
   return snapshot.data() as UserProfile;
 }
 
-//
-// ==========================
-// WALLET HELPERS
-// ==========================
-//
-
-//
-// ==========================
-// POSITION CREATION
-// ==========================
-//
-
 function createPosition(
   params: Omit<UpdateWalletParams, "userId">,
 ): WalletTokenPosition {
@@ -107,12 +95,6 @@ function createPosition(
     updatedAt: Timestamp.now(),
   };
 }
-
-//
-// ==========================
-// POSITION UPDATE
-// ==========================
-//
 
 function updatePosition(
   position: WalletTokenPosition,
@@ -139,12 +121,6 @@ function updatePosition(
   };
 }
 
-//
-// ==========================
-// WALLET RECALCULATION
-// ==========================
-//
-
 function recalculateWallet(wallet: Wallet): Wallet {
   const positions = wallet.positions ?? [];
 
@@ -163,12 +139,6 @@ function recalculateWallet(wallet: Wallet): Wallet {
     updatedAt: Timestamp.now(),
   };
 }
-
-//
-// ==========================
-// WALLET ENTRYPOINT
-// ==========================
-//
 
 export async function updateWallet({
   userId,

@@ -25,7 +25,10 @@ class _HomePageState extends State<HomePage> {
     // Nota: Removido WidgetsFlutterBinding.ensureInitialized() daqui, 
     // pois ele só deve ser chamado no main().
     _pages = [
-      HomeView(userName: widget.userName),
+      HomeView(
+        userName: widget.userName,
+        onNavigateToCatalog: () => _onItemTapped(1),
+      ),
       CatalogPage(),
       const SoonView(title: 'Carteira'),
       const SoonView(title: 'Conta'),
