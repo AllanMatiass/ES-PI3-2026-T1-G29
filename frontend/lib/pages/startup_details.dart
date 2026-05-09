@@ -1,6 +1,8 @@
 //Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
 
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/startup.dart';
 import '../services/startup_service.dart';
 import '../widgets/price_chart.dart';
@@ -18,6 +20,17 @@ class StartupDetailsPage extends StatefulWidget {
 class _StartupDetailsPageState extends State<StartupDetailsPage> {
   late Future<StartupData> startupDetails;
 
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'pt_BR',
+    symbol: 'R\$',
+  );
+
+  final NumberFormat _decimalFormat = NumberFormat.decimalPattern('pt_BR');
+
+  final NumberFormat _percentFormat = NumberFormat.decimalPattern('pt_BR')
+    ..minimumFractionDigits = 1
+    ..maximumFractionDigits = 2;
+
   @override
   void initState() {
     super.initState();
@@ -30,10 +43,22 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
     return await StartupService.getStartupDetails(id);
   }
 
+  String _formatCurrency(num value) {
+    return _currencyFormat.format(value);
+  }
+
+  String _formatNumber(num value) {
+    return _decimalFormat.format(value);
+  }
+
+  String _formatPercent(num value) {
+    return _percentFormat.format(value);
+  }
+
   String gerarIniciais(String nome) {
     List<String> partes = nome.trim().split(" ");
     if (partes.length >= 2) {
-      return (partes[0][0] + partes[1][0]).toUpperCase();
+      return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
     }
     return partes[0].isNotEmpty ? partes[0][0].toUpperCase() : "?";
   }
@@ -207,17 +232,17 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                                   fontWeight: FontWeight.bold, fontSize: 18)),
                           const SizedBox(height: 15),
                           _buildMarketMetric('Valuation Atual',
-                              '${data.meta.currency} ${(data.valuation / 100).toStringAsFixed(2)}'),
+                              _formatCurrency(data.valuation / 100)),
                           const Divider(height: 30),
                           Row(
                             children: [
                               Expanded(
                                   child: _buildMarketMetric('Preço Médio',
-                                      '${data.meta.currency} ${data.summary.averagePrice.toStringAsFixed(2)}')),
+                                      _formatCurrency(data.summary.averagePrice))),
                               const SizedBox(width: 10),
                               Expanded(
                                   child: _buildMarketMetric('Variação',
-                                      '${(data.history.isNotEmpty ? data.history.last.variationPercent ?? 0 : 0).toStringAsFixed(2)}%')),
+                                      '${_formatPercent(data.history.isNotEmpty ? data.history.last.variationPercent ?? 0 : 0)}%')),
                             ],
                           ),
                         ],
@@ -249,12 +274,12 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${data.totalTokens} emitidos',
+                                '${_formatNumber(data.totalTokens)} emitidos',
                                 style: const TextStyle(
                                     fontSize: 12, color: Colors.grey),
                               ),
                               Text(
-                                '${percentualVendido.toStringAsFixed(1)}% vendidos',
+                                '${_formatPercent(percentualVendido)}% vendidos',
                                 style: const TextStyle(
                                     fontSize: 12, color: Colors.grey),
                               ),
@@ -518,7 +543,7 @@ class _CardSobreStartupState extends State<CardSobreStartup> {
                 text: span,
                 maxLines: 3,
                 textAlign: TextAlign.left,
-                textDirection: TextDirection.ltr,
+                textDirection: ui.TextDirection.ltr,
               );
               tp.layout(maxWidth: constraints.maxWidth);
               final needsExpansion = tp.didExceedMaxLines;
