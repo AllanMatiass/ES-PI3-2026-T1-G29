@@ -29,20 +29,10 @@ export type Wallet = {
   updatedAt: Timestamp;
 };
 
-//
-// =========================
-// DTO ENRIQUECIDO (RESPONSE)
-// =========================
-//
-
 export type WalletTokenPositionDTO = WalletTokenPosition & {
   currentTokenPriceCents: number;
 
   currentValueCents: number;
-
-  profitCents: number;
-
-  profitPercentage: number;
 };
 
 export type WalletDTO = Omit<Wallet, "positions"> & {
@@ -61,7 +51,7 @@ export type UserProfile = {
   phone: string;
   cpf: string;
 
-  wallet: Wallet;
+  wallet: WalletDTO;
 
   createdAt: Timestamp;
 };
