@@ -1,16 +1,30 @@
-import { OfferWithId, TransactionAgent } from ".";
+import { OfferWithId, TransactionParticipant } from ".";
+
+export const DASHBOARD_PERIODS = [
+  "daily",
+  "weekly",
+  "monthly",
+  "6months",
+  "ytd",
+] as const;
+
+export type DashboardPeriod = (typeof DASHBOARD_PERIODS)[number];
+
+export type IdDTO = {
+  id: string;
+};
 
 export type RegisterTransactionRequestDTO = {
   startupId: string;
-  buyer: TransactionAgent;
-  seller?: TransactionAgent | null | undefined;
+  buyer: TransactionParticipant;
+  seller?: TransactionParticipant | null;
   qtdTokens: number;
   tokenPriceCents: number;
 };
 
-export type TransactionIdDTO = {
-  id: string;
-};
+export type TransactionIdDTO = IdDTO;
+
+export type OfferIdDTO = IdDTO;
 
 export type GetStartupTransactionsRequestDTO = {
   startupId: string;
@@ -19,7 +33,6 @@ export type GetStartupTransactionsRequestDTO = {
 
 export type CreateOfferRequestDTO = {
   startupId: string;
-  buyerId?: string;
   sellerId: string;
   qtdTokens: number;
   tokenPriceCents: number;
@@ -30,14 +43,26 @@ export type AcceptOfferRequestDTO = {
   offerId: string;
 };
 
-export type OfferIdDTO = {
-  id: string;
-};
-
 export type GetOffersRequestDTO = {
   startupId?: string;
   limit?: number;
   lastOfferId?: string;
+};
+
+export type GetInvestorDashboardRequestDTO = {
+  period?: DashboardPeriod;
+};
+
+export type DashboardDataPoint = {
+  timestamp: string;
+  totalValueCents: number;
+};
+
+export type GetInvestorDashboardResponseDTO = {
+  points: DashboardDataPoint[];
+  currentTotalValueCents: number;
+  variationCents: number;
+  variationPercent: number;
 };
 
 export type PaginatedOffersResponseDTO = {

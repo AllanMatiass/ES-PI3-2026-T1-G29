@@ -1,14 +1,11 @@
 import { Timestamp } from "firebase-admin/firestore";
 
-export type TransactionAgent = {
+export type ParticipantType = "USER" | "STARTUP";
+
+export type TransactionParticipant = {
   id: string;
   name: string;
-};
-
-export type TransactionSeller = {
-  id?: string;
-  name: string;
-  type: "USER" | "STARTUP";
+  type: ParticipantType;
 };
 
 export type TransactionType = "BUY_FROM_STARTUP" | "USER_TRADE";
@@ -16,8 +13,9 @@ export type TransactionType = "BUY_FROM_STARTUP" | "USER_TRADE";
 export type Transaction = {
   startupId: string;
   startupName: string;
-  buyer: TransactionAgent;
-  seller: TransactionSeller;
+  buyer: TransactionParticipant;
+  seller: TransactionParticipant;
+  participants: string[];
   qtdTokens: number;
   tokenPriceCents: number;
   totalCents: number;
@@ -25,10 +23,14 @@ export type Transaction = {
   createdAt: Timestamp;
 };
 
+export type TransactionWithId = Transaction & {
+  id: string;
+};
+
 export type OfferStatus = "OPEN" | "ACCEPTED" | "CANCELLED" | "EXPIRED";
 
-export type Offer = Omit<Transaction, "buyer"> & {
-  buyer?: TransactionAgent;
+export type Offer = Omit<Transaction, "buyer" | "participants"> & {
+  buyer?: TransactionParticipant;
   expiresAt?: Timestamp;
   status: OfferStatus;
   acceptedAt?: Timestamp;
@@ -38,3 +40,5 @@ export type Offer = Omit<Transaction, "buyer"> & {
 export type OfferWithId = Offer & {
   id: string;
 };
+
+export type TransactionAgent = TransactionParticipant;
