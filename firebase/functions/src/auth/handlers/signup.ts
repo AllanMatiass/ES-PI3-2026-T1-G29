@@ -13,9 +13,9 @@ import {
   getUserByCpf,
   getUserByPhone,
 } from "../repositories/userRepository";
-import { SignupData } from "../types";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-import { FieldValue } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
+import { SignupRequestDTO, SignupResponseDTO } from "../types/dtos";
 
 /**
  * Realiza o cadastro de um novo usuario no MesclaInvest.
@@ -31,8 +31,8 @@ import { FieldValue } from "firebase-admin/firestore";
  * salva o perfil complementar no Firestore (colecao `users`).
  */
 export const signup = onCall(
-  withCallHandler(async (request) => {
-    const data = request.data as SignupData;
+  withCallHandler<SignupRequestDTO, SignupResponseDTO>(async (request) => {
+    const data = request.data;
 
     const name = normalizeString(data.name);
     const email = normalizeString(data.email);
@@ -90,9 +90,15 @@ export const signup = onCall(
       uid: userRecord.uid,
       name,
       email,
+      phone,
       cpf,
-      walletBalance: 0,
-      createdAt: FieldValue.serverTimestamp(),
+      wallet: {
+        balanceInCents: 0,
+        totalInvestedCents: 0,
+        updatedAt: Timestamp.now(),
+        positions: [],
+      },
+      createdAt: Timestamp.now(),
     });
 
     logger.info("Novo usuario cadastrado com sucesso.", {

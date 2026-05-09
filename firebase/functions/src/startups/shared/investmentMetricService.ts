@@ -3,17 +3,24 @@ import { HttpsError } from "firebase-functions/https";
 import {
   getStartupById,
   getStartupValuationById,
-  listPublicQuestions,
+  getValuationHistory,
+  listStartupQuestions,
   userIsInvestor,
 } from "../repositories/startupRepository";
-import { RETURN_CONFIG, RISK_CONFIG } from "../shared/constants";
+import { DEFAULT_RANGE, RETURN_CONFIG, RISK_CONFIG } from "../shared/constants";
 import {
   StartupDocument,
   StartupRiskCode,
   StartupRiskLabel,
   StartupStage,
 } from "../types";
-import { ExpectedReturn } from "../types/dtos";
+import {
+  ExpectedReturn,
+  PriceHistoryInterval,
+  PriceHistoryOptions,
+} from "../types/dtos";
+import { validatePriceHistoryOptions as validateValuationHistoryOptions } from "../../utils/validations";
+import { Timestamp } from "firebase-admin/firestore";
 
 const RISK_LABEL_MAP: Record<StartupRiskCode, StartupRiskLabel> = {
   lowRisk: "Risco Baixo",
@@ -103,20 +110,28 @@ export class InvestmentMetricService {
     return HORIZON_MAP[stage];
   }
 
-  async getStartupMetrics(startupId: string, userId: string) {
+  async getStartupMetrics(
+    startupId: string,
+    userId: string,
+    options: PriceHistoryOptions,
+  ) {
     const startup = await this._fetchStartupOrThrow(startupId);
+    const isInvestor = await userIsInvestor(startupId, userId);
 
-    // cálculos internos
     const risk = this.calculateRiskFromStartup(startup);
     const expectedReturn = this.calculateExpectedReturnFromRisk(risk);
     const riskLabel = this.getRiskProfile(risk);
     const horizon = this.getHorizon(startup.stage);
 
-    // chamadas paralelas (melhor performance)
-    const [valuation, isInvestor, questions] = await Promise.all([
+    const [valuation, questions, priceHistory] = await Promise.all([
       getStartupValuationById(startupId),
-      userIsInvestor(startupId, userId),
-      listPublicQuestions(startupId),
+      listStartupQuestions(startupId, isInvestor),
+      this.getStartupPriceHistory(
+        startupId,
+        options.historyRange ?? DEFAULT_RANGE,
+        options.historyInterval ?? "monthly",
+        options.historyLimit ?? 50,
+      ),
     ]);
 
     return {
@@ -128,6 +143,7 @@ export class InvestmentMetricService {
       valuation: valuation ?? 0,
       isInvestor,
       questions,
+      priceHistory,
     };
   }
 
@@ -135,6 +151,125 @@ export class InvestmentMetricService {
     if (risk <= 3) return "lowRisk";
     if (risk <= 6) return "mediumRisk";
     return "highRisk";
+  }
+
+  async getStartupPriceHistory(
+    startupId: string,
+    range: { from: string; to: string },
+    interval: PriceHistoryInterval,
+    limit: number,
+  ) {
+    validateValuationHistoryOptions({
+      historyRange: range,
+      historyLimit: limit,
+      historyInterval: interval,
+    });
+
+    const startup = await this._fetchStartupOrThrow(startupId);
+
+    const fromDate = new Date(range.from);
+    const toDate = new Date(range.to);
+
+    const rawHistory = await getValuationHistory(
+      startupId,
+      fromDate,
+      toDate,
+      null,
+    );
+
+    const grouped = this.groupRawByInterval(rawHistory, interval);
+
+    const historyData = grouped.slice(-limit);
+
+    const history = historyData.map((item, index) => {
+      const price = item.value / startup.totalTokensIssued / 100;
+
+      let variation: number | null = null;
+      let variationPercent: number | null = null;
+
+      if (index > 0) {
+        const prev =
+          historyData[index - 1].value / startup.totalTokensIssued / 100;
+
+        variation = Number((price - prev).toFixed(2));
+
+        variationPercent =
+          prev === 0 ? null : Number(((variation / prev) * 100).toFixed(2));
+      }
+
+      return {
+        timestamp: item.createdAt.toDate().toISOString().split("T")[0],
+        price: Number(price.toFixed(2)),
+        variation,
+        variationPercent,
+      };
+    });
+
+    const prices = history.map((h) => h.price);
+
+    return {
+      history,
+      summary: {
+        currentPrice: prices.length ? prices[prices.length - 1] : 0,
+        highestPrice: prices.length ? Math.max(...prices) : 0,
+        lowestPrice: prices.length ? Math.min(...prices) : 0,
+        averagePrice: prices.length
+          ? Number(
+              (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2),
+            )
+          : 0,
+      },
+      meta: {
+        count: history.length,
+        currency: "BRL",
+        interval,
+      },
+    };
+  }
+
+  private groupRawByInterval(
+    data: { value: number; createdAt: Timestamp }[],
+    interval: PriceHistoryInterval,
+  ) {
+    const groups = new Map<string, { value: number; createdAt: Timestamp }[]>();
+    const now = new Date();
+
+    for (const item of data) {
+      const date = item.createdAt.toDate();
+      let key: string;
+
+      switch (interval) {
+        case "yearly":
+          key = `${date.getFullYear()}`;
+          break;
+
+        case "monthly":
+          key = `${date.getFullYear()}-${date.getMonth()}`;
+          break;
+
+        case "semestrely":
+          key = `${date.getFullYear()}-${date.getMonth() < 6 ? "H1" : "H2"}`;
+          break;
+
+        case "ytd":
+          if (date.getFullYear() !== now.getFullYear()) continue;
+
+          key = `${date.getFullYear()}-${date.getMonth()}`;
+          break;
+
+        default:
+          key = date.toISOString().split("T")[0];
+      }
+
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+
+      groups.get(key)?.push(item);
+    }
+
+    // último valor de cada grupo
+    return Array.from(groups.values()).map((items) => items[items.length - 1]);
   }
 
   private async _fetchStartupOrThrow(

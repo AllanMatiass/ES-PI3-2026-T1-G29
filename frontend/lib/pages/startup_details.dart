@@ -1,58 +1,12 @@
-//autor Pedro Vinicius Romanato - 25004075
+//Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
 
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-class StartupData {
-  final String nome;
-  final String segmento;
-  final String logoUrl;
-  final String resumo;
-  final String descricao;
-  final double retornoEsperado;
-  final String riscoLabel;
-  final String horizonte;
-  final int totalTokens;
-  final int circulatingTokens;
-  final List<dynamic> socios;
-  final List<String> tags;
-
-  StartupData({
-    required this.nome,
-    required this.segmento,
-    required this.logoUrl,
-    required this.resumo,
-    required this.descricao,
-    required this.retornoEsperado,
-    required this.riscoLabel,
-    required this.horizonte,
-    required this.totalTokens,
-    required this.circulatingTokens,
-    required this.socios,
-    required this.tags,
-  });
-
-  factory StartupData.fromJson(Map<String, dynamic> json) {
-    final result = json['result']['data']['details'];
-    final startup = result['startup'];
-
-    return StartupData(
-      nome: startup['name'] ?? '',
-      segmento: (startup['tags'] as List).isNotEmpty ? startup['tags'][0] : 'Startup',
-      logoUrl: startup['coverImageUrl'] ?? '',
-      resumo: startup['shortDescription'] ?? '',
-      descricao: startup['description'] ?? '',
-      retornoEsperado: (result['expectedReturn']['expected'] as num).toDouble(),
-      riscoLabel: result['risk']['label'] ?? 'Médio',
-      horizonte: result['horizon'] ?? 'Longo prazo',
-      totalTokens: startup['totalTokensIssued'] ?? 0,
-      circulatingTokens: startup['circulatingTokens'] ?? 0, // ✅ lido do JSON
-      socios: startup['founders'] ?? [],
-      tags: List<String>.from(startup['tags'] ?? []),
-    );
-  }
-}
+import 'package:intl/intl.dart';
+import '../models/startup.dart';
+import '../services/startup_service.dart';
+import '../widgets/price_chart.dart';
+import './faq_page.dart';
 
 class StartupDetailsPage extends StatefulWidget {
   final String startupId;
@@ -66,37 +20,54 @@ class StartupDetailsPage extends StatefulWidget {
 class _StartupDetailsPageState extends State<StartupDetailsPage> {
   late Future<StartupData> startupDetails;
 
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'pt_BR',
+    symbol: 'R\$',
+  );
+
+  final NumberFormat _decimalFormat = NumberFormat.decimalPattern('pt_BR');
+
+  final NumberFormat _percentFormat = NumberFormat.decimalPattern('pt_BR')
+    ..minimumFractionDigits = 1
+    ..maximumFractionDigits = 2;
+
   @override
   void initState() {
     super.initState();
-    startupDetails = fetchStartupDetails(widget.startupId);
+    setState(() {
+      startupDetails = fetchStartupDetails(widget.startupId);
+    });
   }
 
   Future<StartupData> fetchStartupDetails(String id) async {
-    const String url = 'https://getstartupdetails-obpz3whteq-uc.a.run.app';
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"data": {"id": id}}),
-      );
+    return await StartupService.getStartupDetails(id);
+  }
 
-      if (response.statusCode == 200) {
-        return StartupData.fromJson(jsonDecode(response.body));
-      } else {
-        throw Exception('Erro ao carregar dados');
-      }
-    } catch (e) {
-      throw Exception('Erro de conexão: $e');
-    }
+  String _formatCurrency(num value) {
+    return _currencyFormat.format(value);
+  }
+
+  String _formatNumber(num value) {
+    return _decimalFormat.format(value);
+  }
+
+  String _formatPercent(num value) {
+    return _percentFormat.format(value);
   }
 
   String gerarIniciais(String nome) {
     List<String> partes = nome.trim().split(" ");
     if (partes.length >= 2) {
-      return (partes[0][0] + partes[1][0]).toUpperCase();
+      return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
     }
     return partes[0].isNotEmpty ? partes[0][0].toUpperCase() : "?";
+  }
+
+  Future<void> _handleRefresh() async {
+    setState(() {
+      startupDetails = fetchStartupDetails(widget.startupId);
+    });
+    await startupDetails;
   }
 
   @override
@@ -105,7 +76,8 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
       future: startupDetails,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         } else if (snapshot.hasError) {
           return Scaffold(body: Center(child: Text('Erro: ${snapshot.error}')));
         }
@@ -113,226 +85,305 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
         final data = snapshot.data!;
 
         final double progressoBarra = data.totalTokens > 0
-            ? ((data.totalTokens - data.circulatingTokens) / data.totalTokens).clamp(0.0, 1.0)
+            ? (data.circulatingTokens / data.totalTokens).clamp(0.0, 1.0)
             : 0.0;
 
         final double percentualVendido = progressoBarra * 100;
 
         Color corRisco = const Color.fromARGB(255, 255, 102, 0);
-        if (data.riscoLabel.toLowerCase().contains("baixo")) corRisco = Colors.green;
-        if (data.riscoLabel.toLowerCase().contains("alto")) corRisco = Colors.red;
+        if (data.riskLabel.toLowerCase().contains("baixo")) corRisco = Colors.green;
+        if (data.riskLabel.toLowerCase().contains("alto")) corRisco = Colors.red;
 
         return Scaffold(
+          backgroundColor: const Color(0xFFF5F5F5),
           appBar: FixedHeader(
-            nome: data.nome,
-            segmento: data.segmento,
+            name: data.name,
+            segment: data.segment,
             logoPath: data.logoUrl,
-            resumo: data.resumo,
+            shortDescription: data.shortDescription,
           ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Card de Retorno
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: data.retornoEsperado >= 0
-                          ? const Color(0xFF25A830)
-                          : Colors.redAccent,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Retorno esperado',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12)),
-                        Row(
-                          children: [
-                            Icon(
-                                data.retornoEsperado >= 0
-                                    ? Icons.trending_up
-                                    : Icons.trending_down,
-                                color: Colors.white,
-                                size: 30),
-                            const SizedBox(width: 8),
-                            Text('${data.retornoEsperado}x',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 30)),
-                          ],
-                        ),
-                        const Text('ao ano',
-                            style: TextStyle(color: Colors.white70, fontSize: 11)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-
-                  // Risco e Prazo
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15)),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+          body: RefreshIndicator(
+            onRefresh: _handleRefresh,
+            color: const Color(0xFF00A84E),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Card de Retorno
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: data.expectedReturn >= 0
+                            ? const Color(0xFF25A830)
+                            : Colors.redAccent,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Retorno esperado',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12)),
+                          Row(
                             children: [
-                              const Text('Risco',
-                                  style: TextStyle(
-                                      color: Color.fromARGB(179, 77, 75, 75),
-                                      fontSize: 14)),
-                              Text(
-                                data.riscoLabel.replaceAll("Risco ", ""),
-                                style: TextStyle(
-                                    color: corRisco,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17),
-                              ),
+                              Icon(
+                                  data.expectedReturn >= 0
+                                      ? Icons.trending_up
+                                      : Icons.trending_down,
+                                  color: Colors.white,
+                                  size: 30),
+                              const SizedBox(width: 8),
+                              Text('${data.expectedReturn}x',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30)),
                             ],
                           ),
-                        ),
+                          const Text('ao ano',
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 11)),
+                        ],
                       ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15)),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Prazo',
+                    ),
+                    const SizedBox(height: 15),
+
+                    // Risco e Prazo
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Risco',
+                                    style: TextStyle(
+                                        color: Color.fromARGB(179, 77, 75, 75),
+                                        fontSize: 14)),
+                                Text(
+                                  data.riskLabel.replaceAll("Risco ", ""),
                                   style: TextStyle(
-                                      color: Color.fromARGB(179, 77, 75, 75),
-                                      fontSize: 14)),
-                              Text(
-                                data.horizonte.split(" ").first,
-                                style: const TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17),
-                              ),
-                            ],
+                                      color: corRisco,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Tokens em circulação',
-                            style: TextStyle(color: Colors.grey, fontSize: 14)),
-                        const SizedBox(height: 12),
-                        LinearProgressIndicator(
-                          value: progressoBarra,
-                          backgroundColor: Colors.grey[200],
-                          color: const Color(0xFF00A84E),
-                          minHeight: 10,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // ✅ Exibe total emitido à esquerda
-                            Text(
-                              '${data.totalTokens} emitidos',
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Prazo',
+                                    style: TextStyle(
+                                        color: Color.fromARGB(179, 77, 75, 75),
+                                        fontSize: 14)),
+                                Text(
+                                  data.horizon.split(" ").first,
+                                  style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17),
+                                ),
+                              ],
                             ),
-                            // ✅ Exibe % vendida à direita
-                            Text(
-                              '${percentualVendido.toStringAsFixed(1)}% vendidos',
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 15),
 
-                  CardSobreStartup(descricao: data.descricao),
-                  const SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-                  // Tags
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15)),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: data.tags.map((tag) => _buildTag(tag)).toList(),
+                    // Gráfico de Preço
+                    PriceHistoryChart(
+                      startupId: data.id,
+                      initialHistory: data.history,
+                      currency: data.meta.currency,
                     ),
-                  ),
-                  const SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-                  // Sócios
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Sócios',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 20)),
-                        const SizedBox(height: 15),
-                        ...data.socios.map((socio) => Padding(
-                              padding: const EdgeInsets.only(bottom: 15),
-                              child: _buildSocioRow(
-                                gerarIniciais(socio['name']),
-                                socio['name'],
-                                socio['role'],
-                                "${socio['equityPercent']}%",
-                              ),
-                            )),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00A84E),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 22),
-                      shape: RoundedRectangleBorder(
+                    // Métricas de Mercado
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(15)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Métricas de Mercado',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18)),
+                          const SizedBox(height: 15),
+                          _buildMarketMetric('Valuation Atual',
+                              _formatCurrency(data.valuation / 100)),
+                          const Divider(height: 30),
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: _buildMarketMetric('Preço Médio',
+                                      _formatCurrency(data.summary.averagePrice))),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: _buildMarketMetric('Variação',
+                                      '${_formatPercent(data.history.isNotEmpty ? data.history.last.variationPercent ?? 0 : 0)}%')),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const Text('Investir agora',
-                        style:
-                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: 15),
+
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Tokens em circulação',
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 14)),
+                          const SizedBox(height: 12),
+                          LinearProgressIndicator(
+                            value: progressoBarra,
+                            backgroundColor: Colors.grey[200],
+                            color: const Color(0xFF00A84E),
+                            minHeight: 10,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_formatNumber(data.totalTokens)} emitidos',
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.grey),
+                              ),
+                              Text(
+                                '${_formatPercent(percentualVendido)}% vendidos',
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+
+                    CardSobreStartup(descricao: data.longDescription),
+                    const SizedBox(height: 15),
+
+                    // Tags
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15)),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            data.tags.map((tag) => _buildTag(tag)).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+
+                    // Sócios
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Sócios',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 20)),
+                          const SizedBox(height: 15),
+                          ...data.founders.map((founder) => Padding(
+                                padding: const EdgeInsets.only(bottom: 15),
+                                child: _buildSocioRow(
+                                  gerarIniciais(founder.name),
+                                  founder.name,
+                                  founder.role,
+                                  "${founder.equityPercent}%",
+                                ),
+                              )),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Botão FAQ
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FAQPage(
+                              questions: data.questions,
+                              startupName: data.name,
+                              logoUrl: data.logoUrl,
+                              startupId: data.id,
+                              access: data.access,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.question_answer_outlined),
+                      label: const Text('FAQ da Startup',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF00A84E),
+                        side: const BorderSide(
+                            color: Color(0xFF00A84E), width: 2),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00A84E),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 22),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                      ),
+                      child: const Text('Investir agora',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
             ),
           ),
-        );
+        ));
       },
     );
   }
@@ -341,25 +392,41 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(6)),
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(6)),
       child: Text(label,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+    );
+  }
+
+  Widget _buildMarketMetric(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+        const SizedBox(height: 4),
+        Text(value,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: Colors.black)),
+      ],
     );
   }
 }
 
 class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String nome;
-  final String segmento;
+  final String name;
+  final String segment;
   final String logoPath;
-  final String resumo;
+  final String shortDescription;
 
   const FixedHeader(
       {super.key,
-      required this.nome,
-      required this.segmento,
+      required this.name,
+      required this.segment,
       required this.logoPath,
-      required this.resumo});
+      required this.shortDescription});
 
   @override
   Widget build(BuildContext context) {
@@ -401,19 +468,19 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(nome,
+                    Text(name,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 4),
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8F5E9),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        segmento,
+                        segment,
                         style: const TextStyle(
                           color: Color(0xFF00A84E),
                           fontWeight: FontWeight.bold,
@@ -427,18 +494,20 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(resumo,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: Colors.grey)),
+          Text(
+            shortDescription,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey),
+          ),
         ],
       ),
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(170);
+  Size get preferredSize => const Size.fromHeight(200);
 }
 
 class CardSobreStartup extends StatefulWidget {
@@ -474,7 +543,7 @@ class _CardSobreStartupState extends State<CardSobreStartup> {
                 text: span,
                 maxLines: 3,
                 textAlign: TextAlign.left,
-                textDirection: TextDirection.ltr,
+                textDirection: ui.TextDirection.ltr,
               );
               tp.layout(maxWidth: constraints.maxWidth);
               final needsExpansion = tp.didExceedMaxLines;

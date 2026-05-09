@@ -1,32 +1,82 @@
-// Autor: Allan Giovanni Matias Paes
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
+//
+// =========================
+// PERSISTIDO NO FIRESTORE
+// =========================
+//
+
+export type WalletTokenPosition = {
+  startupId: string;
+  startupName: string;
+
+  qtdTokens: number;
+  lockedTokens: number;
+
+  averagePriceCents: number;
+  investedCents: number;
+
+  updatedAt: Timestamp;
+};
+
+export type Wallet = {
+  balanceInCents: number;
+
+  totalInvestedCents: number;
+
+  positions: WalletTokenPositionDTO[];
+
+  updatedAt: Timestamp;
+};
+
+export type WalletTokenPositionDTO = WalletTokenPosition & {
+  currentTokenPriceCents: number;
+
+  currentValueCents: number;
+};
+
+export type WalletDTO = Omit<Wallet, "positions"> & {
+  positions: WalletTokenPositionDTO[];
+};
+
+//
+// =========================
+// USER
+// =========================
+//
+
 export type UserProfile = {
-  uid: string;
   name: string;
   email: string;
+  phone: string;
   cpf: string;
-  walletBalance: number;
+
+  wallet: WalletDTO;
+
+  createdAt: Timestamp;
+};
+
+export type UserProfileDTO = Omit<UserProfile, "wallet"> & {
+  wallet: WalletDTO;
+};
+
+export type UpdateWalletParams = {
+  userId: string;
+
+  startupId: string;
+  startupName: string;
+
+  qtdTokens: number;
+
+  tokenPriceCents: number;
+  currentTokenPriceCents: number;
 };
 
 export type UserCreateDTO = UserProfile & {
+  uid: string;
   createdAt: FieldValue;
 };
 
 export type UserEntity = UserProfile & {
   createdAt: Timestamp;
-};
-
-export type SignupData = {
-  name: string;
-  email: string;
-  cpf: string;
-  phone: string;
-  password?: string; // OPCIONAL se for login social, mas obrigatorio para email/pass
-};
-
-export type SignupResponse = {
-  uid: string;
-  name: string;
-  email: string;
 };

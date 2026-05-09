@@ -7,6 +7,10 @@ import {
   StartupRiskLabel,
 } from ".";
 
+/* =====================================================
+  DOCUMENTOS / BANCO
+===================================================== */
+
 export type CreateStartupDocumentDTO = StartupDocument & {
   id: string;
   createdAt: FieldValue;
@@ -16,13 +20,46 @@ export type StartupDocumentDTO = StartupDocument & {
   createdAt: Timestamp;
 };
 
+export type StartupQuestionCreateDTO = {
+  startupId: string;
+  authorId: string;
+  authorEmail: string;
+  text: string;
+  visibility: QuestionVisibility;
+  createdAt: Timestamp;
+};
+
+export type QuestionResponseDTO = {
+  id: string;
+  startupId: string;
+  authorId: string;
+  text: string;
+  visibility: QuestionVisibility;
+  answers: StartupQuestionAnswer[];
+  createdAt: Timestamp | FieldValue;
+};
+
+/* =====================================================
+  TIPOS DE NEGÓCIO
+===================================================== */
+
 export type ListStartupsRequest = {
   stage?: string;
   search?: string;
 };
 
-export type GetStartupDetailsRequest = {
+export type GetStartupIdRequest = {
   id: string;
+};
+
+export type PriceHistoryOptions = {
+  historyRange?: { from: string; to: string };
+  historyInterval?: PriceHistoryInterval;
+  historyLimit?: number;
+};
+
+export type GetStartupDetailsRequest = GetStartupIdRequest & {
+  options?: PriceHistoryOptions | null;
 };
 
 export type ExpectedReturn = {
@@ -50,10 +87,45 @@ export type StartupDetails = {
   horizon: string;
 };
 
+/* =====================================================
+  
+DTOs DE RESPOSTA (API)
+===================================================== */
+
+export type AnswerViewDTO = {
+  answer: string;
+  answeredAt: string; // ISO string
+};
+
+export type QuestionViewDTO = {
+  id: string;
+  startupId: string;
+  authorId: string;
+  authorEmail: string;
+  text: string;
+  visibility: QuestionVisibility;
+  answers: AnswerViewDTO[];
+  createdAt: string;
+};
+
+export type GetStartupQuestionsResponse = {
+  startupId: string;
+  startupName: string;
+  isInvestor: boolean;
+  questions: QuestionViewDTO[];
+};
+
+export type PriceHistoryResponse = {
+  history: PriceHistoryItem[];
+  summary: PriceHistorySummary;
+  meta: PriceHistoryMeta;
+};
+
 export type GetStartupDetailsResponse = {
   id: string;
   details: StartupDetails;
-  publicQuestions: QuestionResponseDTO[];
+  priceHistory: PriceHistoryResponse;
+  questions: QuestionViewDTO[];
   access: {
     isInvestor: boolean;
     canTradeTokens: boolean;
@@ -61,24 +133,44 @@ export type GetStartupDetailsResponse = {
   };
 };
 
-/**
- * Documento de pergunta armazenado na subcoleção da startup.
- *
- * As perguntas ficam em `startups/{startupId}/questions/{questionId}` para
- * manter o histórico associado ao projeto. A resposta é opcional porque a
- * pergunta pode ser criada antes de alguém respondê-la.
- */
-export type StartupQuestionCreateInput = {
-  startupId: string;
-  authorId: string;
-  text: string;
-  visibility: QuestionVisibility;
-  createdAt: FieldValue;
+/* =====================================================
+  HISTÓRICO DE PREÇOS
+===================================================== */
+
+export type PriceHistoryInterval = "monthly" | "semestrely" | "yearly" | "ytd";
+
+export type GetStartupPriceHistoryRequest = {
+  id: string;
+  range: {
+    from: string; // ISO date
+    to: string; // ISO date
+  };
+  interval: PriceHistoryInterval;
+  limit?: number;
 };
 
-export type QuestionResponseDTO = {
-  id: string;
-  text: string;
-  answers?: StartupQuestionAnswer[];
-  createdAt: Timestamp | FieldValue;
+export type PriceHistoryItem = {
+  timestamp: string; // ISO date
+  price: number;
+  variation: number | null;
+  variationPercent: number | null;
+};
+
+export type PriceHistorySummary = {
+  currentPrice: number;
+  highestPrice: number;
+  lowestPrice: number;
+  averagePrice: number;
+};
+
+export type PriceHistoryMeta = {
+  count: number;
+  currency: string;
+  interval: PriceHistoryInterval;
+};
+
+export type GetStartupPriceHistoryResponse = {
+  history: PriceHistoryItem[];
+  summary: PriceHistorySummary;
+  meta: PriceHistoryMeta;
 };

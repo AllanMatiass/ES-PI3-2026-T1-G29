@@ -5,6 +5,8 @@ import 'package:frontend/models/startup.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:frontend/pages/startup_details.dart';
 
+import 'package:intl/intl.dart';
+
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
 
@@ -16,6 +18,13 @@ class _CatalogPageState extends State<CatalogPage> {
   late Future<List<StartupListItem>> _startupsFuture;
   String _searchQuery = "";
   StartupStage? _selectedStage;
+
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'pt_BR',
+    symbol: 'R\$',
+  );
+
+  final NumberFormat _decimalFormat = NumberFormat.decimalPattern('pt_BR');
 
   @override
   void initState() {
@@ -35,8 +44,11 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   String _formatCurrency(int cents) {
-    double amount = cents / 100.0;
-    return 'R\$ ${amount.toStringAsFixed(2).replaceAll('.', ',')}';
+    return _currencyFormat.format(cents / 100);
+  }
+
+  String _formatNumber(int number) {
+    return _decimalFormat.format(number);
   }
 
   @override
@@ -273,7 +285,7 @@ class _CatalogPageState extends State<CatalogPage> {
                 const SizedBox(height: 12),
                 _buildInfoRow(
                     'Total de Tokens',
-                    startup.totalTokensIssued.toString(),
+                    _formatNumber(startup.totalTokensIssued),
                     Icons.token_outlined),
                 const SizedBox(height: 12),
                 _buildInfoRow(
@@ -291,7 +303,6 @@ class _CatalogPageState extends State<CatalogPage> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    // ✅ NAVEGAÇÃO ADICIONADA AQUI
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -437,7 +448,6 @@ class _CatalogPageState extends State<CatalogPage> {
       },
     );
   }
-
   Widget _buildErrorState(String error) {
     return Center(
       child: Padding(

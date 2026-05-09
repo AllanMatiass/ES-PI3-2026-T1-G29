@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/pages/catalog_page.dart';
 import 'package:frontend/widgets/home_view.dart';
 import 'package:frontend/widgets/soon_view.dart';
+import 'package:frontend/widgets/offers_view.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
@@ -21,13 +22,14 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     
-    // Inicializamos as páginas. 
-    // Nota: Removido WidgetsFlutterBinding.ensureInitialized() daqui, 
-    // pois ele só deve ser chamado no main().
+
     _pages = [
-      HomeView(userName: widget.userName),
+      HomeView(
+        userName: widget.userName,
+        onNavigateToCatalog: () => _onItemTapped(1),
+      ),
       CatalogPage(),
-      const SoonView(title: 'Carteira'),
+      const OffersView(),
       const SoonView(title: 'Conta'),
       const SoonView(title: 'Perfil'),
     ];
@@ -66,9 +68,9 @@ class _HomePageState extends State<HomePage> {
             label: 'Investir',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.work_outline),
-            activeIcon: Icon(Icons.work),
-            label: 'Carteira',
+            icon: Icon(Icons.local_offer_outlined),
+            activeIcon: Icon(Icons.local_offer),
+            label: 'Ofertas',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.credit_card),
