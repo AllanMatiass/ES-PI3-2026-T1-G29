@@ -46,6 +46,7 @@ export const createTransaction = onCall(
         normalizedSeller = {
           id: sellerId,
           name: sellerName,
+          type: "USER",
         };
       }
 
@@ -54,6 +55,7 @@ export const createTransaction = onCall(
         buyer: {
           id: buyerId,
           name: buyerName,
+          type: "USER",
         },
         seller: normalizedSeller,
         qtdTokens,

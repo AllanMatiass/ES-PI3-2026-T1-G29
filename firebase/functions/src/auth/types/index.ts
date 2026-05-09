@@ -1,15 +1,20 @@
-// Autor: Allan Giovanni Matias Paes
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+
+//
+// =========================
+// PERSISTIDO NO FIRESTORE
+// =========================
+//
 
 export type WalletTokenPosition = {
   startupId: string;
   startupName: string;
 
   qtdTokens: number;
+  lockedTokens: number;
+
   averagePriceCents: number;
   investedCents: number;
-
-  lockedTokens: number;
 
   updatedAt: Timestamp;
 };
@@ -19,9 +24,50 @@ export type Wallet = {
 
   totalInvestedCents: number;
 
-  positions: WalletTokenPosition[];
+  positions: WalletTokenPositionDTO[];
 
   updatedAt: Timestamp;
+};
+
+//
+// =========================
+// DTO ENRIQUECIDO (RESPONSE)
+// =========================
+//
+
+export type WalletTokenPositionDTO = WalletTokenPosition & {
+  currentTokenPriceCents: number;
+
+  currentValueCents: number;
+
+  profitCents: number;
+
+  profitPercentage: number;
+};
+
+export type WalletDTO = Omit<Wallet, "positions"> & {
+  positions: WalletTokenPositionDTO[];
+};
+
+//
+// =========================
+// USER
+// =========================
+//
+
+export type UserProfile = {
+  name: string;
+  email: string;
+  phone: string;
+  cpf: string;
+
+  wallet: Wallet;
+
+  createdAt: Timestamp;
+};
+
+export type UserProfileDTO = Omit<UserProfile, "wallet"> & {
+  wallet: WalletDTO;
 };
 
 export type UpdateWalletParams = {
@@ -34,15 +80,6 @@ export type UpdateWalletParams = {
 
   tokenPriceCents: number;
   currentTokenPriceCents: number;
-};
-
-export type UserProfile = {
-  name: string;
-  email: string;
-  phone: string;
-  cpf: string;
-  wallet: Wallet;
-  createdAt: Timestamp;
 };
 
 export type UserCreateDTO = UserProfile & {

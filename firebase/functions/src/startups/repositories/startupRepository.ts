@@ -70,6 +70,20 @@ export async function getStartupById(
   return startupSnapshot.data() as StartupDocumentDTO;
 }
 
+export async function getStartupsByIds(
+  startupIds: string[],
+): Promise<(StartupDocumentDTO | undefined)[]> {
+  if (startupIds.length === 0) return [];
+
+  const refs = startupIds.map((id) => startupsCollection.doc(id));
+  const snapshots = await db.getAll(...refs);
+
+  return snapshots.map((snap) => {
+    if (!snap.exists) return undefined;
+    return snap.data() as StartupDocumentDTO;
+  });
+}
+
 export async function userIsInvestor(
   startupId: string,
   uid: string,
