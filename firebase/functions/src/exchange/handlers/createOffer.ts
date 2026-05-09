@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-import { requireAuthenticatedUser } from "../../shared/auth";
+// import { requireAuthenticatedUser } from "../../shared/auth";
 import { CreateOfferRequestDTO, OfferResponseDTO } from "../types/dtos";
 import { validateTransactionData } from "../utils";
 import { Timestamp } from "firebase-admin/firestore";
@@ -12,15 +12,9 @@ import {
 
 export const createOffer = onCall(
   withCallHandler<CreateOfferRequestDTO, OfferResponseDTO>(async (request) => {
-    requireAuthenticatedUser(request);
-    const {
-      startupId,
-      buyerId,
-      sellerId,
-      qtdTokens,
-      tokenPriceCents,
-      expiresAt,
-    } = request.data;
+    // requireAuthenticatedUser(request);
+    const { startupId, sellerId, qtdTokens, tokenPriceCents, expiresAt } =
+      request.data;
 
     if (!startupId || !sellerId || !qtdTokens || !tokenPriceCents) {
       throw new HttpsError(
@@ -29,8 +23,7 @@ export const createOffer = onCall(
       );
     }
 
-    const { buyerUser, sellerUser, startup } = await validateTransactionData({
-      buyerId,
+    const { sellerUser, startup } = await validateTransactionData({
       sellerId,
       startupId,
       qtdTokens,
@@ -59,13 +52,6 @@ export const createOffer = onCall(
 
       createdAt: now,
     };
-
-    if (buyerUser && buyerId) {
-      offerData.buyer = {
-        id: buyerId,
-        name: buyerUser.name,
-      };
-    }
 
     if (expiresAt) {
       const expirationDate = new Date(expiresAt);

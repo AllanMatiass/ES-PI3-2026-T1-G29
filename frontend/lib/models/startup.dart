@@ -64,10 +64,10 @@ class StartupListItem {
       name: json['name'] as String,
       stage: StartupStage.fromString(json['stage'] as String),
       shortDescription: json['shortDescription'] as String,
-      capitalRaisedCents: json['capitalRaisedCents'] as int,
-      totalTokensIssued: json['totalTokensIssued'] as int,
-      currentTokenPriceCents: json['currentTokenPriceCents'] as int,
-      priceVariation: json['variation']['percentage'] ?.toDouble(),
+      capitalRaisedCents: (json['capitalRaisedCents'] as num?)?.toInt() ?? 0,
+      totalTokensIssued: (json['totalTokensIssued'] as num?)?.toInt() ?? 0,
+      currentTokenPriceCents: (json['currentTokenPriceCents'] as num?)?.toInt() ?? 0,
+      priceVariation: (json['variation']['percentage'] as num?)?.toDouble(),
       priceVariationTrend: json['variation']['trend'],
       coverImageUrl: json['coverImageUrl'] as String?,
       tags: List<String>.from(json['tags'] as List),
@@ -93,7 +93,7 @@ class Founder {
     return Founder(
       name: json['name'] ?? '',
       role: json['role'] ?? '',
-      equityPercent: json['equityPercent'] ?? 0,
+      equityPercent: (json['equityPercent'] as num?)?.toInt() ?? 0,
       bio: json['bio'] ?? '',
     );
   }
@@ -357,12 +357,12 @@ class StartupData {
       expectedReturn: (details['expectedReturn']['expected'] as num).toDouble(),
       riskLabel: details['risk']['label'] ?? '',
       horizon: details['horizon'] ?? '',
-      valuation: details['valuation'] ?? 0,
+      valuation: (details['valuation'] as num?)?.toInt() ?? 0,
 
       // tokens
-      totalTokens: startup['totalTokensIssued'] ?? 0,
-      circulatingTokens: startup['circulatingTokens'] ?? 0,
-      currentTokenPriceCents: startup['currentTokenPriceCents'] ?? 0,
+      totalTokens: (startup['totalTokensIssued'] as num?)?.toInt() ?? 0,
+      circulatingTokens: (startup['circulatingTokens'] as num?)?.toInt() ?? 0,
+      currentTokenPriceCents: (startup['currentTokenPriceCents'] as num?)?.toInt() ?? 0,
 
       // startup
       demoVideos: List<String>.from(startup['demoVideos'] ?? []),
@@ -370,9 +370,9 @@ class StartupData {
       externalMembers: (startup['externalMembers'] as List? ?? [])
           .map((e) => ExternalMember.fromJson(e))
           .toList(),
-      capitalRaisedCents: startup['capitalRaisedCents'] ?? 0,
+      capitalRaisedCents: (startup['capitalRaisedCents'] as num?)?.toInt() ?? 0,
       executiveSummary: startup['executiveSummary'] ?? '',
-      lastValuationCents: startup['lastValuationCents'] ?? 0,
+      lastValuationCents: (startup['lastValuationCents'] as num?)?.toInt() ?? 0,
       createdAt: FirestoreTimestamp.fromJson(startup['createdAt']),
       updatedAt: FirestoreTimestamp.fromJson(startup['updatedAt']),
 

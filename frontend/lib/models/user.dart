@@ -1,91 +1,129 @@
 import './firebase.dart';
 
-class UserData {
+class UserProfile {
   final String uid;
   final String name;
   final String email;
   final String phone;
   final String cpf;
-  final FirestoreTimestamp createdAt;
   final Wallet wallet;
+  final FirestoreTimestamp createdAt;
 
-  UserData({
+  UserProfile({
     required this.uid,
     required this.name,
     required this.email,
     required this.phone,
     required this.cpf,
-    required this.createdAt,
     required this.wallet,
+    required this.createdAt,
   });
 
-  factory UserData.fromJson(Map<String, dynamic> json) {
-    final data = json['result']['data'];
-    return UserData(
-      uid: data['uid'],
-      name: data['name'],
-      email: data['email'],
-      phone: data['phone'],
-      cpf: data['cpf'],
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final data = json['result'] != null ? json['result']['data'] : json;
+    
+    return UserProfile(
+      uid: data['uid'] ?? '',
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      phone: data['phone'] ?? '',
+      cpf: data['cpf'] ?? '',
+      wallet: Wallet.fromJson(data['wallet'] ?? {}),
       createdAt: FirestoreTimestamp.fromJson(data['createdAt']),
-      wallet: Wallet.fromJson(data['wallet']),
     );
   }
 }
 
 class Wallet {
-  final int balanceInCents;
-  final int totalInvestedCents;
+  final double balanceInCents;
+  final double totalInvestedCents;
+  final List<WalletTokenPosition> positions;
   final FirestoreTimestamp updatedAt;
-  final List<Position> positions;
 
   Wallet({
     required this.balanceInCents,
     required this.totalInvestedCents,
-    required this.updatedAt,
     required this.positions,
+    required this.updatedAt,
   });
 
   factory Wallet.fromJson(Map<String, dynamic> json) {
     return Wallet(
-      balanceInCents: json['balanceInCents'] ?? 0,
-      totalInvestedCents: json['totalInvestedCents'] ?? 0,
+      balanceInCents: (json['balanceInCents'] as num?)?.toDouble() ?? 0.0,
+      totalInvestedCents: (json['totalInvestedCents'] as num?)?.toDouble() ?? 0.0,
       updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
       positions: (json['positions'] as List? ?? [])
-          .map((e) => Position.fromJson(e))
+          .map((e) => WalletTokenPosition.fromJson(e))
           .toList(),
     );
   }
 }
 
-class Position {
-  final int lockedTokens;
-  final int qtdTokens;
+class WalletTokenPosition {
   final String startupId;
   final String startupName;
+  final int qtdTokens;
+  final int lockedTokens;
+  final double averagePriceCents;
+  final double investedCents;
   final FirestoreTimestamp updatedAt;
-  final int averagePriceCents;
-  final int investedCents;
 
-  Position({
-    required this.lockedTokens,
-    required this.qtdTokens,
+  WalletTokenPosition({
     required this.startupId,
     required this.startupName,
-    required this.updatedAt,
+    required this.qtdTokens,
+    required this.lockedTokens,
     required this.averagePriceCents,
     required this.investedCents,
+    required this.updatedAt,
   });
 
-  factory Position.fromJson(Map<String, dynamic> json) {
-    return Position(
-      lockedTokens: json['lockedTokens'] ?? 0,
-      qtdTokens: json['qtdTokens'] ?? 0,
+  factory WalletTokenPosition.fromJson(Map<String, dynamic> json) {
+    return WalletTokenPosition(
       startupId: json['startupId'] ?? '',
       startupName: json['startupName'] ?? '',
+      qtdTokens: (json['qtdTokens'] as num?)?.toInt() ?? 0,
+      lockedTokens: (json['lockedTokens'] as num?)?.toInt() ?? 0,
+      averagePriceCents: (json['averagePriceCents'] as num?)?.toDouble() ?? 0.0,
+      investedCents: (json['investedCents'] as num?)?.toDouble() ?? 0.0,
       updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
-      averagePriceCents: json['averagePriceCents'] ?? 0,
-      investedCents: json['investedCents'] ?? 0,
+    );
+  }
+}
+
+class WalletTokenPositionDTO extends WalletTokenPosition {
+  final double currentTokenPriceCents;
+  final double currentValueCents;
+  final double profitCents;
+  final double profitPercentage;
+
+  WalletTokenPositionDTO({
+    required super.startupId,
+    required super.startupName,
+    required super.qtdTokens,
+    required super.lockedTokens,
+    required super.averagePriceCents,
+    required super.investedCents,
+    required super.updatedAt,
+    required this.currentTokenPriceCents,
+    required this.currentValueCents,
+    required this.profitCents,
+    required this.profitPercentage,
+  });
+
+  factory WalletTokenPositionDTO.fromJson(Map<String, dynamic> json) {
+    return WalletTokenPositionDTO(
+      startupId: json['startupId'] ?? '',
+      startupName: json['startupName'] ?? '',
+      qtdTokens: (json['qtdTokens'] as num?)?.toInt() ?? 0,
+      lockedTokens: (json['lockedTokens'] as num?)?.toInt() ?? 0,
+      averagePriceCents: (json['averagePriceCents'] as num?)?.toDouble() ?? 0.0,
+      investedCents: (json['investedCents'] as num?)?.toDouble() ?? 0.0,
+      updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
+      currentTokenPriceCents: (json['currentTokenPriceCents'] as num?)?.toDouble() ?? 0.0,
+      currentValueCents: (json['currentValueCents'] as num?)?.toDouble() ?? 0.0,
+      profitCents: (json['profitCents'] as num?)?.toDouble() ?? 0.0,
+      profitPercentage: (json['profitPercentage'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
