@@ -169,39 +169,53 @@ export const acceptOffer = onCall(
         // Atualiza posição vendedor
         // ============================
 
-        sellerPosition.qtdTokens -= qtdTokens;
+        sellerPosition.qtdTokens =
+          (Number(sellerPosition.qtdTokens) || 0) - qtdTokens;
 
-        sellerPosition.lockedTokens -= qtdTokens;
+        sellerPosition.lockedTokens =
+          (Number(sellerPosition.lockedTokens) || 0) - qtdTokens;
 
-        sellerPosition.investedCents =
-          sellerPosition.qtdTokens * sellerPosition.averagePriceCents;
+        const sellerAvgPrice = Number(sellerPosition.averagePriceCents) || 0;
+        const sellerCurrentPrice =
+          Number(sellerPosition.currentTokenPriceCents) || 0;
 
-        sellerPosition.currentValueCents =
-          sellerPosition.qtdTokens * sellerPosition.currentTokenPriceCents;
+        sellerPosition.investedCents = Math.round(
+          sellerPosition.qtdTokens * sellerAvgPrice,
+        );
 
-        sellerPosition.profitCents =
-          sellerPosition.currentValueCents - sellerPosition.investedCents;
+        sellerPosition.currentValueCents = Math.round(
+          sellerPosition.qtdTokens * sellerCurrentPrice,
+        );
 
-        sellerPosition.profitPercentage =
-          sellerPosition.investedCents <= 0
-            ? 0
-            : (sellerPosition.profitCents / sellerPosition.investedCents) * 100;
+        // sellerPosition.profitCents =
+        //   sellerPosition.currentValueCents - sellerPosition.investedCents;
+
+        // sellerPosition.profitPercentage =
+        //   sellerPosition.investedCents <= 0
+        //     ? 0
+        //     : Number(
+        //         (
+        //           (sellerPosition.profitCents / sellerPosition.investedCents) *
+        //           100
+        //         ).toFixed(2),
+        //       );
 
         sellerPosition.updatedAt = now;
 
         // remove posições zeradas
         sellerWallet.positions = sellerWallet.positions.filter(
-          (p: WalletTokenPositionDTO) => p.qtdTokens > 0,
+          (p: WalletTokenPositionDTO) => (Number(p.qtdTokens) || 0) > 0,
         );
 
         // ============================
         // Atualiza wallet vendedor
         // ============================
 
-        sellerWallet.balanceInCents += purchaseTotalCents;
+        sellerWallet.balanceInCents =
+          (Number(sellerWallet.balanceInCents) || 0) + purchaseTotalCents;
 
         sellerWallet.totalInvestedCents = sellerWallet.positions.reduce(
-          (acc, p) => acc + p.investedCents,
+          (acc, p) => acc + (Number(p.investedCents) || 0),
           0,
         );
 
@@ -216,32 +230,44 @@ export const acceptOffer = onCall(
         );
 
         if (existingBuyerPosition) {
-          const newQtdTokens = existingBuyerPosition.qtdTokens + qtdTokens;
+          const currentBuyerQtd = Number(existingBuyerPosition.qtdTokens) || 0;
+          const currentBuyerInvested =
+            Number(existingBuyerPosition.investedCents) || 0;
+          const currentBuyerPrice =
+            Number(existingBuyerPosition.currentTokenPriceCents) ||
+            offer.tokenPriceCents;
 
-          const newInvestedCents =
-            existingBuyerPosition.investedCents + purchaseTotalCents;
+          const newQtdTokens = currentBuyerQtd + qtdTokens;
+
+          const newInvestedCents = currentBuyerInvested + purchaseTotalCents;
 
           existingBuyerPosition.qtdTokens = newQtdTokens;
 
           existingBuyerPosition.investedCents = newInvestedCents;
 
-          existingBuyerPosition.averagePriceCents = Math.round(
-            newInvestedCents / newQtdTokens,
+          existingBuyerPosition.averagePriceCents =
+            newQtdTokens > 0 ? Math.round(newInvestedCents / newQtdTokens) : 0;
+
+          existingBuyerPosition.currentTokenPriceCents = currentBuyerPrice;
+
+          existingBuyerPosition.currentValueCents = Math.round(
+            newQtdTokens * currentBuyerPrice,
           );
 
-          existingBuyerPosition.currentValueCents =
-            newQtdTokens * existingBuyerPosition.currentTokenPriceCents;
+          // existingBuyerPosition.profitCents =
+          //   existingBuyerPosition.currentValueCents -
+          //   existingBuyerPosition.investedCents;
 
-          existingBuyerPosition.profitCents =
-            existingBuyerPosition.currentValueCents -
-            existingBuyerPosition.investedCents;
-
-          existingBuyerPosition.profitPercentage =
-            existingBuyerPosition.investedCents <= 0
-              ? 0
-              : (existingBuyerPosition.profitCents /
-                  existingBuyerPosition.investedCents) *
-                100;
+          // existingBuyerPosition.profitPercentage =
+          //   existingBuyerPosition.investedCents <= 0
+          //     ? 0
+          //     : Number(
+          //         (
+          //           (existingBuyerPosition.profitCents /
+          //             existingBuyerPosition.investedCents) *
+          //           100
+          //         ).toFixed(2),
+          //       );
 
           existingBuyerPosition.updatedAt = now;
         } else {
@@ -262,9 +288,9 @@ export const acceptOffer = onCall(
 
             currentValueCents,
 
-            profitCents: currentValueCents - purchaseTotalCents,
+            // profitCents: currentValueCents - purchaseTotalCents,
 
-            profitPercentage: 0,
+            // profitPercentage: 0,
 
             updatedAt: now,
           });
@@ -274,10 +300,11 @@ export const acceptOffer = onCall(
         // Atualiza wallet comprador
         // ============================
 
-        buyerWallet.balanceInCents -= purchaseTotalCents;
+        buyerWallet.balanceInCents =
+          (Number(buyerWallet.balanceInCents) || 0) - purchaseTotalCents;
 
         buyerWallet.totalInvestedCents = buyerWallet.positions.reduce(
-          (acc, p) => acc + p.investedCents,
+          (acc, p) => acc + (Number(p.investedCents) || 0),
           0,
         );
 

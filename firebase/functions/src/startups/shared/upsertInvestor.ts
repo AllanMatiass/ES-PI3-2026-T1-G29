@@ -52,16 +52,20 @@ export async function upsertStartupInvestor(
   // =========================
   const data = snap.data() as StartupInvestor;
 
-  const totalTokens = data.totalTokens + params.qtdTokens;
+  const currentTokens = Number(data.totalTokens) || 0;
+  const currentInvested = Number(data.totalInvestedCents) || 0;
 
-  const totalInvestedCents = data.totalInvestedCents + investedCents;
+  const totalTokens = currentTokens + params.qtdTokens;
 
-  const averagePriceCents = totalInvestedCents / totalTokens;
+  const totalInvestedCents = currentInvested + investedCents;
+
+  const averagePriceCents =
+    totalTokens > 0 ? totalInvestedCents / totalTokens : 0;
 
   tx.update(ref, {
     totalTokens,
     totalInvestedCents,
-    averagePriceCents,
+    averagePriceCents: Math.round(averagePriceCents),
     lastInvestmentAt: now,
     updatedAt: now,
   });
