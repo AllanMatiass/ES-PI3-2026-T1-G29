@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-import { AcceptOfferRequestDTO, TransactionIdDTO } from "../types/dtos";
+import { AcceptOfferRequestDTO, AcceptOfferResponseDTO } from "../types/dtos";
 
 import { getOfferById } from "../repositories/offerRepository";
 import { getUserById } from "../../auth/repositories/userRepository";
@@ -15,331 +15,386 @@ import { db } from "../../shared/firebase";
 import { Wallet, WalletTokenPositionDTO } from "../../auth/types";
 
 import { TransactionService } from "../shared/transactionService";
+import { Offer } from "../types";
 
-// import { requireAuthenticatedUser } from "../../shared/auth";
+import { requireAuthenticatedUser } from "../../shared/auth";
 
 const transactionService = new TransactionService();
 
 export const acceptOffer = onCall(
-  withCallHandler<AcceptOfferRequestDTO, TransactionIdDTO>(async (request) => {
-    // const buyerId = requireAuthenticatedUser(request).uid;
-    const buyerId = "mZ7eEGjtx2dXZu3w8lB28sTXGkf2";
+  withCallHandler<AcceptOfferRequestDTO, AcceptOfferResponseDTO>(
+    async (request) => {
+      const buyerId = requireAuthenticatedUser(request).uid;
 
-    const offerId = normalizeString(request.data?.offerId);
+      const offerId = normalizeString(request.data?.offerId);
+      const qtdTokens = request.data.qtdTokens;
 
-    if (!offerId) {
-      throw new HttpsError("invalid-argument", "offerId é obrigatório.");
-    }
+      if (!offerId || !qtdTokens || qtdTokens <= 0) {
+        throw new HttpsError(
+          "invalid-argument",
+          "offerId e qtdTokens > 0 são obrigatórios.",
+        );
+      }
 
-    const [offer, buyerUser] = await Promise.all([
-      getOfferById(offerId),
-      getUserById(buyerId),
-    ]);
-
-    if (!offer) {
-      throw new HttpsError("not-found", "Oferta não encontrada.");
-    }
-
-    if (!buyerUser) {
-      throw new HttpsError("not-found", "Comprador não encontrado.");
-    }
-
-    const now = Timestamp.now();
-
-    if (offer.status !== "OPEN") {
-      throw new HttpsError("failed-precondition", "Oferta não está aberta.");
-    }
-
-    if (offer.expiresAt && offer.expiresAt.toMillis() < now.toMillis()) {
-      throw new HttpsError("failed-precondition", "Oferta expirou.");
-    }
-
-    if (offer.seller.id === buyerId) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Comprador não pode ser vendedor.",
-      );
-    }
-
-    const sellerId = offer.seller.id;
-
-    if (!sellerId) {
-      throw new HttpsError("failed-precondition", "Vendedor inválido.");
-    }
-
-    const result = await db.runTransaction(async (tx) => {
-      const sellerRef = db.collection("users").doc(sellerId);
-
-      const buyerRef = db.collection("users").doc(buyerId);
-
-      const offerRef = db.collection("offers").doc(offerId);
-
-      // ============================
-      // Leituras transacionais
-      // ============================
-
-      const [sellerSnap, buyerSnap, offerSnap] = await Promise.all([
-        tx.get(sellerRef),
-        tx.get(buyerRef),
-        tx.get(offerRef),
+      const [offer, buyerUser] = await Promise.all([
+        getOfferById(offerId),
+        getUserById(buyerId),
       ]);
 
-      if (!sellerSnap.exists) {
-        throw new HttpsError("not-found", "Vendedor não encontrado.");
-      }
-
-      if (!buyerSnap.exists) {
-        throw new HttpsError("not-found", "Comprador não encontrado.");
-      }
-
-      if (!offerSnap.exists) {
+      if (!offer) {
         throw new HttpsError("not-found", "Oferta não encontrada.");
       }
 
-      const freshOffer = offerSnap.data();
-
-      if (!freshOffer) {
-        throw new HttpsError("not-found", "Oferta inválida.");
+      if (!buyerUser) {
+        throw new HttpsError("not-found", "Comprador não encontrado.");
       }
 
-      // evita race condition
-      if (freshOffer.status !== "OPEN") {
-        throw new HttpsError("failed-precondition", "Oferta já processada.");
+      const now = Timestamp.now();
+
+      if (offer.status !== "OPEN") {
+        throw new HttpsError("failed-precondition", "Oferta não está aberta.");
       }
 
-      const sellerData = sellerSnap.data();
-      const buyerData = buyerSnap.data();
-
-      const sellerWallet: Wallet = sellerData?.wallet;
-      const buyerWallet: Wallet = buyerData?.wallet;
-
-      sellerWallet.positions ??= [];
-      buyerWallet.positions ??= [];
-
-      // ============================
-      // Validação saldo comprador
-      // ============================
-
-      if (buyerWallet.balanceInCents < offer.totalCents) {
-        throw new HttpsError("failed-precondition", "Saldo insuficiente.");
+      if (offer.expiresAt && offer.expiresAt.toMillis() < now.toMillis()) {
+        throw new HttpsError("failed-precondition", "Oferta expirou.");
       }
 
-      // ============================
-      // Busca posição vendedor
-      // ============================
-
-      const sellerPosition = sellerWallet.positions.find(
-        (p: WalletTokenPositionDTO) => p.startupId === offer.startupId,
-      );
-
-      if (!sellerPosition) {
-        throw new HttpsError("failed-precondition", "Vendedor sem posição.");
-      }
-
-      if (sellerPosition.qtdTokens < offer.qtdTokens) {
+      if (offer.seller.id === buyerId) {
         throw new HttpsError(
-          "failed-precondition",
-          "Tokens totais insuficientes.",
+          "invalid-argument",
+          "Comprador não pode ser vendedor.",
         );
       }
 
-      if (sellerPosition.lockedTokens < offer.qtdTokens) {
-        throw new HttpsError(
-          "failed-precondition",
-          "Tokens bloqueados insuficientes.",
-        );
+      const sellerId = offer.seller.id;
+
+      if (!sellerId) {
+        throw new HttpsError("failed-precondition", "Vendedor inválido.");
       }
 
-      // ============================
-      // Atualiza posição vendedor
-      // ============================
+      const result = await db.runTransaction(async (tx) => {
+        const sellerRef = db.collection("users").doc(sellerId);
 
-      sellerPosition.qtdTokens -= offer.qtdTokens;
+        const buyerRef = db.collection("users").doc(buyerId);
 
-      sellerPosition.lockedTokens -= offer.qtdTokens;
+        const offerRef = db.collection("offers").doc(offerId);
 
-      sellerPosition.investedCents =
-        sellerPosition.qtdTokens * sellerPosition.averagePriceCents;
+        // ============================
+        // Leituras transacionais
+        // ============================
 
-      sellerPosition.currentValueCents =
-        sellerPosition.qtdTokens * sellerPosition.currentTokenPriceCents;
+        const [sellerSnap, buyerSnap, offerSnap] = await Promise.all([
+          tx.get(sellerRef),
+          tx.get(buyerRef),
+          tx.get(offerRef),
+        ]);
 
-      sellerPosition.profitCents =
-        sellerPosition.currentValueCents - sellerPosition.investedCents;
+        if (!sellerSnap.exists) {
+          throw new HttpsError("not-found", "Vendedor não encontrado.");
+        }
 
-      sellerPosition.profitPercentage =
-        sellerPosition.investedCents <= 0
-          ? 0
-          : (sellerPosition.profitCents / sellerPosition.investedCents) * 100;
+        if (!buyerSnap.exists) {
+          throw new HttpsError("not-found", "Comprador não encontrado.");
+        }
 
-      sellerPosition.updatedAt = now;
+        if (!offerSnap.exists) {
+          throw new HttpsError("not-found", "Oferta não encontrada.");
+        }
 
-      // remove posições zeradas
-      sellerWallet.positions = sellerWallet.positions.filter(
-        (p: WalletTokenPositionDTO) => p.qtdTokens > 0,
-      );
+        const freshOffer = offerSnap.data() as Offer;
 
-      // ============================
-      // Atualiza wallet vendedor
-      // ============================
+        if (!freshOffer) {
+          throw new HttpsError("not-found", "Oferta inválida.");
+        }
 
-      sellerWallet.balanceInCents += offer.totalCents;
+        // evita race condition
+        if (freshOffer.status !== "OPEN") {
+          throw new HttpsError("failed-precondition", "Oferta já processada.");
+        }
 
-      sellerWallet.totalInvestedCents = sellerWallet.positions.reduce(
-        (acc, p) => acc + p.investedCents,
-        0,
-      );
+        if (qtdTokens > freshOffer.qtdTokens) {
+          throw new HttpsError(
+            "failed-precondition",
+            "A quantidade solicitada é maior do que a disponível na oferta.",
+          );
+        }
 
-      sellerWallet.updatedAt = now;
+        const purchaseTotalCents = qtdTokens * freshOffer.tokenPriceCents;
 
-      // ============================
-      // Atualiza posição comprador
-      // ============================
+        const sellerData = sellerSnap.data();
+        const buyerData = buyerSnap.data();
 
-      const existingBuyerPosition = buyerWallet.positions.find(
-        (p: WalletTokenPositionDTO) => p.startupId === offer.startupId,
-      );
+        const sellerWallet: Wallet = sellerData?.wallet;
+        const buyerWallet: Wallet = buyerData?.wallet;
 
-      if (existingBuyerPosition) {
-        const newQtdTokens = existingBuyerPosition.qtdTokens + offer.qtdTokens;
+        sellerWallet.positions ??= [];
+        buyerWallet.positions ??= [];
 
-        const newInvestedCents =
-          existingBuyerPosition.investedCents + offer.totalCents;
+        // ============================
+        // Validação saldo comprador
+        // ============================
 
-        existingBuyerPosition.qtdTokens = newQtdTokens;
+        if (buyerWallet.balanceInCents < purchaseTotalCents) {
+          throw new HttpsError("failed-precondition", "Saldo insuficiente.");
+        }
 
-        existingBuyerPosition.investedCents = newInvestedCents;
+        // ============================
+        // Busca posição vendedor
+        // ============================
 
-        existingBuyerPosition.averagePriceCents = Math.round(
-          newInvestedCents / newQtdTokens,
+        const sellerPosition = sellerWallet.positions.find(
+          (p: WalletTokenPositionDTO) => p.startupId === offer.startupId,
         );
 
-        existingBuyerPosition.currentValueCents =
-          newQtdTokens * existingBuyerPosition.currentTokenPriceCents;
+        if (!sellerPosition) {
+          throw new HttpsError("failed-precondition", "Vendedor sem posição.");
+        }
 
-        existingBuyerPosition.profitCents =
-          existingBuyerPosition.currentValueCents -
-          existingBuyerPosition.investedCents;
+        if (sellerPosition.qtdTokens < qtdTokens) {
+          throw new HttpsError(
+            "failed-precondition",
+            "Tokens totais insuficientes.",
+          );
+        }
 
-        existingBuyerPosition.profitPercentage =
-          existingBuyerPosition.investedCents <= 0
-            ? 0
-            : (existingBuyerPosition.profitCents /
-                existingBuyerPosition.investedCents) *
-              100;
+        if (sellerPosition.lockedTokens < qtdTokens) {
+          throw new HttpsError(
+            "failed-precondition",
+            "Tokens bloqueados insuficientes.",
+          );
+        }
 
-        existingBuyerPosition.updatedAt = now;
-      } else {
-        const currentValueCents = offer.qtdTokens * offer.tokenPriceCents;
+        // ============================
+        // Atualiza posição vendedor
+        // ============================
 
-        buyerWallet.positions.push({
+        sellerPosition.qtdTokens =
+          (Number(sellerPosition.qtdTokens) || 0) - qtdTokens;
+
+        sellerPosition.lockedTokens =
+          (Number(sellerPosition.lockedTokens) || 0) - qtdTokens;
+
+        const sellerAvgPrice = Number(sellerPosition.averagePriceCents) || 0;
+        const sellerCurrentPrice =
+          Number(sellerPosition.currentTokenPriceCents) || 0;
+
+        sellerPosition.investedCents = Math.round(
+          sellerPosition.qtdTokens * sellerAvgPrice,
+        );
+
+        sellerPosition.currentValueCents = Math.round(
+          sellerPosition.qtdTokens * sellerCurrentPrice,
+        );
+
+        // sellerPosition.profitCents =
+        //   sellerPosition.currentValueCents - sellerPosition.investedCents;
+
+        // sellerPosition.profitPercentage =
+        //   sellerPosition.investedCents <= 0
+        //     ? 0
+        //     : Number(
+        //         (
+        //           (sellerPosition.profitCents / sellerPosition.investedCents) *
+        //           100
+        //         ).toFixed(2),
+        //       );
+
+        sellerPosition.updatedAt = now;
+
+        // remove posições zeradas
+        sellerWallet.positions = sellerWallet.positions.filter(
+          (p: WalletTokenPositionDTO) => (Number(p.qtdTokens) || 0) > 0,
+        );
+
+        // ============================
+        // Atualiza wallet vendedor
+        // ============================
+
+        sellerWallet.balanceInCents =
+          (Number(sellerWallet.balanceInCents) || 0) + purchaseTotalCents;
+
+        sellerWallet.totalInvestedCents = sellerWallet.positions.reduce(
+          (acc, p) => acc + (Number(p.investedCents) || 0),
+          0,
+        );
+
+        sellerWallet.updatedAt = now;
+
+        // ============================
+        // Atualiza posição comprador
+        // ============================
+
+        const existingBuyerPosition = buyerWallet.positions.find(
+          (p: WalletTokenPositionDTO) => p.startupId === offer.startupId,
+        );
+
+        if (existingBuyerPosition) {
+          const currentBuyerQtd = Number(existingBuyerPosition.qtdTokens) || 0;
+          const currentBuyerInvested =
+            Number(existingBuyerPosition.investedCents) || 0;
+          const currentBuyerPrice =
+            Number(existingBuyerPosition.currentTokenPriceCents) ||
+            offer.tokenPriceCents;
+
+          const newQtdTokens = currentBuyerQtd + qtdTokens;
+
+          const newInvestedCents = currentBuyerInvested + purchaseTotalCents;
+
+          existingBuyerPosition.qtdTokens = newQtdTokens;
+
+          existingBuyerPosition.investedCents = newInvestedCents;
+
+          existingBuyerPosition.averagePriceCents =
+            newQtdTokens > 0 ? Math.round(newInvestedCents / newQtdTokens) : 0;
+
+          existingBuyerPosition.currentTokenPriceCents = currentBuyerPrice;
+
+          existingBuyerPosition.currentValueCents = Math.round(
+            newQtdTokens * currentBuyerPrice,
+          );
+
+          // existingBuyerPosition.profitCents =
+          //   existingBuyerPosition.currentValueCents -
+          //   existingBuyerPosition.investedCents;
+
+          // existingBuyerPosition.profitPercentage =
+          //   existingBuyerPosition.investedCents <= 0
+          //     ? 0
+          //     : Number(
+          //         (
+          //           (existingBuyerPosition.profitCents /
+          //             existingBuyerPosition.investedCents) *
+          //           100
+          //         ).toFixed(2),
+          //       );
+
+          existingBuyerPosition.updatedAt = now;
+        } else {
+          const currentValueCents = qtdTokens * offer.tokenPriceCents;
+
+          buyerWallet.positions.push({
+            startupId: offer.startupId,
+            startupName: offer.startupName,
+
+            qtdTokens: qtdTokens,
+            lockedTokens: 0,
+
+            averagePriceCents: offer.tokenPriceCents,
+
+            investedCents: purchaseTotalCents,
+
+            currentTokenPriceCents: offer.tokenPriceCents,
+
+            currentValueCents,
+
+            // profitCents: currentValueCents - purchaseTotalCents,
+
+            // profitPercentage: 0,
+
+            updatedAt: now,
+          });
+        }
+
+        // ============================
+        // Atualiza wallet comprador
+        // ============================
+
+        buyerWallet.balanceInCents =
+          (Number(buyerWallet.balanceInCents) || 0) - purchaseTotalCents;
+
+        buyerWallet.totalInvestedCents = buyerWallet.positions.reduce(
+          (acc, p) => acc + (Number(p.investedCents) || 0),
+          0,
+        );
+
+        buyerWallet.updatedAt = now;
+
+        // ============================
+        // Atualiza investidores startup
+        // ============================
+
+        await upsertStartupInvestor(tx, {
           startupId: offer.startupId,
           startupName: offer.startupName,
 
-          qtdTokens: offer.qtdTokens,
-          lockedTokens: 0,
+          userId: buyerId,
+          userName: buyerUser.name,
 
-          averagePriceCents: offer.tokenPriceCents,
-
-          investedCents: offer.totalCents,
-
-          currentTokenPriceCents: offer.tokenPriceCents,
-
-          currentValueCents,
-
-          profitCents: currentValueCents - offer.totalCents,
-
-          profitPercentage: 0,
-
-          updatedAt: now,
-        });
-      }
-
-      // ============================
-      // Atualiza wallet comprador
-      // ============================
-
-      buyerWallet.balanceInCents -= offer.totalCents;
-
-      buyerWallet.totalInvestedCents = buyerWallet.positions.reduce(
-        (acc, p) => acc + p.investedCents,
-        0,
-      );
-
-      buyerWallet.updatedAt = now;
-
-      // ============================
-      // Atualiza investidores startup
-      // ============================
-
-      await upsertStartupInvestor(tx, {
-        startupId: offer.startupId,
-        startupName: offer.startupName,
-
-        userId: buyerId,
-        userName: buyerUser.name,
-
-        qtdTokens: offer.qtdTokens,
-
-        tokenPriceCents: offer.tokenPriceCents,
-      });
-
-      // ============================
-      // Auditoria / histórico
-      // ============================
-
-      const transactionRef = await transactionService.registerTransactionTx(
-        tx,
-        {
-          startupId: offer.startupId,
-          startupName: offer.startupName,
-
-          buyer: {
-            id: buyerId,
-            name: buyerUser.name,
-            type: "USER",
-          },
-
-          seller: {
-            id: sellerId,
-            name: offer.seller.name,
-            type: "USER",
-          },
-
-          qtdTokens: offer.qtdTokens,
+          qtdTokens: qtdTokens,
 
           tokenPriceCents: offer.tokenPriceCents,
-        },
-      );
+        });
 
-      // ============================
-      // Escritas finais
-      // ============================
+        // ============================
+        // Auditoria / histórico
+        // ============================
 
-      tx.update(sellerRef, {
-        wallet: sellerWallet,
+        const transactionRef = await transactionService.registerTransactionTx(
+          tx,
+          {
+            startupId: offer.startupId,
+            startupName: offer.startupName,
+
+            buyer: {
+              id: buyerId,
+              name: buyerUser.name,
+              type: "USER",
+            },
+
+            seller: {
+              id: sellerId,
+              name: offer.seller.name,
+              type: "USER",
+            },
+
+            qtdTokens: qtdTokens,
+
+            tokenPriceCents: offer.tokenPriceCents,
+          },
+        );
+
+        // ============================
+        // Escritas finais
+        // ============================
+
+        tx.update(sellerRef, {
+          wallet: sellerWallet,
+        });
+
+        tx.update(buyerRef, {
+          wallet: buyerWallet,
+        });
+
+        const isFullAcceptance = qtdTokens === freshOffer.qtdTokens;
+
+        if (isFullAcceptance) {
+          tx.update(offerRef, {
+            status: "ACCEPTED",
+            qtdTokens: 0,
+            totalCents: 0,
+
+            acceptedAt: now,
+
+            buyer: {
+              id: buyerId,
+              name: buyerUser.name,
+            },
+          });
+        } else {
+          tx.update(offerRef, {
+            qtdTokens: freshOffer.qtdTokens - qtdTokens,
+            totalCents:
+              (freshOffer.qtdTokens - qtdTokens) * freshOffer.tokenPriceCents,
+          });
+        }
+
+        return {
+          transactionId: transactionRef.id,
+          remainingTokens: freshOffer.qtdTokens - qtdTokens,
+        };
       });
 
-      tx.update(buyerRef, {
-        wallet: buyerWallet,
-      });
-
-      tx.update(offerRef, {
-        status: "ACCEPTED",
-
-        acceptedAt: now,
-
-        buyer: {
-          id: buyerId,
-          name: buyerUser.name,
-        },
-      });
-
-      return transactionRef.id;
-    });
-
-    return {
-      id: result,
-    };
-  }),
+      return result;
+    },
+  ),
 );

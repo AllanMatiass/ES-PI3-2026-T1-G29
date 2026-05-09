@@ -106,15 +106,16 @@ export class DashboardService {
 
     const variationCents = currentTotalValueCents - investedTotalCents;
 
-    const variationPercent =
-      investedTotalCents <= 0
-        ? 0
-        : Number(((variationCents / investedTotalCents) * 100).toFixed(2));
+    let variationPercent = 0;
+    if (investedTotalCents > 0) {
+      const calc = (variationCents / investedTotalCents) * 100;
+      variationPercent = isNaN(calc) ? 0 : Number(calc.toFixed(2));
+    }
 
     return {
       points,
-      currentTotalValueCents,
-      variationCents,
+      currentTotalValueCents: Math.round(currentTotalValueCents) || 0,
+      variationCents: Math.round(variationCents) || 0,
       variationPercent,
     };
   }

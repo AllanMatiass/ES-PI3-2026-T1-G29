@@ -74,32 +74,72 @@ export async function getUserById(
 
   if (!snapshot.exists) return undefined;
 
-  return snapshot.data() as UserProfile;
+  const data = snapshot.data() as UserProfile;
+
+  if (data.wallet) {
+    data.wallet = healWallet(data.wallet);
+  }
+
+  return data;
+}
+
+function healWallet(wallet: Wallet): Wallet {
+  const positions = (wallet.positions ?? []).map(
+    (p: WalletTokenPositionDTO) => ({
+      startupId: p.startupId || "",
+      startupName: p.startupName || "Startup",
+      qtdTokens: Number(p.qtdTokens) || 0,
+      lockedTokens: Number(p.lockedTokens) || 0,
+      averagePriceCents: Number(p.averagePriceCents) || 0,
+      investedCents: Number(p.investedCents) || 0,
+      currentTokenPriceCents: Number(p.currentTokenPriceCents) || 0,
+      currentValueCents: Number(p.currentValueCents) || 0,
+      updatedAt: p.updatedAt || Timestamp.now(),
+    }),
+  );
+
+  const totalInvestedCents = positions.reduce(
+    (sum: number, p: WalletTokenPositionDTO) =>
+      sum + (Number(p.investedCents) || 0),
+    0,
+  );
+
+  return {
+    ...wallet,
+    balanceInCents: Number(wallet.balanceInCents) || 0,
+    totalInvestedCents: Number(totalInvestedCents) || 0,
+    positions,
+    updatedAt: wallet.updatedAt || Timestamp.now(),
+  };
 }
 
 function createPosition(
   params: Omit<UpdateWalletParams, "userId">,
 ): WalletTokenPositionDTO {
-  const investedCents = params.qtdTokens * params.tokenPriceCents;
-  const currentValueCents = params.qtdTokens * params.currentTokenPriceCents;
-  const profitCents = currentValueCents - investedCents;
-  const profitPercentage =
-    investedCents <= 0 ? 0 : (profitCents / investedCents) * 100;
+  const qtdTokens = Number(params.qtdTokens) || 0;
+  const tokenPriceCents = Number(params.tokenPriceCents) || 0;
+  const currentTokenPriceCents = Number(params.currentTokenPriceCents) || 0;
+
+  const investedCents = qtdTokens * tokenPriceCents;
+  const currentValueCents = qtdTokens * currentTokenPriceCents;
+  // const profitCents = currentValueCents - investedCents;
+  // const profitPercentage =
+  //   investedCents <= 0 ? 0 : (profitCents / investedCents) * 100;
 
   return {
     startupId: params.startupId,
     startupName: params.startupName,
 
-    qtdTokens: params.qtdTokens,
+    qtdTokens,
     lockedTokens: 0,
 
-    averagePriceCents: params.tokenPriceCents,
+    averagePriceCents: tokenPriceCents,
     investedCents,
 
-    currentTokenPriceCents: params.currentTokenPriceCents,
+    currentTokenPriceCents,
     currentValueCents,
-    profitCents,
-    profitPercentage,
+    // profitCents,
+    // profitPercentage,
 
     updatedAt: Timestamp.now(),
   };
@@ -107,34 +147,45 @@ function createPosition(
 
 function updatePosition(
   position: WalletTokenPositionDTO,
-  qtdTokens: number,
+  qtdTokensDelta: number,
   tokenPriceCents: number,
   currentTokenPriceCents: number,
 ): WalletTokenPositionDTO {
-  const totalTokens = position.qtdTokens + qtdTokens;
+  const currentQtd = Number(position.qtdTokens) || 0;
+  const currentInvested = Number(position.investedCents) || 0;
 
-  const newInvestment = qtdTokens * tokenPriceCents;
+  const totalTokens = currentQtd + qtdTokensDelta;
 
-  const investedCents = position.investedCents + newInvestment;
+  let investedCents = currentInvested;
+  if (qtdTokensDelta > 0) {
+    investedCents += qtdTokensDelta * tokenPriceCents;
+  } else if (qtdTokensDelta < 0) {
+    // Proporcional ao que foi investido (preço médio)
+    const avgPrice = currentQtd > 0 ? currentInvested / currentQtd : 0;
+    investedCents += qtdTokensDelta * avgPrice;
+  }
 
-  const averagePriceCents = investedCents / totalTokens;
+  // Garante que não fique negativo por arredondamento
+  investedCents = Math.max(0, investedCents);
+
+  const averagePriceCents = totalTokens > 0 ? investedCents / totalTokens : 0;
 
   const currentValueCents = totalTokens * currentTokenPriceCents;
-  const profitCents = currentValueCents - investedCents;
-  const profitPercentage =
-    investedCents <= 0 ? 0 : (profitCents / investedCents) * 100;
+  // const profitCents = currentValueCents - investedCents;
+  // const profitPercentage =
+  //   investedCents <= 0 ? 0 : (profitCents / investedCents) * 100;
 
   return {
     ...position,
 
     qtdTokens: totalTokens,
-    investedCents,
+    investedCents: Math.round(investedCents),
 
     averagePriceCents: Math.round(averagePriceCents),
     currentTokenPriceCents,
-    currentValueCents,
-    profitCents,
-    profitPercentage,
+    currentValueCents: Math.round(currentValueCents),
+    // profitCents: Math.round(profitCents),
+    // profitPercentage: Number(profitPercentage.toFixed(2)),
 
     updatedAt: Timestamp.now(),
   };
@@ -144,7 +195,7 @@ function recalculateWallet(wallet: Wallet): Wallet {
   const positions = wallet.positions ?? [];
 
   const totalInvestedCents = positions.reduce(
-    (sum, p) => sum + p.investedCents,
+    (sum, p) => sum + (Number(p.investedCents) || 0),
     0,
   );
 
@@ -153,7 +204,7 @@ function recalculateWallet(wallet: Wallet): Wallet {
 
     positions,
 
-    totalInvestedCents,
+    totalInvestedCents: Math.round(totalInvestedCents),
 
     updatedAt: Timestamp.now(),
   };
