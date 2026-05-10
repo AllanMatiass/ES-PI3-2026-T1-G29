@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 
@@ -253,21 +254,6 @@ export const acceptOffer = onCall(
             newQtdTokens * currentBuyerPrice,
           );
 
-          // existingBuyerPosition.profitCents =
-          //   existingBuyerPosition.currentValueCents -
-          //   existingBuyerPosition.investedCents;
-
-          // existingBuyerPosition.profitPercentage =
-          //   existingBuyerPosition.investedCents <= 0
-          //     ? 0
-          //     : Number(
-          //         (
-          //           (existingBuyerPosition.profitCents /
-          //             existingBuyerPosition.investedCents) *
-          //           100
-          //         ).toFixed(2),
-          //       );
-
           existingBuyerPosition.updatedAt = now;
         } else {
           const currentValueCents = qtdTokens * offer.tokenPriceCents;
@@ -286,10 +272,6 @@ export const acceptOffer = onCall(
             currentTokenPriceCents: offer.tokenPriceCents,
 
             currentValueCents,
-
-            // profitCents: currentValueCents - purchaseTotalCents,
-
-            // profitPercentage: 0,
 
             updatedAt: now,
           });

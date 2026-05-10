@@ -1,16 +1,13 @@
+// Autor: Allan Giovanni Matias Paes
 import { Timestamp } from "firebase-admin/firestore";
-
 import * as transactionRepository from "../repositories/transactionRepository";
 import * as startupRepository from "../../startups/repositories/startupRepository";
-
 import {
   DashboardPeriod,
   DashboardDataPoint,
   GetInvestorDashboardResponseDTO,
 } from "../types/dtos";
-
 import { Transaction } from "../types";
-
 import { StartupDocumentDTO } from "../../startups/types/dtos";
 
 interface StartupValuationData {
@@ -62,10 +59,6 @@ export class DashboardService {
       }
     });
 
-    // =========================
-    // VALUATIONS
-    // =========================
-
     const startupsData: StartupValuationData[] = await Promise.all(
       startupIds.map(async (id) => {
         const valuations = await startupRepository.getValuationHistory(
@@ -82,10 +75,6 @@ export class DashboardService {
         };
       }),
     );
-
-    // =========================
-    // POINTS
-    // =========================
 
     const points = this.calculatePoints(
       userId,
@@ -120,10 +109,6 @@ export class DashboardService {
     };
   }
 
-  // ======================================================
-  // INVESTED VALUE
-  // ======================================================
-
   private calculateInvestedValue(
     userId: string,
     transactions: Transaction[],
@@ -142,10 +127,6 @@ export class DashboardService {
 
     return invested;
   }
-
-  // ======================================================
-  // DATE RANGE
-  // ======================================================
 
   private getStartDate(period: DashboardPeriod, now: Date): Date {
     const date = new Date(now);
@@ -175,10 +156,6 @@ export class DashboardService {
 
     return date;
   }
-
-  // ======================================================
-  // MAIN GRAPH CALCULATION
-  // ======================================================
 
   private calculatePoints(
     userId: string,
@@ -252,8 +229,6 @@ export class DashboardService {
       }[]
     >();
 
-    // importante:
-    // garantir ASC
     const sortedTransactions = [...transactions].sort(
       (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis(),
     );

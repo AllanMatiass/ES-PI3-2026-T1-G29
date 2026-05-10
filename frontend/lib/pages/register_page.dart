@@ -56,7 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _isLoading = false);
 
     if (mounted) {
-      if (result['success']) {
+      if (result.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Conta criada com sucesso! Redirecionando...'),
@@ -70,7 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => HomePage(
-                userName: result['data']['name'] ?? _nameController.text,
+                userName: result.data?['name'] ?? _nameController.text,
               ),
             ),
             (route) => false,
@@ -79,7 +79,7 @@ class _RegisterPageState extends State<RegisterPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['error'] ?? 'Erro ao criar conta'),
+            content: Text(result.error?.message ?? 'Erro ao criar conta'),
             backgroundColor: Colors.red,
           ),
         );
