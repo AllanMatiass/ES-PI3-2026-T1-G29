@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { Timestamp } from "firebase-admin/firestore";
 
 export type ParticipantType = "USER" | "STARTUP";

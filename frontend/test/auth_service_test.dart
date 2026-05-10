@@ -46,9 +46,9 @@ void main() {
         password: "123456"
       );
 
-      expect(result['success'], true);
-      expect(result['data']['name'], "Matias");
-      expect(result['data']['email'], "matias3@22e.com");
+      expect(result.success, true);
+      expect(result.data?['name'], "Matias");
+      expect(result.data?['email'], "matias3@22e.com");
     });
 
     test('returns error map when the CPF already exists', () async {
@@ -77,8 +77,8 @@ void main() {
         password: "123456"
       );
 
-      expect(result['success'], false);
-      expect(result['error'], "CPF já cadastrado no sistema.");
+      expect(result.success, false);
+      expect(result.error?.message, "CPF já cadastrado no sistema.");
     });
 
     test('returns error map when connection fails', () async {
@@ -96,8 +96,8 @@ void main() {
         password: "123456"
       );
 
-      expect(result['success'], false);
-      expect(result['error'], contains("Falha na conexão"));
+      expect(result.success, false);
+      expect(result.error?.message, contains("Falha na conexão"));
     });
   });
 }

@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
 import { db } from "../../firebase";

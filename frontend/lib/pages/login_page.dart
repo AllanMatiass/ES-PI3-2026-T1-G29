@@ -38,11 +38,11 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = false);
 
     if (mounted) {
-      if (result['success']) {
+      if (result.success) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) =>
-                HomePage(userName: result['name'] ?? 'Usuário'),
+                HomePage(userName: result.data?['name'] ?? 'Usuário'),
           ),
         );
       } else {

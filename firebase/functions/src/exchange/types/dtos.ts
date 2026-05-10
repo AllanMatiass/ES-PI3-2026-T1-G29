@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { OfferWithId, TransactionParticipant } from ".";
 
 export const DASHBOARD_PERIODS = [

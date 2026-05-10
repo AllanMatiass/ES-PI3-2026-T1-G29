@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { requireAuthenticatedUser } from "../../shared/auth";
