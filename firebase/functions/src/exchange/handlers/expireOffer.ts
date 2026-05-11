@@ -14,7 +14,7 @@ export const expireOffer = onCall(
     if (!offerId || !expirationDate) {
       throw new HttpsError(
         "invalid-argument",
-        "offerId e expirationDate devem estar presentes no corpo da requisição.",
+        "offerId deve estar presente no corpo da requisição.",
       );
     }
 
