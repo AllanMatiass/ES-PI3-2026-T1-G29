@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    
+
 
     _pages = [
       HomeView(
@@ -44,7 +44,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    
+    final theme = Theme.of(context);
+
     if (user == null) {
       // Usamos Future.microtask para evitar erros de navegação durante o build
       Future.microtask(() => Navigator.pushReplacementNamed(context, '/login'));
@@ -84,10 +85,10 @@ class _HomePageState extends State<HomePage> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xFF00A84E),
-        unselectedItemColor: const Color(0xFF9AA3AE),
+        unselectedItemColor: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 8,
       ),
     );

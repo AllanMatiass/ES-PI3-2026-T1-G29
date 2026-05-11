@@ -72,14 +72,18 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return FutureBuilder<StartupData>(
       future: startupDetails,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
+          return Scaffold(
+              backgroundColor: theme.scaffoldBackgroundColor,
+              body: const Center(child: CircularProgressIndicator()));
         } else if (snapshot.hasError) {
-          return Scaffold(body: Center(child: Text('Erro: ${snapshot.error}')));
+          return Scaffold(
+              backgroundColor: theme.scaffoldBackgroundColor,
+              body: Center(child: Text('Erro: ${snapshot.error}', style: TextStyle(color: theme.colorScheme.onSurface))));
         }
 
         final data = snapshot.data!;
@@ -95,7 +99,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
         if (data.riskLabel.toLowerCase().contains("alto")) corRisco = Colors.red;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
+          backgroundColor: theme.scaffoldBackgroundColor,
           appBar: FixedHeader(
             name: data.name,
             segment: data.segment,
@@ -160,14 +164,15 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                           child: Container(
                             padding: const EdgeInsets.all(15),
                             decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.colorScheme.surface,
+                                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                                 borderRadius: BorderRadius.circular(15)),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Risco',
+                                Text('Risco',
                                     style: TextStyle(
-                                        color: Color.fromARGB(179, 77, 75, 75),
+                                        color: theme.colorScheme.onSurfaceVariant,
                                         fontSize: 14)),
                                 Text(
                                   data.riskLabel.replaceAll("Risco ", ""),
@@ -185,19 +190,20 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                           child: Container(
                             padding: const EdgeInsets.all(15),
                             decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.colorScheme.surface,
+                                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                                 borderRadius: BorderRadius.circular(15)),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Prazo',
+                                Text('Prazo',
                                     style: TextStyle(
-                                        color: Color.fromARGB(179, 77, 75, 75),
+                                        color: theme.colorScheme.onSurfaceVariant,
                                         fontSize: 14)),
                                 Text(
                                   data.horizon.split(" ").first,
-                                  style: const TextStyle(
-                                      color: Colors.black,
+                                  style: TextStyle(
+                                      color: theme.colorScheme.onSurface,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 17),
                                 ),
@@ -222,18 +228,19 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.colorScheme.surface,
+                          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                           borderRadius: BorderRadius.circular(15)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Métricas de Mercado',
+                          Text('Métricas de Mercado',
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 18)),
+                                  fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
                           const SizedBox(height: 15),
                           _buildMarketMetric('Valuation Atual',
                               _formatCurrency(data.valuation / 100)),
-                          const Divider(height: 30),
+                          Divider(height: 30, color: theme.dividerColor.withOpacity(0.1)),
                           Row(
                             children: [
                               Expanded(
@@ -253,18 +260,19 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.colorScheme.surface,
+                          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                           borderRadius: BorderRadius.circular(15)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Tokens em circulação',
+                          Text('Tokens em circulação',
                               style:
-                                  TextStyle(color: Colors.grey, fontSize: 14)),
+                                  TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
                           const SizedBox(height: 12),
                           LinearProgressIndicator(
                             value: progressoBarra,
-                            backgroundColor: Colors.grey[200],
+                            backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                             color: const Color(0xFF00A84E),
                             minHeight: 10,
                             borderRadius: BorderRadius.circular(5),
@@ -275,13 +283,13 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                             children: [
                               Text(
                                 '${_formatNumber(data.totalTokens)} emitidos',
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.grey),
+                                style: TextStyle(
+                                    fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                               ),
                               Text(
                                 '${_formatPercent(percentualVendido)}% vendidos',
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.grey),
+                                style: TextStyle(
+                                    fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                               ),
                             ],
                           ),
@@ -297,7 +305,8 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.colorScheme.surface,
+                          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                           borderRadius: BorderRadius.circular(15)),
                       child: Wrap(
                         spacing: 8,
@@ -312,18 +321,20 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.colorScheme.surface,
+                          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
                           borderRadius: BorderRadius.circular(15)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Sócios',
+                          Text('Sócios',
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 20)),
+                                  fontWeight: FontWeight.bold, fontSize: 20, color: theme.colorScheme.onSurface)),
                           const SizedBox(height: 15),
                           ...data.founders.map((founder) => Padding(
                                 padding: const EdgeInsets.only(bottom: 15),
                                 child: _buildSocioRow(
+                                  context,
                                   gerarIniciais(founder.name),
                                   founder.name,
                                   founder.role,
@@ -389,27 +400,29 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
   }
 
   Widget _buildTag(String label) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
+          color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(6)),
       child: Text(label,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: theme.colorScheme.onSurface)),
     );
   }
 
   Widget _buildMarketMetric(String label, String value) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+        Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
         const SizedBox(height: 4),
         Text(value,
-            style: const TextStyle(
+            style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17,
-                color: Colors.black)),
+                color: theme.colorScheme.onSurface)),
       ],
     );
   }
@@ -430,21 +443,22 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top + 10,
           left: 20,
           right: 20,
           bottom: 15),
-      decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0)))),
+      decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
             onPressed: () => Navigator.maybePop(context),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -460,7 +474,7 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                   width: 50,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.business, size: 50, color: Colors.grey),
+                      Icon(Icons.business, size: 50, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ),
               const SizedBox(width: 15),
@@ -469,14 +483,14 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18)),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5E9),
+                        color: const Color(0xFF00A84E).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -498,8 +512,8 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
             shortDescription,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -523,21 +537,22 @@ class _CardSobreStartupState extends State<CardSobreStartup> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(15),
       decoration:
-          BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+          BoxDecoration(color: theme.colorScheme.surface, border: Border.all(color: theme.dividerColor.withOpacity(0.1)), borderRadius: BorderRadius.circular(15)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Sobre a startup',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text('Sobre a startup',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
           const SizedBox(height: 8),
           LayoutBuilder(
             builder: (context, constraints) {
               final span = TextSpan(
                 text: widget.descricao,
-                style: const TextStyle(color: Colors.black54, height: 1.5),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, height: 1.5),
               );
               final tp = TextPainter(
                 text: span,
@@ -556,7 +571,7 @@ class _CardSobreStartupState extends State<CardSobreStartup> {
                     maxLines: isExpanded ? null : 3,
                     overflow:
                         isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.black54, height: 1.5),
+                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, height: 1.5),
                   ),
                   if (needsExpansion)
                     Padding(
@@ -589,12 +604,13 @@ class _CardSobreStartupState extends State<CardSobreStartup> {
 }
 
 Widget _buildSocioRow(
-    String iniciais, String nome, String cargo, String porcentagem) {
+    BuildContext context, String iniciais, String nome, String cargo, String porcentagem) {
+  final theme = Theme.of(context);
   return Row(
     children: [
       CircleAvatar(
         radius: 22,
-        backgroundColor: const Color(0xFFE8F5E9),
+        backgroundColor: const Color(0xFF00A84E).withOpacity(0.1),
         child: Text(iniciais,
             style: const TextStyle(
                 color: Color(0xFF00A84E), fontWeight: FontWeight.bold)),
@@ -606,9 +622,9 @@ Widget _buildSocioRow(
           children: [
             Text(nome,
                 style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface)),
             Text(cargo,
-                style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
           ],
         ),
       ),
