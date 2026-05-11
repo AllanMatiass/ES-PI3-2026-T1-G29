@@ -84,18 +84,19 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   @override
   Widget build(BuildContext context) {
     final totalCents = _selectedTokens * widget.offer.tokenPriceCents;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Confirmar Compra',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
+        iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
       ),
       body: _isLoading
           ? _buildLoadingState()
@@ -120,16 +121,17 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Widget _buildStartupInfo() {
+    final theme = Theme.of(context);
     return Row(
       children: [
         CircleAvatar(
           radius: 30,
-          backgroundColor: const Color(0xFFF1F5F9),
+          backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
           backgroundImage: _startupData?.logoUrl.isNotEmpty == true
               ? NetworkImage(_startupData!.logoUrl)
               : null,
           child: _startupData?.logoUrl.isEmpty == true
-              ? const Icon(Icons.business, color: Color(0xFF64748B))
+              ? Icon(Icons.business, color: theme.colorScheme.onSurfaceVariant)
               : null,
         ),
         const SizedBox(width: 16),
@@ -139,15 +141,15 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
             children: [
               Text(
                 widget.offer.startupName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               Text(
                 _startupData?.segment ?? 'Setor não informado',
-                style: const TextStyle(color: Color(0xFF64748B)),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -157,6 +159,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Widget _buildFinancialAnalysis() {
+    final theme = Theme.of(context);
     final marketPrice = _startupData?.currentTokenPriceCents ?? 0;
     final offerPrice = widget.offer.tokenPriceCents;
     final discount = marketPrice > 0 ? ((marketPrice - offerPrice) / marketPrice * 100) : 0.0;
@@ -164,16 +167,16 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Análise Financeira',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
           ),
           const SizedBox(height: 16),
           _buildAnalysisRow(
@@ -188,16 +191,16 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
             Icons.local_offer_outlined,
             valueColor: offerPrice <= marketPrice ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
           ),
-          const Divider(height: 32),
+          Divider(height: 32, color: theme.dividerColor.withOpacity(0.1)),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Oportunidade', style: TextStyle(color: Color(0xFF64748B))),
+              Text('Oportunidade', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
               Text(
                 discount > 0 ? '${discount.toStringAsFixed(1)}% abaixo do mercado' : 'Preço de mercado',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: discount > 0 ? const Color(0xFF00A84E) : const Color(0xFF64748B),
+                  color: discount > 0 ? const Color(0xFF00A84E) : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -208,17 +211,18 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Widget _buildAnalysisRow(String label, String value, IconData icon, {Color? valueColor}) {
+    final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF64748B)),
+        Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 12),
-        Text(label, style: const TextStyle(color: Color(0xFF64748B))),
+        Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
         const Spacer(),
         Text(
           value,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: valueColor ?? const Color(0xFF1E293B),
+            color: valueColor ?? theme.colorScheme.onSurface,
           ),
         ),
       ],
@@ -226,12 +230,13 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Widget _buildPriceChart() {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Histórico de Preços',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
         ),
         const SizedBox(height: 16),
         SizedBox(
@@ -247,12 +252,13 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Widget _buildPurchaseSelector() {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Quantidade desejada',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
         ),
         const SizedBox(height: 16),
         Row(
@@ -267,7 +273,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
                     '$_selectedTokens',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
                   ),
                 ),
                 _buildCounterButton(Icons.add, () {
@@ -277,7 +283,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
             ),
             Text(
               'Disponível: ${widget.offer.qtdTokens}',
-              style: const TextStyle(color: Color(0xFF64748B)),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -286,13 +292,14 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Widget _buildCounterButton(IconData icon, VoidCallback onTap) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFF1F5F9)),
+          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: const Color(0xFF00A84E)),
@@ -301,14 +308,15 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Widget _buildBottomButton(int totalCents) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Total a pagar',
-              style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
             ),
             Text(
               _formatCurrency(totalCents),
@@ -351,13 +359,17 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Widget _buildLoadingState() {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CircularProgressIndicator(color: Color(0xFF00A84E)),
           const SizedBox(height: 16),
-          Text('Carregando dados da ${widget.offer.startupName}...'),
+          Text(
+            'Carregando dados da ${widget.offer.startupName}...',
+            style: TextStyle(color: theme.colorScheme.onSurface),
+          ),
         ],
       ),
     );

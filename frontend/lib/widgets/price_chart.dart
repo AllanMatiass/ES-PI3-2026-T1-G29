@@ -143,10 +143,12 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
@@ -155,11 +157,11 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Histórico de Preço',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              Text('Histórico de Preço',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
               Text(widget.currency,
-                  style: const TextStyle(
-                      color: Colors.grey, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 15),
@@ -178,12 +180,12 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : history.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text('Histórico indisponível',
-                            style: TextStyle(color: Colors.grey)))
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
                     : CustomPaint(
                         size: Size.infinite,
-                        painter: _LineChartPainter(history: history),
+                        painter: _LineChartPainter(history: history, lineColor: const Color(0xFF00A84E)),
                       ),
           ),
           const SizedBox(height: 10),
@@ -192,9 +194,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_formatDate(history.first.timestamp),
-                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
                 Text(_formatDate(history.last.timestamp),
-                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
               ],
             )
         ],
@@ -203,6 +205,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   }
 
   Widget _buildFilterButton(String label) {
+    final theme = Theme.of(context);
     final bool isSelected = selectedFilter == label;
     return GestureDetector(
       onTap: () {
@@ -212,13 +215,13 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF00A84E) : const Color(0xFFF5F5F5),
+          color: isSelected ? const Color(0xFF00A84E) : theme.colorScheme.surfaceVariant.withOpacity(0.3),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
+            color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.bold,
             fontSize: 13,
           ),
@@ -228,19 +231,20 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   }
 
   Widget _buildCustomRangeButton() {
+    final theme = Theme.of(context);
     final bool isSelected = selectedFilter == 'Custom';
     return GestureDetector(
       onTap: _selectCustomRange,
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF00A84E) : const Color(0xFFF5F5F5),
+          color: isSelected ? const Color(0xFF00A84E) : theme.colorScheme.surfaceVariant.withOpacity(0.3),
           shape: BoxShape.circle,
         ),
         child: Icon(
           Icons.calendar_today_outlined,
           size: 18,
-          color: isSelected ? Colors.white : Colors.grey[700],
+          color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -258,13 +262,14 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
 
 class _LineChartPainter extends CustomPainter {
   final List<PriceHistoryItem> history;
-  _LineChartPainter({required this.history});
+  final Color lineColor;
+  _LineChartPainter({required this.history, required this.lineColor});
 
   @override
   void paint(Canvas canvas, Size size) {
     if (history.length < 2) {
       if (history.length == 1) {
-        final Paint pointPaint = Paint()..color = const Color(0xFF00A84E);
+        final Paint pointPaint = Paint()..color = lineColor;
         canvas.drawCircle(Offset(size.width / 2, size.height / 2), 5, pointPaint);
       }
       return;
@@ -279,7 +284,7 @@ class _LineChartPainter extends CustomPainter {
     final double stepX = size.width / (history.length - 1);
     
     final Paint linePaint = Paint()
-      ..color = const Color(0xFF00A84E)
+      ..color = lineColor
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -307,7 +312,7 @@ class _LineChartPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [const Color(0xFF00A84E).withOpacity(0.2), Colors.transparent],
+        colors: [lineColor.withOpacity(0.2), Colors.transparent],
       ).createShader(Rect.fromLTRB(0, 0, size.width, size.height));
 
     canvas.drawPath(fillPath, fillPaint);
@@ -353,8 +358,10 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AlertDialog(
-      title: const Text('Selecionar Período', style: TextStyle(fontWeight: FontWeight.bold)),
+      backgroundColor: theme.colorScheme.surface,
+      title: Text('Selecionar Período', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -364,7 +371,7 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar', style: TextStyle(color: Colors.grey))),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancelar', style: TextStyle(color: theme.colorScheme.onSurfaceVariant))),
         ElevatedButton(
           onPressed: () {
             final start = DateTime(startYear, startMonth);
@@ -383,10 +390,11 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
   }
 
   Widget _buildPickerRow(String label, int currentMonth, int currentYear, Function(int) onMonthChange, Function(int) onYearChange) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+        Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -394,6 +402,8 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
               child: DropdownButton<int>(
                 value: currentMonth,
                 isExpanded: true,
+                dropdownColor: theme.colorScheme.surface,
+                style: TextStyle(color: theme.colorScheme.onSurface),
                 items: List.generate(12, (i) => DropdownMenuItem(value: i + 1, child: Text(months[i], style: const TextStyle(fontSize: 14)))),
                 onChanged: (v) => onMonthChange(v!),
               ),
@@ -403,6 +413,8 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
               child: DropdownButton<int>(
                 value: currentYear,
                 isExpanded: true,
+                dropdownColor: theme.colorScheme.surface,
+                style: TextStyle(color: theme.colorScheme.onSurface),
                 items: years.map((y) => DropdownMenuItem(value: y, child: Text(y.toString(), style: const TextStyle(fontSize: 14)))).toList(),
                 onChanged: (v) => onYearChange(v!),
               ),
