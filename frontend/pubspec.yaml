@@ -97,6 +97,7 @@ flutter:
   assets:
     - .env
     - assets/images/logo.jpeg
+    - assets/images/logo_sembg.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

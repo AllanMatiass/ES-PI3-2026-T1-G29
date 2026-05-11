@@ -71,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 const SizedBox(height: 20),
                 Image.asset(
-                  'assets/images/logo.jpeg',
+                  'assets/images/logo_sembg.png',
                   height: 120,
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.business,
