@@ -448,7 +448,7 @@ class _HomeViewState extends State<HomeView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (profitCents >= 0 ? const Color(0xFF00A84E) : const Color(0xFFEF4444)).withOpacity(0.1),
+                      color: (profitCents >= 0 || !_isBalanceVisible ? const Color(0xFF00A84E) : const Color(0xFFEF4444)).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -456,7 +456,7 @@ class _HomeViewState extends State<HomeView> {
                           ? '${profitCents >= 0 ? '+' : ''}${profitPercentage.toStringAsFixed(0)}%'
                           : '••%',
                       style: TextStyle(
-                        color: profitCents >= 0 ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
+                        color: profitCents >= 0 || !_isBalanceVisible ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -483,7 +483,7 @@ class _HomeViewState extends State<HomeView> {
                     _isBalanceVisible 
                         ? '${profitCents >= 0 ? '+' : ''}${_formatCents(profitCents)}'
                         : '••••••',
-                    valueColor: profitCents >= 0 ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
+                    valueColor: profitCents >= 0 || !_isBalanceVisible ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
                   ),
                 ],
               ),
