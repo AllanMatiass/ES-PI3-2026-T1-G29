@@ -340,17 +340,54 @@ class _OffersViewState extends State<OffersView> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  final result = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute(
-                      builder: (context) => BuyOfferPage(offer: offer),
-                    ),
-                  );
-                  if (result == true) {
-                    _loadMoreOffers(refresh: true);
+                  try {
+                    // Show loading indicator
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(child: CircularProgressIndicator()),
+                    );
+
+                    final isExpired = await OfferService.isOfferExpired(offerId: offer.id);
+
+                    if (context.mounted) {
+                      Navigator.of(context).pop(); // Close loading indicator
+                    }
+
+                    if (isExpired) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Essa oferta acabou de expirar! Que tal conferir estas outras?'),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 15),
+                          ),
+                        );
+                        _loadMoreOffers(refresh: true);
+                      }
+                      return;
+                    }
+
+                    if (context.mounted) {
+                      final result = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(
+                          builder: (context) => BuyOfferPage(offer: offer),
+                        ),
+                      );
+                      if (result == true) {
+                        _loadMoreOffers(refresh: true);
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      Navigator.of(context).pop(); // Close loading indicator
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erro ao verificar oferta: $e')),
+                      );
+                    }
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00A84E),
+                style: ElevatedButton.styleFrom(                  backgroundColor: const Color(0xFF00A84E),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(

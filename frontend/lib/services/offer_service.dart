@@ -259,4 +259,60 @@ class OfferService {
       if (client == null) httpClient.close();
     }
   }
+
+  static Future<bool> isOfferExpired({
+    required String offerId,
+    http.Client? client,
+    FirebaseAuth? auth,
+  }) async {
+    const String expireUrl = 'https://expireoffer-obpz3whteq-uc.a.run.app';
+    final firebaseAuth = auth ?? FirebaseAuth.instance;
+    final user = firebaseAuth.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final token = await user.getIdToken(true);
+    final httpClient = client ?? http.Client();
+
+    try {
+      final response = await httpClient.post(
+        Uri.parse(expireUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "data": {
+            "offerId": offerId,
+          }
+        }),
+      );
+
+      if (response.body.isEmpty) {
+        throw Exception('Empty response from server');
+      }
+
+      final body = jsonDecode(response.body);
+      final result = body['result'];
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (result != null && result['success'] == false) {
+          final error = result['error'];
+          throw Exception(error?['message'] ?? 'Unknown error');
+        }
+        
+        final responseData = result is Map ? (result['data'] ?? result) : body;
+        return responseData['expired'] == true;
+      } else {
+        if (result != null && result['error'] != null) {
+          throw Exception(result['error']['message']);
+        }
+        throw Exception('Failed to check offer expiration: ${response.statusCode} - ${response.body}');
+      }
+    } finally {
+      if (client == null) httpClient.close();
+    }
+  }
 }

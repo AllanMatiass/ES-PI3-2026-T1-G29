@@ -5,3 +5,4 @@ export { acceptOffer } from "./handlers/acceptOffer";
 export { getOffers } from "./handlers/getOffers";
 export { getInvestorDashboard } from "./handlers/getInvestorDashboard";
 export { getMyOffers } from "./handlers/getMyOffers";
+export { expireOffer } from "./handlers/expireOffer";
