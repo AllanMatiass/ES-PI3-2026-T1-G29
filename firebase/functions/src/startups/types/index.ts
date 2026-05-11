@@ -87,6 +87,7 @@ export type StartupDocument = {
   externalMembers: ExternalMember[];
   demoVideos: string[]; // poderia ser enderecos URLs no Youtube ou firebase storage.
   pitchDeckUrl?: string;
+  businessPlan: string;
   coverImageUrl?: string;
   lastValuationCents?: number;
   tags: string[];
