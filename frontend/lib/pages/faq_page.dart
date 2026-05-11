@@ -102,9 +102,11 @@ class _FAQPageState extends State<FAQPage> {
   }
 
   void _showAddQuestionSheet() {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -122,16 +124,18 @@ class _FAQPageState extends State<FAQPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Fazer uma pergunta',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface),
                   ),
                   const SizedBox(height: 15),
                   TextField(
                     controller: _questionController,
                     maxLines: 3,
+                    style: TextStyle(color: theme.colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: 'Digite sua pergunta aqui...',
+                      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -142,7 +146,7 @@ class _FAQPageState extends State<FAQPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Pergunta privada?'),
+                        Text('Pergunta privada?', style: TextStyle(color: theme.colorScheme.onSurface)),
                         Switch(
                           value: _isPrivate,
                           activeThumbColor: const Color(0xFF00A84E),
@@ -154,9 +158,9 @@ class _FAQPageState extends State<FAQPage> {
                       ],
                     )
                   else
-                    const Text(
+                    Text(
                       'Sua pergunta será pública (apenas investidores podem enviar perguntas privadas).',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                     ),
                   const SizedBox(height: 20),
                   ElevatedButton(
@@ -192,11 +196,12 @@ class _FAQPageState extends State<FAQPage> {
   }
 
   Widget _buildSkeletonItem() {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
@@ -206,7 +211,7 @@ class _FAQPageState extends State<FAQPage> {
             width: double.infinity,
             height: 15,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -215,7 +220,7 @@ class _FAQPageState extends State<FAQPage> {
             width: 150,
             height: 12,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -226,15 +231,16 @@ class _FAQPageState extends State<FAQPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return PopScope(
       canPop: true,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          title: const Text('FAQ da Startup',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          title: Text('FAQ da Startup',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
+          backgroundColor: theme.scaffoldBackgroundColor,
+          foregroundColor: theme.colorScheme.onSurface,
           elevation: 0,
           centerTitle: true,
         ),
@@ -252,7 +258,7 @@ class _FAQPageState extends State<FAQPage> {
               // Header com Logo e Nome
               Container(
                 padding: const EdgeInsets.all(20),
-                color: Colors.white,
+                color: theme.colorScheme.surface,
                 child: Row(
                   children: [
                     ClipRRect(
@@ -262,8 +268,8 @@ class _FAQPageState extends State<FAQPage> {
                         height: 60,
                         width: 60,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.business,
-                            size: 60, color: Colors.grey),
+                        errorBuilder: (_, __, ___) => Icon(Icons.business,
+                            size: 60, color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ),
                     const SizedBox(width: 15),
@@ -273,12 +279,12 @@ class _FAQPageState extends State<FAQPage> {
                         children: [
                           Text(
                             widget.startupName,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 20),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20, color: theme.colorScheme.onSurface),
                           ),
-                          const Text(
+                          Text(
                             'Perguntas Frequentes',
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
                           ),
                         ],
                       ),
@@ -286,7 +292,7 @@ class _FAQPageState extends State<FAQPage> {
                   ],
                 ),
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: theme.dividerColor.withOpacity(0.1)),
               Expanded(
                 child: _isRefreshing
                     ? ListView.builder(
@@ -305,12 +311,12 @@ class _FAQPageState extends State<FAQPage> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(Icons.question_answer_outlined,
-                                          size: 64, color: Colors.grey[400]),
+                                          size: 64, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4)),
                                       const SizedBox(height: 16),
-                                      const Text(
+                                      Text(
                                           'Nenhuma pergunta disponível no momento.',
                                           style: TextStyle(
-                                              color: Colors.grey,
+                                              color: theme.colorScheme.onSurfaceVariant,
                                               fontSize: 16)),
                                     ],
                                   ),
@@ -328,7 +334,7 @@ class _FAQPageState extends State<FAQPage> {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 15),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: theme.colorScheme.surface,
                                   borderRadius: BorderRadius.circular(15),
                                   boxShadow: [
                                     BoxShadow(
@@ -354,10 +360,10 @@ class _FAQPageState extends State<FAQPage> {
                                       Expanded(
                                         child: Text(
                                           q.text,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 15,
-                                            color: Color(0xFF333333),
+                                            color: theme.colorScheme.onSurface,
                                           ),
                                         ),
                                       ),
@@ -367,19 +373,19 @@ class _FAQPageState extends State<FAQPage> {
                                     padding: const EdgeInsets.only(top: 4.0),
                                     child: Text(
                                       'Enviada em ${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
-                                      style: const TextStyle(
-                                          fontSize: 12, color: Colors.grey),
+                                      style: TextStyle(
+                                          fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                                     ),
                                   ),
                                   children: [
-                                    const Divider(height: 1),
+                                    Divider(height: 1, color: theme.dividerColor.withOpacity(0.1)),
                                     if (q.answers.isEmpty)
-                                      const Padding(
-                                        padding: EdgeInsets.all(20.0),
+                                      Padding(
+                                        padding: const EdgeInsets.all(20.0),
                                         child: Text(
                                           'Esta pergunta ainda não foi respondida pela startup.',
                                           style: TextStyle(
-                                              color: Colors.grey,
+                                              color: theme.colorScheme.onSurfaceVariant,
                                               fontStyle: FontStyle.italic),
                                         ),
                                       )
@@ -404,16 +410,16 @@ class _FAQPageState extends State<FAQPage> {
                                               const SizedBox(height: 8),
                                               Text(
                                                 a.answer,
-                                                style: const TextStyle(
-                                                    color: Colors.black87,
+                                                style: TextStyle(
+                                                    color: theme.colorScheme.onSurface,
                                                     height: 1.5),
                                               ),
                                               const SizedBox(height: 12),
                                               Text(
                                                 'Respondida em ${ansDate.day.toString().padLeft(2, '0')}/${ansDate.month.toString().padLeft(2, '0')}/${ansDate.year}',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                     fontSize: 11,
-                                                    color: Colors.grey),
+                                                    color: theme.colorScheme.onSurfaceVariant),
                                               ),
                                             ],
                                           ),

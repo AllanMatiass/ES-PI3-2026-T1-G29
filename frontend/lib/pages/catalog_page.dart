@@ -53,14 +53,15 @@ class _CatalogPageState extends State<CatalogPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Investir',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
       ),
@@ -75,11 +76,13 @@ class _CatalogPageState extends State<CatalogPage> {
                   _searchQuery = value.toLowerCase();
                 });
               },
+              style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: 'Buscar startups...',
+                hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF00A84E)),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -115,7 +118,7 @@ class _CatalogPageState extends State<CatalogPage> {
                   } else if (snapshot.hasError) {
                     return _buildErrorState(snapshot.error.toString());
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('Nenhuma startup encontrada.'));
+                    return Center(child: Text('Nenhuma startup encontrada.', style: TextStyle(color: theme.colorScheme.onSurface)));
                   }
 
                   var startups = snapshot.data!;
@@ -132,7 +135,7 @@ class _CatalogPageState extends State<CatalogPage> {
                   }
 
                   if (startups.isEmpty) {
-                    return const Center(child: Text('Nenhuma startup corresponde aos filtros.'));
+                    return Center(child: Text('Nenhuma startup corresponde aos filtros.', style: TextStyle(color: theme.colorScheme.onSurface)));
                   }
 
                   return ListView.builder(
@@ -153,6 +156,7 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   Widget _buildFilterChip(StartupStage? stage, String label) {
+    final theme = Theme.of(context);
     bool isSelected = _selectedStage == stage;
     return ChoiceChip(
       label: Text(label),
@@ -164,10 +168,10 @@ class _CatalogPageState extends State<CatalogPage> {
       },
       selectedColor: const Color(0xFF00A84E).withOpacity(0.2),
       labelStyle: TextStyle(
-        color: isSelected ? const Color(0xFF00A84E) : const Color(0xFF64748B),
+        color: isSelected ? const Color(0xFF00A84E) : theme.colorScheme.onSurfaceVariant,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
       side: BorderSide(
         color: isSelected ? const Color(0xFF00A84E) : Colors.transparent,
       ),
@@ -176,12 +180,13 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   Widget _buildStartupCard(StartupListItem startup) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -223,10 +228,10 @@ class _CatalogPageState extends State<CatalogPage> {
                           Expanded(
                             child: Text(
                               startup.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 20,
-                                  color: Color(0xFF1E293B)),
+                                  color: theme.colorScheme.onSurface),
                             ),
                           ),
                           if (startup.priceVariation != null)
@@ -252,7 +257,7 @@ class _CatalogPageState extends State<CatalogPage> {
                       const SizedBox(height: 8),
                       Text(
                         'ID: ${startup.id}',
-                        style: const TextStyle(color: Color(0xFF9AA3AE), fontSize: 10),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6), fontSize: 10),
                       ),
                     ],
                   ),
@@ -266,12 +271,12 @@ class _CatalogPageState extends State<CatalogPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               startup.shortDescription,
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 14, height: 1.5),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14, height: 1.5),
             ),
           ),
 
           const SizedBox(height: 16),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          Divider(height: 1, color: theme.dividerColor.withOpacity(0.1)),
 
           // Financial and Token Details
           Padding(
@@ -359,15 +364,16 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   Widget _buildInfoRow(String label, String value, IconData icon) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Icon(icon, size: 18, color: const Color(0xFF00A84E)),
         const SizedBox(width: 12),
-        Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 14)),
+        Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
         const Spacer(),
         Text(value,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 14, color: theme.colorScheme.onSurface)),
       ],
     );
   }
@@ -405,37 +411,40 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   Widget _buildTag(String tag) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
         tag,
-        style: const TextStyle(
-            color: Color(0xFF59627A), fontSize: 12, fontWeight: FontWeight.w500),
+        style: TextStyle(
+            color: theme.colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w500),
       ),
     );
   }
 
   Widget _buildLogoPlaceholder(double size) {
+    final theme = Theme.of(context);
     return Container(
       width: size,
       height: size,
-      color: const Color(0xFFF1F5F9),
+      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
       child: const Icon(Icons.business, color: Color(0xFF00A84E), size: 32),
     );
   }
 
   Widget _buildSkeletonLoading() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView.builder(
       itemCount: 3,
       padding: const EdgeInsets.all(16.0),
       itemBuilder: (context, index) {
         return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
+          baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+          highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
           child: Container(
             height: 250,
             margin: const EdgeInsets.only(bottom: 24),
@@ -449,6 +458,7 @@ class _CatalogPageState extends State<CatalogPage> {
     );
   }
   Widget _buildErrorState(String error) {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -457,7 +467,7 @@ class _CatalogPageState extends State<CatalogPage> {
           children: [
             const Icon(Icons.error_outline, color: Colors.red, size: 48),
             const SizedBox(height: 16),
-            Text('Erro ao carregar startups: $error', textAlign: TextAlign.center),
+            Text('Erro ao carregar startups: $error', textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurface)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadStartups,
