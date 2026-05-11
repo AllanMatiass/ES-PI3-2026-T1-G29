@@ -7,7 +7,7 @@ import '../models/startup.dart';
 import '../services/startup_service.dart';
 import '../widgets/price_chart.dart';
 import './faq_page.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StartupDetailsPage extends StatefulWidget {
@@ -303,26 +303,36 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                     CardSobreStartup(descricao: data.longDescription),
                     const SizedBox(height: 15),
                     if (data.demoVideos.isNotEmpty)
-  Padding(
-    padding: const EdgeInsets.only(bottom: 15),
-    child: Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: DemoVideoPlayer(videoUrl: data.demoVideos.first),
-    ),
-  ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 15),
+                        child: Container(
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Vídeo de demonstração',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: theme.colorScheme.onSurface)),
+                              const SizedBox(height: 12),
+                              DemoVideoPlayer(videoUrl: data.demoVideos.first),
+                            ],
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 15),
-DocumentsDownloadCard(
-  pitchDeckUrl: data.pitchDeckUrl,
-  businessPlanUrl: data.businessPlanUrl,
-  executiveSummaryUrl: data.executiveSummaryUrl,
-),
+                    DocumentsDownloadCard(
+                      pitchDeckUrl: data.pitchDeckUrl,
+                      businessPlanUrl: data.businessPlanUrl,
+                      executiveSummary: data.executiveSummary,
+                    ),
 const SizedBox(height: 15),
-
-
                     // Tags
                     Container(
                       padding: const EdgeInsets.all(15),
@@ -667,51 +677,165 @@ class DemoVideoPlayer extends StatefulWidget {
 }
 
 class _DemoVideoPlayerState extends State<DemoVideoPlayer> {
-  late YoutubePlayerController _controller;
+  late VideoPlayerController _controller;
   bool _hasError = false;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
 
-    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
-
-    if (videoId == null || videoId.isEmpty) {
+    if (!widget.videoUrl.startsWith('https://firebasestorage.googleapis.com/')) {
       setState(() => _hasError = true);
       return;
     }
 
-    _controller = YoutubePlayerController.fromVideoId(
-      videoId: videoId,
-      autoPlay: false,
-      params: const YoutubePlayerParams(
-        showControls: true,
-        showFullscreenButton: true,
-        mute: false,
-        playsInline: true, 
-        strictRelatedVideos: true,
-      ),
-    );
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+      ..initialize().then((_) {
+        if (mounted) {
+          setState(() {
+            _isInitialized = true;
+          });
+        }
+      }).catchError((error) {
+        if (mounted) {
+          setState(() => _hasError = true);
+        }
+      });
   }
 
   @override
   void dispose() {
-    _controller.close();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (_hasError) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text("Vídeo Indisponivel")),
+        child: Center(
+          child: Text(
+            "Vídeo Indisponível",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: theme.colorScheme.error),
+          ),
+        ),
       );
     }
 
-    return YoutubePlayer(
-      controller: _controller,
-      aspectRatio: 16 / 9,
+    if (!_isInitialized) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF00A84E))),
+      );
+    }
+
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                VideoPlayer(_controller),
+                _ControlsOverlay(controller: _controller),
+                VideoProgressIndicator(
+                  _controller,
+                  allowScrubbing: true,
+                  colors: const VideoProgressColors(
+                    playedColor: Color(0xFF00A84E),
+                    bufferedColor: Colors.white24,
+                    backgroundColor: Colors.white12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ControlsOverlay extends StatefulWidget {
+  const _ControlsOverlay({required this.controller});
+
+  final VideoPlayerController controller;
+
+  @override
+  State<_ControlsOverlay> createState() => _ControlsOverlayState();
+}
+
+class _ControlsOverlayState extends State<_ControlsOverlay> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_updateOverlay);
+  }
+
+  @override
+  void didUpdateWidget(_ControlsOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_updateOverlay);
+      widget.controller.addListener(_updateOverlay);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_updateOverlay);
+    super.dispose();
+  }
+
+  void _updateOverlay() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isFinished = widget.controller.value.isInitialized &&
+        widget.controller.value.position >= widget.controller.value.duration;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (isFinished) {
+          widget.controller.seekTo(Duration.zero);
+          widget.controller.play();
+        } else {
+          widget.controller.value.isPlaying
+              ? widget.controller.pause()
+              : widget.controller.play();
+        }
+      },
+      child: Stack(
+        children: <Widget>[
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 50),
+            reverseDuration: const Duration(milliseconds: 200),
+            child: widget.controller.value.isPlaying
+                ? const SizedBox.shrink()
+                : Container(
+                    color: Colors.black26,
+                    child: Center(
+                      child: Icon(
+                        isFinished ? Icons.replay : Icons.play_arrow,
+                        color: Colors.white,
+                        size: 100.0,
+                        semanticLabel: isFinished ? 'Replay' : 'Play',
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -720,19 +844,19 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer> {
 class DocumentsDownloadCard extends StatelessWidget {
   final String? pitchDeckUrl;
   final String? businessPlanUrl;
-  final String? executiveSummaryUrl;
+  final String? executiveSummary;
 
   const DocumentsDownloadCard({
     super.key,
     this.pitchDeckUrl,
     this.businessPlanUrl,
-    this.executiveSummaryUrl,
+    this.executiveSummary,
   });
 
   bool get _hasAny =>
       pitchDeckUrl != null ||
       businessPlanUrl != null ||
-      executiveSummaryUrl != null;
+      executiveSummary != null;
 
   Future<void> _launch(BuildContext context, String? url, String label) async {
     if (url == null || url.isEmpty) {
@@ -754,19 +878,24 @@ class DocumentsDownloadCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!_hasAny) return const SizedBox.shrink();
+    final theme = Theme.of(context);
 
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Documentos',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: theme.colorScheme.onSurface),
           ),
           const SizedBox(height: 12),
           _DocItem(
@@ -775,20 +904,20 @@ class DocumentsDownloadCard extends StatelessWidget {
             available: pitchDeckUrl != null,
             onTap: () => _launch(context, pitchDeckUrl, 'Pitch Deck'),
           ),
-          const Divider(height: 20),
+          Divider(height: 20, color: theme.dividerColor.withOpacity(0.1)),
           _DocItem(
             icon: Icons.description_rounded,
             label: 'Plano de negócios',
             available: businessPlanUrl != null,
             onTap: () => _launch(context, businessPlanUrl, 'Business Plan'),
           ),
-          const Divider(height: 20),
+          Divider(height: 20, color: theme.dividerColor.withOpacity(0.1)),
           _DocItem(
             icon: Icons.summarize_rounded,
             label: 'Resumo Executivo',
-            available: executiveSummaryUrl != null,
+            available: executiveSummary != null,
             onTap: () =>
-                _launch(context, executiveSummaryUrl, 'Executive Summary'),
+                _launch(context, executiveSummary, 'Executive Summary'),
           ),
         ],
       ),
@@ -811,7 +940,8 @@ class _DocItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = available ? const Color(0xFF00A84E) : Colors.grey[400]!;
+    final theme = Theme.of(context);
+    final color = available ? const Color(0xFF00A84E) : theme.colorScheme.onSurfaceVariant.withOpacity(0.5);
 
     return InkWell(
       onTap: available ? onTap : null,
@@ -824,8 +954,8 @@ class _DocItem extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: available
-                    ? const Color(0xFFE8F5E9)
-                    : Colors.grey[100],
+                    ? const Color(0xFF00A84E).withOpacity(0.1)
+                    : theme.colorScheme.surfaceVariant.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -837,7 +967,7 @@ class _DocItem extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
-                  color: available ? Colors.black87 : Colors.grey[400],
+                  color: available ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
                 ),
               ),
             ),
