@@ -51,6 +51,9 @@ dependencies:
 
   # Máscaras
   mask_text_input_formatter: ^2.0.0
+  youtube_player_iframe: ^5.2.2
+  video_player: ^2.11.1
+  url_launcher: ^6.3.2
 
   # Splash screen
   flutter_native_splash: ^2.4.7

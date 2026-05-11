@@ -285,6 +285,9 @@ class StartupData {
 
   // 🔹 startup
   final List<String> demoVideos;
+  final String? pitchDeckUrl;
+  final String? businessPlanUrl;
+  final String? executiveSummaryUrl;
   final StartupStage stage;
   final List<ExternalMember> externalMembers;
   final int capitalRaisedCents;
@@ -321,6 +324,9 @@ class StartupData {
     required this.circulatingTokens,
     required this.currentTokenPriceCents,
     required this.demoVideos,
+    required this.pitchDeckUrl,
+    required this.businessPlanUrl,
+    required this.executiveSummaryUrl,
     required this.stage,
     required this.externalMembers,
     required this.capitalRaisedCents,
@@ -366,6 +372,11 @@ class StartupData {
 
       // startup
       demoVideos: List<String>.from(startup['demoVideos'] ?? []),
+
+      pitchDeckUrl: startup['pitchDeckUrl'] as String?,
+      businessPlanUrl: startup['businessPlan'] as String?,
+      executiveSummaryUrl: startup['executiveSummaryUrl'] as String?,
+
       stage: StartupStage.fromString(startup['stage']),
       externalMembers: (startup['externalMembers'] as List? ?? [])
           .map((e) => ExternalMember.fromJson(e))
