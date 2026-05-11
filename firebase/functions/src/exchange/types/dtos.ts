@@ -94,3 +94,12 @@ export type MyOfferDTO = {
 export type GetMyOffersResponseDTO = {
   offers: MyOfferDTO[];
 };
+
+export type ExpireOfferDTO = {
+  offerId: string;
+};
+
+export type ExpireOfferResponseDTO = {
+  offerId: string;
+  expired: boolean;
+};
