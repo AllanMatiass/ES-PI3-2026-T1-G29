@@ -9,6 +9,8 @@ import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/pages/login_page.dart';
 import 'package:frontend/pages/register_page.dart';
 
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -29,22 +31,42 @@ class MesclaInvest extends StatelessWidget {
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
 
-    return MaterialApp(
-      title: 'Mescla Invest',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00A84E)),
-        useMaterial3: true,
-        fontFamily: 'Inter',
-      ),
-      home: user == null 
-          ? const LoginPage() 
-          : HomePage(userName: user.displayName ?? 'Desconhecido'),
-      routes: {
-        '/login': (context) => const LoginPage(),
-        '/register': (context) => const RegisterPage(),
-        '/forgotPassword': (context) => const ForgotPasswordPage(),
-        '/home': (context) => HomePage(userName: FirebaseAuth.instance.currentUser?.displayName ?? 'Desconhecido'),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, ThemeMode currentMode, __) {
+        return MaterialApp(
+          title: 'Mescla Invest',
+          debugShowCheckedModeBanner: false,
+          themeMode: currentMode,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF00A84E),
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+            fontFamily: 'Inter',
+            scaffoldBackgroundColor: Colors.white,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF00A84E),
+              brightness: Brightness.dark,
+              surface: const Color(0xFF0F172A),
+            ),
+            useMaterial3: true,
+            fontFamily: 'Inter',
+            scaffoldBackgroundColor: const Color(0xFF0F172A),
+          ),
+          home: user == null 
+              ? const LoginPage() 
+              : HomePage(userName: user.displayName ?? 'Desconhecido'),
+          routes: {
+            '/login': (context) => const LoginPage(),
+            '/register': (context) => const RegisterPage(),
+            '/forgotPassword': (context) => const ForgotPasswordPage(),
+            '/home': (context) => HomePage(userName: FirebaseAuth.instance.currentUser?.displayName ?? 'Desconhecido'),
+          },
+        );
       },
     );
   }

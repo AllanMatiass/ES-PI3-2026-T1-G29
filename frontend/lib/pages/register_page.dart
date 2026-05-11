@@ -88,19 +88,20 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   InputDecoration _buildInputDecoration(String hintText) {
+    final theme = Theme.of(context);
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(color: Color(0xFF9AA3AE)),
+      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
@@ -114,14 +115,15 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildFormLabel(String label, {bool required = false}) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: RichText(
         text: TextSpan(
           text: label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: Color(0xFF556179),
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w500,
             fontFamily: 'Inter',
           ),
@@ -142,8 +144,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -161,7 +164,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
@@ -171,27 +174,27 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back,
-                        color: Color(0xFF1E293B),
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 'Criar conta',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Preencha seus dados para começar',
-                style: TextStyle(fontSize: 15, color: Color(0xFF59627A)),
+                style: TextStyle(fontSize: 15, color: theme.colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 30),
               Expanded(
@@ -205,6 +208,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildFormLabel('Nome completo', required: true),
                         TextFormField(
                           controller: _nameController,
+                          style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: _buildInputDecoration('João Silva'),
                           textInputAction: TextInputAction.next,
                           validator: (value) => value == null || value.isEmpty
@@ -216,6 +220,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextFormField(
                           inputFormatters: [cpfMask],
                           controller: _cpfController,
+                          style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: _buildInputDecoration('000.000.000-00'),
                           keyboardType: TextInputType.number,
                           textInputAction: TextInputAction.next,
@@ -226,6 +231,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextFormField(
                           inputFormatters: [phoneMask],
                           controller: _phoneController,
+                          style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: _buildInputDecoration('(00) 00000-0000'),
                           keyboardType: TextInputType.phone,
                           textInputAction: TextInputAction.next,
@@ -235,6 +241,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildFormLabel('Email', required: true),
                         TextFormField(
                           controller: _emailController,
+                          style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: _buildInputDecoration('seu@email.com'),
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
@@ -244,6 +251,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         _buildFormLabel('Senha', required: true),
                         TextFormField(
                           controller: _passwordController,
+                          style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration:
                               _buildInputDecoration(
                                 'Mínimo 8 caracteres',
@@ -253,7 +261,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     _obscurePassword
                                         ? Icons.visibility_off
                                         : Icons.visibility,
-                                    color: const Color(0xFF6B7280),
+                                    color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -302,10 +310,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
+                            Text(
                               'Já tem uma conta? ',
                               style: TextStyle(
-                                color: Color(0xFF556179),
+                                color: theme.colorScheme.onSurfaceVariant,
                                 fontSize: 14,
                               ),
                             ),
@@ -325,11 +333,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                         ),
                         const SizedBox(height: 18),
-                        const Text(
+                        Text(
                           'Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Color(0xFF9AA3AE),
+                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
                             fontSize: 12,
                           ),
                         ),
