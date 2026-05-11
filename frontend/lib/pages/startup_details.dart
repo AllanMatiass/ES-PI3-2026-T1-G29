@@ -7,6 +7,8 @@ import '../models/startup.dart';
 import '../services/startup_service.dart';
 import '../widgets/price_chart.dart';
 import './faq_page.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class StartupDetailsPage extends StatefulWidget {
   final String startupId;
@@ -292,6 +294,26 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
 
                     CardSobreStartup(descricao: data.longDescription),
                     const SizedBox(height: 15),
+                    if (data.demoVideos.isNotEmpty)
+  Padding(
+    padding: const EdgeInsets.only(bottom: 15),
+    child: Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: DemoVideoPlayer(videoUrl: data.demoVideos.first),
+    ),
+  ),
+                    const SizedBox(height: 15),
+DocumentsDownloadCard(
+  pitchDeckUrl: data.pitchDeckUrl,
+  businessPlanUrl: data.businessPlanUrl,
+  executiveSummaryUrl: data.executiveSummaryUrl,
+),
+const SizedBox(height: 15),
+
 
                     // Tags
                     Container(
@@ -619,4 +641,200 @@ Widget _buildSocioRow(
               fontSize: 16)),
     ],
   );
+}
+class DemoVideoPlayer extends StatefulWidget {
+  final String videoUrl;
+  const DemoVideoPlayer({super.key, required this.videoUrl});
+
+  @override
+  State<DemoVideoPlayer> createState() => _DemoVideoPlayerState();
+}
+
+class _DemoVideoPlayerState extends State<DemoVideoPlayer> {
+  late YoutubePlayerController _controller;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
+
+    if (videoId == null || videoId.isEmpty) {
+      setState(() => _hasError = true);
+      return;
+    }
+
+    _controller = YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: false,
+      params: const YoutubePlayerParams(
+        showControls: true,
+        showFullscreenButton: true,
+        mute: false,
+        playsInline: true, 
+        strictRelatedVideos: true,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: Text("Vídeo Indisponivel")),
+      );
+    }
+
+    return YoutubePlayer(
+      controller: _controller,
+      aspectRatio: 16 / 9,
+    );
+  }
+}
+
+
+class DocumentsDownloadCard extends StatelessWidget {
+  final String? pitchDeckUrl;
+  final String? businessPlanUrl;
+  final String? executiveSummaryUrl;
+
+  const DocumentsDownloadCard({
+    super.key,
+    this.pitchDeckUrl,
+    this.businessPlanUrl,
+    this.executiveSummaryUrl,
+  });
+
+  bool get _hasAny =>
+      pitchDeckUrl != null ||
+      businessPlanUrl != null ||
+      executiveSummaryUrl != null;
+
+  Future<void> _launch(BuildContext context, String? url, String label) async {
+    if (url == null || url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$label não disponível')),
+      );
+      return;
+    }
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Não foi possível abrir $label')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasAny) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Documentos',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          const SizedBox(height: 12),
+          _DocItem(
+            icon: Icons.slideshow_rounded,
+            label: 'Apresentação para investidores',
+            available: pitchDeckUrl != null,
+            onTap: () => _launch(context, pitchDeckUrl, 'Pitch Deck'),
+          ),
+          const Divider(height: 20),
+          _DocItem(
+            icon: Icons.description_rounded,
+            label: 'Plano de negócios',
+            available: businessPlanUrl != null,
+            onTap: () => _launch(context, businessPlanUrl, 'Business Plan'),
+          ),
+          const Divider(height: 20),
+          _DocItem(
+            icon: Icons.summarize_rounded,
+            label: 'Resumo Executivo',
+            available: executiveSummaryUrl != null,
+            onTap: () =>
+                _launch(context, executiveSummaryUrl, 'Executive Summary'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DocItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool available;
+  final VoidCallback onTap;
+
+  const _DocItem({
+    required this.icon,
+    required this.label,
+    required this.available,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = available ? const Color(0xFF00A84E) : Colors.grey[400]!;
+
+    return InkWell(
+      onTap: available ? onTap : null,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: available
+                    ? const Color(0xFFE8F5E9)
+                    : Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  color: available ? Colors.black87 : Colors.grey[400],
+                ),
+              ),
+            ),
+            Icon(
+              available
+                  ? Icons.download_rounded
+                  : Icons.lock_outline_rounded,
+              color: color,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
