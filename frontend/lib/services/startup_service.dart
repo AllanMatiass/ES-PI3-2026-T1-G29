@@ -110,15 +110,15 @@ class StartupService {
 
     final Map<String, dynamic> requestData = {
       "id": id,
-      "historyInterval": historyInterval,
+      "interval": historyInterval,
     };
 
     if (historyRange != null) {
-      requestData["historyRange"] = historyRange;
+      requestData["range"] = historyRange;
     }
 
     if (historyLimit != null) {
-      requestData["historyLimit"] = historyLimit;
+      requestData["limit"] = historyLimit;
     }
 
     try {

@@ -23,12 +23,13 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   String selectedFilter = 'YTD';
   bool isLoading = false;
   DateTimeRange? customRange;
+  String customInterval = 'monthly';
+  int? selectedIndex;
 
   @override
   void initState() {
     super.initState();
     history = widget.initialHistory;
-    // Forçamos a atualização para YTD no primeiro frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateFilter('YTD');
     });
@@ -42,20 +43,26 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
         history = widget.initialHistory;
         selectedFilter = 'YTD';
         customRange = null;
+        selectedIndex = null;
       });
     }
   }
 
   Future<void> _selectCustomRange() async {
-    final DateTimeRange? picked = await showDialog<DateTimeRange>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => _MonthYearRangeDialog(initialRange: customRange),
+      builder: (context) => _MonthYearRangeDialog(
+        initialRange: customRange,
+        initialInterval: customInterval,
+      ),
     );
 
-    if (picked != null) {
+    if (result != null) {
       setState(() {
-        customRange = picked;
+        customRange = result['range'];
+        customInterval = result['interval'];
         selectedFilter = 'Custom';
+        selectedIndex = null;
       });
       _updateFilter('Custom');
     }
@@ -65,29 +72,33 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     setState(() {
       selectedFilter = filter;
       isLoading = true;
+      selectedIndex = null;
     });
 
     try {
       String interval = 'monthly';
       Map<String, String>? range;
+      int? limit;
 
       final now = DateTime.now();
       final toDateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
       if (filter == '6M') {
-        interval = 'semestrely';
-        final from = now.subtract(const Duration(days: 180));
+        interval = 'monthly';
+        final from = DateTime(now.year, now.month - 6, now.day);
         range = {
           "from": "${from.year}-${from.month.toString().padLeft(2, '0')}-${from.day.toString().padLeft(2, '0')}",
           "to": toDateStr
         };
+        limit = 6;
       } else if (filter == '1Y') {
-        interval = 'yearly';
-        final from = now.subtract(const Duration(days: 365));
+        interval = 'monthly';
+        final from = DateTime(now.year - 1, now.month, now.day);
         range = {
           "from": "${from.year}-${from.month.toString().padLeft(2, '0')}-${from.day.toString().padLeft(2, '0')}",
           "to": toDateStr
         };
+        limit = 12;
       } else if (filter == 'YTD') {
         interval = 'ytd';
         range = {
@@ -95,7 +106,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           "to": toDateStr
         };
       } else if (filter == 'Custom' && customRange != null) {
-        interval = 'monthly';
+        interval = customInterval;
         range = {
           "from": "${customRange!.start.year}-${customRange!.start.month.toString().padLeft(2, '0')}-${customRange!.start.day.toString().padLeft(2, '0')}",
           "to": "${customRange!.end.year}-${customRange!.end.month.toString().padLeft(2, '0')}-${customRange!.end.day.toString().padLeft(2, '0')}"
@@ -106,7 +117,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
         id: widget.startupId,
         historyInterval: interval,
         historyRange: range,
-        historyLimit: 50,
+        historyLimit: limit ?? 50,
       );
 
       if (mounted) {
@@ -141,6 +152,17 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     }
   }
 
+  void _handleTap(Offset localPosition, Size size) {
+    if (history.length < 2) return;
+    
+    final double stepX = size.width / (history.length - 1);
+    final int index = (localPosition.dx / stepX).round().clamp(0, history.length - 1);
+    
+    setState(() {
+      selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -157,8 +179,22 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Histórico de Preço',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Histórico de Preço',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
+                  if (selectedIndex != null)
+                    Text(
+                      '${_formatDate(history[selectedIndex!].timestamp)}: ${widget.currency} ${history[selectedIndex!].price.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF00A84E),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                ],
+              ),
               Text(widget.currency,
                   style: TextStyle(
                       color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold)),
@@ -175,18 +211,31 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
             ],
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            height: 150,
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : history.isEmpty
-                    ? Center(
-                        child: Text('Histórico indisponível',
-                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
-                    : CustomPaint(
-                        size: Size.infinite,
-                        painter: _LineChartPainter(history: history, lineColor: const Color(0xFF00A84E)),
-                      ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return GestureDetector(
+                onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest),
+                onPanUpdate: (details) => _handleTap(details.localPosition, constraints.biggest),
+                child: SizedBox(
+                  height: 150,
+                  width: double.infinity,
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : history.isEmpty
+                          ? Center(
+                              child: Text('Histórico indisponível',
+                                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
+                          : CustomPaint(
+                              size: Size.infinite,
+                              painter: _LineChartPainter(
+                                history: history,
+                                lineColor: const Color(0xFF00A84E),
+                                selectedIndex: selectedIndex,
+                              ),
+                            ),
+                ),
+              );
+            }
           ),
           const SizedBox(height: 10),
           if (history.isNotEmpty && !isLoading)
@@ -263,7 +312,13 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
 class _LineChartPainter extends CustomPainter {
   final List<PriceHistoryItem> history;
   final Color lineColor;
-  _LineChartPainter({required this.history, required this.lineColor});
+  final int? selectedIndex;
+
+  _LineChartPainter({
+    required this.history,
+    required this.lineColor,
+    this.selectedIndex,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -317,17 +372,36 @@ class _LineChartPainter extends CustomPainter {
 
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
+
+    // Draw selection indicator
+    if (selectedIndex != null && selectedIndex! < history.length) {
+      final double x = selectedIndex! * stepX;
+      final double y = size.height - ((history[selectedIndex!].price - offsetMin) / range * size.height);
+
+      final Paint selectionPaint = Paint()
+        ..color = lineColor
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke;
+
+      // Vertical line
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), selectionPaint);
+
+      // Selected point
+      canvas.drawCircle(Offset(x, y), 6, Paint()..color = Colors.white);
+      canvas.drawCircle(Offset(x, y), 4, Paint()..color = lineColor);
+    }
   }
 
   @override
   bool shouldRepaint(covariant _LineChartPainter oldDelegate) {
-    return oldDelegate.history != history;
+    return oldDelegate.history != history || oldDelegate.selectedIndex != selectedIndex;
   }
 }
 
 class _MonthYearRangeDialog extends StatefulWidget {
   final DateTimeRange? initialRange;
-  const _MonthYearRangeDialog({this.initialRange});
+  final String initialInterval;
+  const _MonthYearRangeDialog({this.initialRange, required this.initialInterval});
 
   @override
   State<_MonthYearRangeDialog> createState() => _MonthYearRangeDialogState();
@@ -338,6 +412,7 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
   late int startYear;
   late int endMonth;
   late int endYear;
+  late String selectedInterval;
 
   final List<String> months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -345,6 +420,12 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
   ];
 
   final List<int> years = List.generate(11, (index) => 2020 + index);
+
+  final List<Map<String, String>> intervals = [
+    {'label': 'Mensal', 'value': 'monthly'},
+    {'label': 'Semestral', 'value': 'semestrely'},
+    {'label': 'Anual', 'value': 'yearly'},
+  ];
 
   @override
   void initState() {
@@ -354,6 +435,7 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
     startYear = widget.initialRange?.start.year ?? now.year - 1;
     endMonth = widget.initialRange?.end.month ?? now.month;
     endYear = widget.initialRange?.end.year ?? now.year;
+    selectedInterval = widget.initialInterval;
   }
 
   @override
@@ -362,28 +444,54 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
     return AlertDialog(
       backgroundColor: theme.colorScheme.surface,
       title: Text('Selecionar Período', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildPickerRow('Início', startMonth, startYear, (m) => setState(() => startMonth = m), (y) => setState(() => startYear = y)),
-          const SizedBox(height: 20),
-          _buildPickerRow('Fim', endMonth, endYear, (m) => setState(() => endMonth = m), (y) => setState(() => endYear = y)),
-        ],
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildIntervalPicker(),
+            const SizedBox(height: 20),
+            _buildPickerRow('Início', startMonth, startYear, (m) => setState(() => startMonth = m), (y) => setState(() => startYear = y)),
+            const SizedBox(height: 20),
+            _buildPickerRow('Fim', endMonth, endYear, (m) => setState(() => endMonth = m), (y) => setState(() => endYear = y)),
+          ],
+        ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancelar', style: TextStyle(color: theme.colorScheme.onSurfaceVariant))),
         ElevatedButton(
           onPressed: () {
             final start = DateTime(startYear, startMonth);
-            final end = DateTime(endYear, endMonth + 1, 0); // Last day of selected month
+            final end = DateTime(endYear, endMonth + 1, 0);
             if (start.isAfter(end)) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Data inicial deve ser anterior à final')));
               return;
             }
-            Navigator.pop(context, DateTimeRange(start: start, end: end));
+            Navigator.pop(context, {
+              'range': DateTimeRange(start: start, end: end),
+              'interval': selectedInterval,
+            });
           },
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00A84E), foregroundColor: Colors.white),
           child: const Text('Aplicar'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIntervalPicker() {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Intervalo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 8),
+        DropdownButton<String>(
+          value: selectedInterval,
+          isExpanded: true,
+          dropdownColor: theme.colorScheme.surface,
+          style: TextStyle(color: theme.colorScheme.onSurface),
+          items: intervals.map((i) => DropdownMenuItem(value: i['value'], child: Text(i['label']!, style: const TextStyle(fontSize: 14)))).toList(),
+          onChanged: (v) => setState(() => selectedInterval = v!),
         ),
       ],
     );
@@ -425,3 +533,4 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
     );
   }
 }
+
