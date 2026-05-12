@@ -117,26 +117,12 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
         id: widget.startupId,
         historyInterval: interval,
         historyRange: range,
-        historyLimit: limit ?? 50,
+        historyLimit: limit,
       );
 
       if (mounted) {
-        List<PriceHistoryItem> fetchedHistory = List<PriceHistoryItem>.from(result['history']);
-        
-        if (fetchedHistory.length > 50) {
-          final sampled = <PriceHistoryItem>[];
-          final step = (fetchedHistory.length / 50).ceil();
-          for (var i = 0; i < fetchedHistory.length; i += step) {
-            sampled.add(fetchedHistory[i]);
-          }
-          if (!sampled.contains(fetchedHistory.last)) {
-            sampled.add(fetchedHistory.last);
-          }
-          fetchedHistory = sampled;
-        }
-
         setState(() {
-          history = fetchedHistory;
+          history = List<PriceHistoryItem>.from(result['history']);
           isLoading = false;
         });
       }
