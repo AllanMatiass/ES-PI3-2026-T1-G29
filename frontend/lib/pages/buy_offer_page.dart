@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/offer_service.dart';
@@ -7,6 +8,27 @@ import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:frontend/widgets/price_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+
+class MaxValueInputFormatter extends TextInputFormatter {
+  final int maxValue;
+
+  MaxValueInputFormatter(this.maxValue);
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final int? value = int.tryParse(newValue.text);
+    if (value == null) return oldValue;
+
+    if (value > maxValue) {
+      return oldValue;
+    }
+
+    return newValue;
+  }
+}
 
 class BuyOfferPage extends StatefulWidget {
   final OfferWithId offer;
@@ -22,6 +44,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   bool _isLoading = true;
   int _selectedTokens = 1;
   bool _isPurchasing = false;
+  final TextEditingController _quantityController = TextEditingController();
 
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'pt_BR',
@@ -31,7 +54,14 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   @override
   void initState() {
     super.initState();
+    _quantityController.text = _selectedTokens.toString();
     _loadStartupDetails();
+  }
+
+  @override
+  void dispose() {
+    _quantityController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadStartupDetails() async {
@@ -52,6 +82,13 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Future<void> _handlePurchase() async {
+    if (_selectedTokens <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A quantidade deve ser maior que zero')),
+      );
+      return;
+    }
+
     setState(() => _isPurchasing = true);
     try {
       await OfferService.acceptOffer(
@@ -278,17 +315,64 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
             Row(
               children: [
                 _buildCounterButton(Icons.remove, () {
-                  if (_selectedTokens > 1) setState(() => _selectedTokens--);
+                  if (_selectedTokens > 1) {
+                    setState(() {
+                      _selectedTokens--;
+                      _quantityController.text = _selectedTokens.toString();
+                    });
+                  }
                 }),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    '$_selectedTokens',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 80,
+                  child: TextFormField(
+                    controller: _quantityController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      isDense: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF00A84E), width: 2),
+                      ),
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      MaxValueInputFormatter(widget.offer.qtdTokens),
+                    ],
+                    onChanged: (value) {
+                      if (value.isNotEmpty) {
+                        final val = int.tryParse(value) ?? 1;
+                        setState(() {
+                          _selectedTokens = val;
+                        });
+                      } else {
+                        setState(() {
+                          _selectedTokens = 0;
+                        });
+                      }
+                    },
                   ),
                 ),
+                const SizedBox(width: 12),
                 _buildCounterButton(Icons.add, () {
-                  if (_selectedTokens < widget.offer.qtdTokens) setState(() => _selectedTokens++);
+                  if (_selectedTokens < widget.offer.qtdTokens) {
+                    setState(() {
+                      _selectedTokens++;
+                      _quantityController.text = _selectedTokens.toString();
+                    });
+                  }
                 }),
               ],
             ),

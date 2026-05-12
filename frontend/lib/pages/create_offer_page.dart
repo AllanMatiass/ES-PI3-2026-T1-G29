@@ -282,7 +282,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   labelText: 'Quantidade',
                                   labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                  helperText: _selectedPosition != null ? 'Saldo: ${_selectedPosition!.qtdTokens}' : null,
+                                  helperText: _selectedPosition != null ? 'Saldo: ${_selectedPosition!.qtdTokens - _selectedPosition!.lockedTokens }' : null,
                                   helperStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -462,7 +462,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
           ),
           const SizedBox(height: 24),
           SizedBox(
-            height: 250, // Increased height to avoid overflow and show more details
+            height: 360, // Increased height to avoid overflow and show more details
             child: PriceHistoryChart(
               startupId: _selectedPosition!.startupId,
               initialHistory: _selectedStartupData!.history,

@@ -118,7 +118,15 @@ class _CatalogPageState extends State<CatalogPage> {
                   } else if (snapshot.hasError) {
                     return _buildErrorState(snapshot.error.toString());
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('Nenhuma startup encontrada.', style: TextStyle(color: theme.colorScheme.onSurface)));
+                    return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: Center(child: Text('Nenhuma startup encontrada.', style: TextStyle(color: theme.colorScheme.onSurface))),
+                        ),
+                      ],
+                    );
                   }
 
                   var startups = snapshot.data!;
@@ -135,7 +143,15 @@ class _CatalogPageState extends State<CatalogPage> {
                   }
 
                   if (startups.isEmpty) {
-                    return Center(child: Text('Nenhuma startup corresponde aos filtros.', style: TextStyle(color: theme.colorScheme.onSurface)));
+                    return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: Center(child: Text('Nenhuma startup corresponde aos filtros.', style: TextStyle(color: theme.colorScheme.onSurface))),
+                        ),
+                      ],
+                    );
                   }
 
                   return ListView.builder(

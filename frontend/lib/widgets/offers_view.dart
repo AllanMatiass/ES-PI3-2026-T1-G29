@@ -485,21 +485,26 @@ class _OffersViewState extends State<OffersView> {
 
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
-    return Center(
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.local_offer_outlined, size: 64, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
-            const SizedBox(height: 16),
-            Text(
-              'Nenhuma oferta encontrada',
-              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.local_offer_outlined, size: 64, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
+                const SizedBox(height: 16),
+                Text(
+                  'Nenhuma oferta encontrada',
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }
     );
   }
 }
