@@ -332,7 +332,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                       businessPlanUrl: data.businessPlanUrl,
                       executiveSummary: data.executiveSummary,
                     ),
-const SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     // Tags
                     Container(
                       padding: const EdgeInsets.all(15),
@@ -526,7 +526,7 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        segment,
+                        segment.replaceFirst(segment[0], segment[0].toUpperCase()),
                         style: const TextStyle(
                           color: Color(0xFF00A84E),
                           fontWeight: FontWeight.bold,
