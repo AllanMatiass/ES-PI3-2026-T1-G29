@@ -1,7 +1,9 @@
 import { Timestamp } from "firebase-admin/firestore";
+import { HttpsError } from "firebase-functions/v2/https";
 
 import * as transactionRepository from "../repositories/transactionRepository";
 import * as startupRepository from "../../startups/repositories/startupRepository";
+import { normalizeString } from "../../shared/validation";
 
 import {
   DashboardPeriod,
@@ -12,6 +14,12 @@ import {
 import { Transaction } from "../types";
 
 import { StartupDocumentDTO } from "../../startups/types/dtos";
+
+const validPeriods = ["daily", "weekly", "monthly", "6months", "ytd"] as const;
+
+function isDashboardPeriod(value: string): value is DashboardPeriod {
+  return validPeriods.includes(value as DashboardPeriod);
+}
 
 interface StartupValuationData {
   id: string;
@@ -25,8 +33,17 @@ interface StartupValuationData {
 export class DashboardService {
   async getDashboardData(
     userId: string,
-    period: DashboardPeriod,
+    rawPeriod?: string,
   ): Promise<GetInvestorDashboardResponseDTO> {
+    const period = normalizeString(rawPeriod)?.toLowerCase();
+
+    if (!period || !isDashboardPeriod(period)) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Período inválido. Use: daily, weekly, monthly, 6months ou ytd.",
+      );
+    }
+
     const transactions =
       await transactionRepository.getTransactionsByUserId(userId);
 
