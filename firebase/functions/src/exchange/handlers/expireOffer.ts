@@ -1,7 +1,10 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { ExpireOfferDTO, ExpireOfferResponseDTO } from "../types/dtos";
-import { getOfferById, updateOffer } from "../repositories/offerRepository";
+import {
+  getOfferById,
+  expireOfferInTransaction,
+} from "../repositories/offerRepository";
 import { normalizeString } from "../../shared/validation";
 import { Timestamp } from "firebase-admin/firestore";
 
@@ -9,37 +12,47 @@ export const expireOffer = onCall(
   withCallHandler<ExpireOfferDTO, ExpireOfferResponseDTO>(async (request) => {
     const offerId = normalizeString(request.data.offerId);
     const expirationDate = Timestamp.now();
-    const isExpired = true;
 
-    if (!offerId || !expirationDate) {
+    if (!offerId) {
       throw new HttpsError(
         "invalid-argument",
-        "offerId e expirationDate devem estar presentes no corpo da requisição.",
+        "offerId deve estar presente no corpo da requisição.",
       );
     }
 
-    const notExpired = {
-      offerId,
-      expired: !isExpired,
-    };
-
     const offer = await getOfferById(offerId);
     if (!offer) throw new HttpsError("not-found", "Oferta não encontrada.");
+
+    if (offer.status !== "OPEN") {
+      return {
+        offerId,
+        expired: offer.status === "EXPIRED",
+      };
+    }
+
     const expiresAt = offer.expiresAt?.toMillis();
 
-    if (!expiresAt) return notExpired;
+    if (!expiresAt) {
+      return {
+        offerId,
+        expired: false,
+      };
+    }
 
-    const expired = expiresAt < expirationDate.toMillis();
+    const isExpired = expiresAt < expirationDate.toMillis();
 
-    if (!expired) return notExpired;
+    if (!isExpired) {
+      return {
+        offerId,
+        expired: false,
+      };
+    }
 
-    await updateOffer(offerId, {
-      status: "EXPIRED",
-    });
+    const success = await expireOfferInTransaction(offerId);
 
     return {
       offerId,
-      expired: isExpired,
+      expired: success,
     };
   }),
 );
