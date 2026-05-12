@@ -324,22 +324,28 @@ class _MyOffersViewState extends State<MyOffersView> {
     final hasAnyOffers = _myOffers.isNotEmpty;
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            hasAnyOffers ? Icons.search_off : Icons.local_offer_outlined,
-            size: 64,
-            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                hasAnyOffers ? Icons.search_off : Icons.local_offer_outlined,
+                size: 64,
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                hasAnyOffers
+                    ? 'Nenhuma oferta encontrada para este status'
+                    : 'Você ainda não criou nenhuma oferta',
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            hasAnyOffers
-                ? 'Nenhuma oferta encontrada para este status'
-                : 'Você ainda não criou nenhuma oferta',
-            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
-          ),
-        ],
+        ),
       ),
     );
   }
