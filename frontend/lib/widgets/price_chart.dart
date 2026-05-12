@@ -152,76 +152,93 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        color: isDark ? theme.colorScheme.surface : theme.colorScheme.surface,
+        border: Border.all(color: theme.dividerColor.withOpacity(isDark ? 0.2 : 0.1)),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Histórico de Preço',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
-                  if (selectedIndex != null)
-                    Text(
-                      '${_formatDate(history[selectedIndex!].timestamp)}: ${widget.currency} ${history[selectedIndex!].price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF00A84E),
-                        fontWeight: FontWeight.bold,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Histórico de Preço',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 16, 
+                          color: theme.colorScheme.onSurface
+                        )),
+                    if (selectedIndex != null)
+                      Text(
+                        '${_formatDate(history[selectedIndex!].timestamp)}: ${widget.currency} ${history[selectedIndex!].price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF00A84E),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
               Text(widget.currency,
                   style: TextStyle(
                       color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildFilterButton('6M'),
-              _buildFilterButton('1Y'),
-              _buildFilterButton('YTD'),
-              _buildCustomRangeButton(),
-            ],
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterButton('6M'),
+                const SizedBox(width: 8),
+                _buildFilterButton('1Y'),
+                const SizedBox(width: 8),
+                _buildFilterButton('YTD'),
+                const SizedBox(width: 8),
+                _buildCustomRangeButton(),
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return GestureDetector(
-                onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest),
-                onPanUpdate: (details) => _handleTap(details.localPosition, constraints.biggest),
-                child: SizedBox(
-                  height: 150,
-                  width: double.infinity,
-                  child: isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : history.isEmpty
-                          ? Center(
-                              child: Text('Histórico indisponível',
-                                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
-                          : CustomPaint(
-                              size: Size.infinite,
-                              painter: _LineChartPainter(
-                                history: history,
-                                lineColor: const Color(0xFF00A84E),
-                                selectedIndex: selectedIndex,
+          const SizedBox(height: 15),
+          SizedBox(
+            height: 200, // Fixed height to avoid errors in scrollable views like StartupDetails
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return GestureDetector(
+                  onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest),
+                  onPanUpdate: (details) => _handleTap(details.localPosition, constraints.biggest),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: isLoading
+                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E)))
+                        : history.isEmpty
+                            ? Center(
+                                child: Text('Histórico indisponível',
+                                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
+                            : CustomPaint(
+                                size: Size.infinite,
+                                painter: _LineChartPainter(
+                                  history: history,
+                                  lineColor: const Color(0xFF00A84E),
+                                  selectedIndex: selectedIndex,
+                                  isDark: isDark,
+                                ),
                               ),
-                            ),
-                ),
-              );
-            }
+                  ),
+                );
+              }
+            ),
           ),
           const SizedBox(height: 10),
           if (history.isNotEmpty && !isLoading)
@@ -229,9 +246,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_formatDate(history.first.timestamp),
-                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+                    style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
                 Text(_formatDate(history.last.timestamp),
-                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+                    style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
               ],
             )
         ],
@@ -241,6 +258,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
 
   Widget _buildFilterButton(String label) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final bool isSelected = selectedFilter == label;
     return GestureDetector(
       onTap: () {
@@ -248,9 +266,11 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
         _updateFilter(label);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF00A84E) : theme.colorScheme.surfaceVariant.withOpacity(0.3),
+          color: isSelected 
+              ? const Color(0xFF00A84E) 
+              : (isDark ? theme.colorScheme.surfaceVariant.withOpacity(0.2) : theme.colorScheme.surfaceVariant.withOpacity(0.3)),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -258,7 +278,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           style: TextStyle(
             color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.bold,
-            fontSize: 13,
+            fontSize: 12,
           ),
         ),
       ),
@@ -267,18 +287,21 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
 
   Widget _buildCustomRangeButton() {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final bool isSelected = selectedFilter == 'Custom';
     return GestureDetector(
       onTap: _selectCustomRange,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF00A84E) : theme.colorScheme.surfaceVariant.withOpacity(0.3),
+          color: isSelected 
+              ? const Color(0xFF00A84E) 
+              : (isDark ? theme.colorScheme.surfaceVariant.withOpacity(0.2) : theme.colorScheme.surfaceVariant.withOpacity(0.3)),
           shape: BoxShape.circle,
         ),
         child: Icon(
           Icons.calendar_today_outlined,
-          size: 18,
+          size: 16,
           color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
         ),
       ),
@@ -299,11 +322,13 @@ class _LineChartPainter extends CustomPainter {
   final List<PriceHistoryItem> history;
   final Color lineColor;
   final int? selectedIndex;
+  final bool isDark;
 
   _LineChartPainter({
     required this.history,
     required this.lineColor,
     this.selectedIndex,
+    required this.isDark,
   });
 
   @override
@@ -365,7 +390,7 @@ class _LineChartPainter extends CustomPainter {
       final double y = size.height - ((history[selectedIndex!].price - offsetMin) / range * size.height);
 
       final Paint selectionPaint = Paint()
-        ..color = lineColor
+        ..color = isDark ? Colors.white70 : Colors.black45
         ..strokeWidth = 1
         ..style = PaintingStyle.stroke;
 
@@ -373,14 +398,14 @@ class _LineChartPainter extends CustomPainter {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), selectionPaint);
 
       // Selected point
-      canvas.drawCircle(Offset(x, y), 6, Paint()..color = Colors.white);
+      canvas.drawCircle(Offset(x, y), 6, Paint()..color = isDark ? Colors.black : Colors.white);
       canvas.drawCircle(Offset(x, y), 4, Paint()..color = lineColor);
     }
   }
 
   @override
   bool shouldRepaint(covariant _LineChartPainter oldDelegate) {
-    return oldDelegate.history != history || oldDelegate.selectedIndex != selectedIndex;
+    return oldDelegate.history != history || oldDelegate.selectedIndex != selectedIndex || oldDelegate.isDark != isDark;
   }
 }
 

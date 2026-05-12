@@ -2,9 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:frontend/services/offer_service.dart';
-import 'package:frontend/widgets/create_offer_dialog.dart';
 import 'package:frontend/pages/my_offers_page.dart';
 import 'package:frontend/pages/buy_offer_page.dart';
+import 'package:frontend/pages/create_offer_page.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
@@ -175,9 +176,8 @@ class _OffersViewState extends State<OffersView> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final result = await showDialog<bool>(
-            context: context,
-            builder: (context) => const CreateOfferDialog(),
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(builder: (context) => const CreateOfferPage()),
           );
           if (result == true) {
             _loadMoreOffers(refresh: true);
@@ -345,7 +345,7 @@ class _OffersViewState extends State<OffersView> {
                     showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (context) => const Center(child: CircularProgressIndicator()),
+                      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E))),
                     );
 
                     final isExpired = await OfferService.isOfferExpired(offerId: offer.id);
@@ -356,14 +356,13 @@ class _OffersViewState extends State<OffersView> {
 
                     if (isExpired) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Essa oferta acabou de expirar! Que tal conferir estas outras?'),
-                            backgroundColor: Colors.red,
-                            duration: Duration(seconds: 15),
-                          ),
+                        FeedbackModal.show(
+                          context: context,
+                          title: 'Oferta Expirada',
+                          message: 'Essa oferta acabou de expirar! Que tal conferir outras oportunidades no catálogo?',
+                          type: FeedbackType.info,
+                          onConfirm: () => _loadMoreOffers(refresh: true),
                         );
-                        _loadMoreOffers(refresh: true);
                       }
                       return;
                     }
@@ -381,13 +380,17 @@ class _OffersViewState extends State<OffersView> {
                   } catch (e) {
                     if (context.mounted) {
                       Navigator.of(context).pop(); // Close loading indicator
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erro ao verificar oferta: $e')),
+                      FeedbackModal.show(
+                        context: context,
+                        title: 'Erro ao Verificar',
+                        message: 'Não foi possível verificar o status da oferta: $e',
+                        type: FeedbackType.error,
                       );
                     }
                   }
                 },
-                style: ElevatedButton.styleFrom(                  backgroundColor: const Color(0xFF00A84E),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00A84E),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
