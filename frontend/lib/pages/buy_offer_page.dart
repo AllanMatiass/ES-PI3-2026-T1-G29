@@ -3,6 +3,7 @@ import 'package:frontend/models/offer.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/offer_service.dart';
 import 'package:frontend/services/startup_service.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:frontend/widgets/price_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
@@ -53,21 +54,28 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   Future<void> _handlePurchase() async {
     setState(() => _isPurchasing = true);
     try {
-      final result = await OfferService.acceptOffer(
+      await OfferService.acceptOffer(
         offerId: widget.offer.id,
         qtdTokens: _selectedTokens,
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Compra realizada com sucesso!')),
+        FeedbackModal.show(
+          context: context,
+          title: 'Compra Realizada!',
+          message: 'Você adquiriu $_selectedTokens tokens da ${widget.offer.startupName}.',
+          type: FeedbackType.success,
+          onConfirm: () => Navigator.of(context).pop(true),
+          buttonText: 'Ir para Ofertas',
         );
-        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao realizar compra: $e')),
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro na Compra',
+          message: 'Não foi possível completar sua compra: $e',
+          type: FeedbackType.error,
         );
       }
     } finally {
@@ -76,6 +84,9 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
       }
     }
   }
+
+  // Remove the old _showSuccessDialog method entirely
+
 
   String _formatCurrency(num cents) {
     return _currencyFormat.format(cents / 100);
