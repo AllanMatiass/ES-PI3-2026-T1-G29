@@ -12,10 +12,11 @@ import {
 const buyFromStartupService = new BuyFromStartupService();
 
 export const buyTokensFromStartup = onCall(
-  withCallHandler<BuyTokensFromStartupRequestDTO, BuyTokensFromStartupResponseDTO>(
-    async (request) => {
-      const { uid } = requireAuthenticatedUser(request);
-      return buyFromStartupService.buyTokens(uid, request.data);
-    },
-  ),
+  withCallHandler<
+    BuyTokensFromStartupRequestDTO,
+    BuyTokensFromStartupResponseDTO
+  >(async (request) => {
+    const { uid } = requireAuthenticatedUser(request);
+    return buyFromStartupService.buyTokens(uid, request.data);
+  }),
 );
