@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/pages/register_page.dart';
 import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -38,19 +39,19 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = false);
 
     if (mounted) {
-      if (result['success']) {
+      if (result.success) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) =>
-                HomePage(userName: result['name'] ?? 'Usuário'),
+                HomePage(userName: result.data?['name'] ?? 'Usuário'),
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Credenciais Inválidas'),
-            backgroundColor: Colors.red,
-          ),
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro no login',
+          message: result.message ?? 'Credenciais Inválidas',
+          type: FeedbackType.error,
         );
       }
     }

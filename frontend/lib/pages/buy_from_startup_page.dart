@@ -71,38 +71,47 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
   }
 
   Future<void> _loadStartupDetails() async {
-    try {
-      final data = await StartupService.getStartupDetails(widget.startupId);
-      setState(() {
-        _startupData = data;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar detalhes: $e')),
-        );
-        Navigator.of(context).pop();
-      }
+    final result = await StartupService.getStartupDetails(widget.startupId);
+    if (!mounted) return;
+
+    if (!result.success){
+      FeedbackModal.show(
+        context: context,
+        title: 'Erro ao carregar',
+        message: result.message ?? 'Não foi possível carregar os detalhes da startup',
+        type: FeedbackType.error,
+      );
+      Navigator.of(context).pop();
     }
+
+    setState(() {
+      _startupData = result.data;
+      _isLoading = false;
+    });
+
+
   }
 
   Future<void> _handlePurchase() async {
     if (_selectedTokens <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A quantidade deve ser maior que zero')),
+      FeedbackModal.show(
+        context: context,
+        title: 'Quantidade Inválida',
+        message: 'A quantidade deve ser maior que zero',
+        type: FeedbackType.info,
       );
       return;
     }
 
     setState(() => _isPurchasing = true);
-    try {
-      await StartupService.buyTokensFromStartup(
-        startupId: widget.startupId,
-        qtdTokens: _selectedTokens,
-      );
+    final result = await StartupService.buyTokensFromStartup(
+      startupId: widget.startupId,
+      qtdTokens: _selectedTokens,
+    );
 
-      if (mounted) {
+    if (mounted) return;
+      setState(() => _isPurchasing = false);
+      if (result.success) {
         FeedbackModal.show(
           context: context,
           title: 'Investimento Realizado!',
@@ -111,21 +120,17 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
           onConfirm: () => Navigator.of(context).pop(true),
           buttonText: 'Voltar para o Portfólio',
         );
+        return;
       }
-    } catch (e) {
-      if (mounted) {
-        FeedbackModal.show(
-          context: context,
-          title: 'Erro no Investimento',
-          message: 'Não foi possível completar seu investimento: $e',
-          type: FeedbackType.error,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isPurchasing = false);
-      }
-    }
+
+      FeedbackModal.show(
+        context: context,
+        title: 'Erro no Investimento',
+        message: result.message ?? 'Não foi possível completar seu investimento',
+        type: FeedbackType.error,
+      );
+
+
   }
 
   String _formatCurrency(num cents) {

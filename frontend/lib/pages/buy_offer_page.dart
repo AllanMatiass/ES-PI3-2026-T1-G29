@@ -65,16 +65,19 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Future<void> _loadStartupDetails() async {
-    try {
-      final data = await StartupService.getStartupDetails(widget.offer.startupId);
-      setState(() {
-        _startupData = data;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar detalhes: $e')),
+    final result = await StartupService.getStartupDetails(widget.offer.startupId);
+    if (mounted) {
+      if (result.success) {
+        setState(() {
+          _startupData = result.data;
+          _isLoading = false;
+        });
+      } else {
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro ao carregar',
+          message: result.message ?? 'Não foi possível carregar os detalhes da startup',
+          type: FeedbackType.error,
         );
         Navigator.of(context).pop();
       }
@@ -83,20 +86,24 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
 
   Future<void> _handlePurchase() async {
     if (_selectedTokens <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A quantidade deve ser maior que zero')),
+      FeedbackModal.show(
+        context: context,
+        title: 'Quantidade Inválida',
+        message: 'A quantidade deve ser maior que zero',
+        type: FeedbackType.info,
       );
       return;
     }
 
     setState(() => _isPurchasing = true);
-    try {
-      await OfferService.acceptOffer(
-        offerId: widget.offer.id,
-        qtdTokens: _selectedTokens,
-      );
+    final result = await OfferService.acceptOffer(
+      offerId: widget.offer.id,
+      qtdTokens: _selectedTokens,
+    );
 
-      if (mounted) {
+    if (mounted) {
+      setState(() => _isPurchasing = false);
+      if (result.success) {
         FeedbackModal.show(
           context: context,
           title: 'Compra Realizada!',
@@ -105,24 +112,17 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
           onConfirm: () => Navigator.of(context).pop(true),
           buttonText: 'Ir para Ofertas',
         );
+        return;
       }
-    } catch (e) {
-      if (mounted) {
-        FeedbackModal.show(
-          context: context,
-          title: 'Erro na Compra',
-          message: 'Não foi possível completar sua compra: $e',
-          type: FeedbackType.error,
-        );
+      FeedbackModal.show(
+        context: context,
+        title: 'Erro na Compra',
+        message: result.message ?? 'Não foi possível completar sua compra',
+        type: FeedbackType.error,
+      );
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isPurchasing = false);
-      }
-    }
-  }
 
-  // Remove the old _showSuccessDialog method entirely
+  }
 
 
   String _formatCurrency(num cents) {

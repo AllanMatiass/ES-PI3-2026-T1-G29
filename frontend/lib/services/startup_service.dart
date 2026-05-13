@@ -1,96 +1,52 @@
 // Autor: Allan Giovanni Matias Paes
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/startup.dart';
+import '../models/api_response.dart';
+import 'base_service.dart';
 
 class StartupService {
-  static const String _listUrl =
-      'https://liststartups-obpz3whteq-uc.a.run.app/';
+  static const String _listUrl = 'https://liststartups-obpz3whteq-uc.a.run.app/';
+  static const String _detailsUrl = 'https://getstartupdetails-obpz3whteq-uc.a.run.app';
+  static const String _priceHistoryUrl = 'https://getstartuppricehistory-obpz3whteq-uc.a.run.app';
+  static const String _createQuestionUrl = 'https://createstartupquestion-obpz3whteq-uc.a.run.app';
+  static const String _buyTokensUrl = 'https://buytokensfromstartup-obpz3whteq-uc.a.run.app';
 
-  static Future<List<StartupListItem>> listStartups({http.Client? client, FirebaseAuth? auth}) async {
-    final firebaseAuth = auth ?? FirebaseAuth.instance;
-    final user = firebaseAuth.currentUser;
-    if (user == null) {
-      throw Exception('User not logged in');
-    }
-
-    final token = await user.getIdToken();
-    final httpClient = client ?? http.Client();
-
-    try {
-      final response = await httpClient.post(
-        Uri.parse(_listUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({"data": {}}),
-      );
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final result = body['result'];
-
-        if (result == null ||
-            result['success'] != true ||
-            result['data'] == null) {
-          return [];
-        }
-
-        final Map<String, dynamic> responseData = result['data'];
-        final Map<String, dynamic> startupsMap = responseData['data'];
-
-        return startupsMap.entries.map((entry) {
+  static Future<ApiResponse<List<StartupListItem>>> listStartups({
+    http.Client? client,
+    FirebaseAuth? auth,
+  }) async {
+    return BaseService.post<List<StartupListItem>>(
+      _listUrl,
+      fromJson: (data) {
+        final Map<String, dynamic> responseData = data['data'];
+        return responseData.entries.map((entry) {
           return StartupListItem.fromJson(
             entry.key,
             entry.value as Map<String, dynamic>,
           );
         }).toList();
-      } else {
-        throw Exception(
-          'Failed to load startups: ${response.statusCode} - ${response.body}',
-        );
-      }
-    } finally {
-      if (client == null) httpClient.close();
-    }
+      },
+      client: client,
+      auth: auth,
+    );
   }
 
-  static Future<StartupData> getStartupDetails(String id, {http.Client? client, FirebaseAuth? auth}) async {
-    final firebaseAuth = auth ?? FirebaseAuth.instance;
-    final user = firebaseAuth.currentUser;
-    if (user == null) {
-      throw Exception('User not logged in');
-    }
-
-    final token = await user.getIdToken();
-    const String url = 'https://getstartupdetails-obpz3whteq-uc.a.run.app';
-    final httpClient = client ?? http.Client();
-    try {
-      final response = await httpClient.post(
-        Uri.parse(url),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({"data": {"id": id}}),
-      );
-
-      final body = jsonDecode(response.body);
-      if (response.statusCode == 200 && body['result']['success'] == true) {
-        return StartupData.fromJson(body);
-      } else {
-        throw Exception('Erro ao carregar dados: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Erro de conexão: $e');
-    } finally {
-      if (client == null) httpClient.close();
-    }
+  static Future<ApiResponse<StartupData>> getStartupDetails(
+    String id, {
+    http.Client? client,
+    FirebaseAuth? auth,
+  }) async {
+    return BaseService.post<StartupData>(
+      _detailsUrl,
+      data: {"id": id},
+      fromJson: (data) => StartupData.fromJson(data as Map<String, dynamic>),
+      client: client,
+      auth: auth,
+    );
   }
 
-  static Future<Map<String, dynamic>> getStartupPriceHistory({
+  static Future<ApiResponse<Map<String, dynamic>>> getStartupPriceHistory({
     required String id,
     String historyInterval = 'monthly',
     Map<String, String>? historyRange,
@@ -98,16 +54,6 @@ class StartupService {
     http.Client? client,
     FirebaseAuth? auth,
   }) async {
-    final firebaseAuth = auth ?? FirebaseAuth.instance;
-    final user = firebaseAuth.currentUser;
-    if (user == null) {
-      throw Exception('User not logged in');
-    }
-
-    final token = await user.getIdToken();
-    const String url = 'https://getstartuppricehistory-obpz3whteq-uc.a.run.app';
-    final httpClient = client ?? http.Client();
-
     final Map<String, dynamic> requestData = {
       "id": id,
       "interval": historyInterval,
@@ -121,19 +67,10 @@ class StartupService {
       requestData["limit"] = historyLimit;
     }
 
-    try {
-      final response = await httpClient.post(
-        Uri.parse(url),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({"data": requestData}),
-      );
-
-      final body = jsonDecode(response.body);
-      if (response.statusCode == 200 && body['result']['success'] == true) {
-        final data = body['result']['data'];
+    return BaseService.post<Map<String, dynamic>>(
+      _priceHistoryUrl,
+      data: requestData,
+      fromJson: (data) {
         return {
           'history': (data['history'] as List? ?? [])
               .map((e) => PriceHistoryItem.fromJson(e))
@@ -141,114 +78,47 @@ class StartupService {
           'summary': PriceSummary.fromJson(data['summary']),
           'meta': PriceMeta.fromJson(data['meta']),
         };
-      } else {
-        throw Exception('Erro ao carregar histórico de preços: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Erro de conexão: $e');
-    } finally {
-      if (client == null) httpClient.close();
-    }
+      },
+      client: client,
+      auth: auth,
+    );
   }
 
-  static const String _createQuestionUrl =
-      'https://createstartupquestion-obpz3whteq-uc.a.run.app';
-
-  static Future<Question> createQuestion({
+  static Future<ApiResponse<Question>> createQuestion({
     required String startupId,
     required String text,
     required String visibility,
     http.Client? client,
     FirebaseAuth? auth,
   }) async {
-    final firebaseAuth = auth ?? FirebaseAuth.instance;
-    final user = firebaseAuth.currentUser;
-    if (user == null) {
-      throw Exception('User not logged in');
-    }
-
-    final token = await user.getIdToken();
-    final httpClient = client ?? http.Client();
-
-    try {
-      final response = await httpClient.post(
-        Uri.parse(_createQuestionUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          "data": {
-            "startupId": startupId,
-            "text": text,
-            "visibility": visibility,
-          }
-        }),
-      );
-
-      final body = jsonDecode(response.body);
-      final result = body['result'];
-
-      if (response.statusCode == 200 &&
-          result != null &&
-          result['success'] == true) {
-        return Question.fromJson(result['data']);
-      } else {
-        final error = result?['error'];
-        final message =
-            error?['message'] ?? 'Erro desconhecido ao criar pergunta';
-        throw Exception(message);
-      }
-    } catch (e) {
-      throw Exception('Erro ao criar pergunta: $e');
-    } finally {
-      if (client == null) httpClient.close();
-    }
+    return BaseService.post<Question>(
+      _createQuestionUrl,
+      data: {
+        "startupId": startupId,
+        "text": text,
+        "visibility": visibility,
+      },
+      fromJson: (data) => Question.fromJson(data as Map<String, dynamic>),
+      client: client,
+      auth: auth,
+    );
   }
 
-  static Future<void> buyTokensFromStartup({
+  static Future<ApiResponse<void>> buyTokensFromStartup({
     required String startupId,
     required int qtdTokens,
     http.Client? client,
     FirebaseAuth? auth,
   }) async {
-    final firebaseAuth = auth ?? FirebaseAuth.instance;
-    final user = firebaseAuth.currentUser;
-    if (user == null) {
-      throw Exception('User not logged in');
-    }
-
-    final token = await user.getIdToken();
-    const String url = 'https://buytokensfromstartup-obpz3whteq-uc.a.run.app';
-    final httpClient = client ?? http.Client();
-
-    try {
-      final response = await httpClient.post(
-        Uri.parse(url),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({
-          "data": {
-            "startupId": startupId,
-            "qtdTokens": qtdTokens,
-          }
-        }),
-      );
-
-      final body = jsonDecode(response.body);
-      if (response.statusCode != 200 || body['result']?['success'] != true) {
-        final error = body['result']?['error'];
-        final message =
-            error?['message'] ?? 'Erro desconhecido ao comprar tokens';
-        throw Exception(message);
-      }
-    } catch (e) {
-      throw Exception('Erro na compra: $e');
-    } finally {
-      if (client == null) httpClient.close();
-    }
+    return BaseService.post<void>(
+      _buyTokensUrl,
+      data: {
+        "startupId": startupId,
+        "qtdTokens": qtdTokens,
+      },
+      fromJson: (_) => null,
+      client: client,
+      auth: auth,
+    );
   }
 }
-
