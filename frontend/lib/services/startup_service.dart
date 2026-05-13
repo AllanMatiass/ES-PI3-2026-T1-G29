@@ -205,5 +205,50 @@ class StartupService {
       if (client == null) httpClient.close();
     }
   }
+
+  static Future<void> buyTokensFromStartup({
+    required String startupId,
+    required int qtdTokens,
+    http.Client? client,
+    FirebaseAuth? auth,
+  }) async {
+    final firebaseAuth = auth ?? FirebaseAuth.instance;
+    final user = firebaseAuth.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final token = await user.getIdToken();
+    const String url = 'https://buytokensfromstartup-obpz3whteq-uc.a.run.app';
+    final httpClient = client ?? http.Client();
+
+    try {
+      final response = await httpClient.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "data": {
+            "startupId": startupId,
+            "qtdTokens": qtdTokens,
+          }
+        }),
+      );
+
+      final body = jsonDecode(response.body);
+      if (response.statusCode != 200 || body['result']?['success'] != true) {
+        final error = body['result']?['error'];
+        final message =
+            error?['message'] ?? 'Erro desconhecido ao comprar tokens';
+        throw Exception(message);
+      }
+    } catch (e) {
+      throw Exception('Erro na compra: $e');
+    } finally {
+      if (client == null) httpClient.close();
+    }
+  }
 }
 

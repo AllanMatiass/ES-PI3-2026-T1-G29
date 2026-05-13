@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
+import 'package:frontend/pages/buy_from_startup_page.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:frontend/pages/startup_details.dart';
 
@@ -347,7 +348,19 @@ class _CatalogPageState extends State<CatalogPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BuyFromStartupPage(
+                            startupId: startup.id,
+                            startupName: startup.name,
+                            tokenPriceCents: startup.currentTokenPriceCents,
+                            logoUrl: startup.coverImageUrl,
+                          ),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00A84E),
                       foregroundColor: Colors.white,
