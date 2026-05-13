@@ -6,3 +6,4 @@ export { getOffers } from "./handlers/getOffers";
 export { getInvestorDashboard } from "./handlers/getInvestorDashboard";
 export { getMyOffers } from "./handlers/getMyOffers";
 export { expireOffer } from "./handlers/expireOffer";
+export { buyTokensFromStartup } from "./handlers/buyTokensFromStartup";
