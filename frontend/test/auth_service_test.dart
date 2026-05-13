@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:frontend/services/auth.dart';
+import 'package:frontend/models/api_response.dart';
 
 // Generate a MockClient using Mockito
 @GenerateMocks([http.Client])
@@ -14,13 +15,12 @@ void main() {
 
   setUp(() {
     mockClient = MockClient();
-    AuthService.setHttpClient(mockClient);
   });
 
   group('AuthService.signUp', () {
     const signUpUrl = 'https://signup-obpz3whteq-uc.a.run.app';
 
-    test('returns success map when the call is successful', () async {
+    test('returns success ApiResponse when the call is successful', () async {
       final successResponse = {
         "result": {
           "success": true,
@@ -43,15 +43,16 @@ void main() {
         name: "Matias",
         email: "matias3@22e.com",
         phone: "11930541768",
-        password: "123456"
+        password: "123456",
+        client: mockClient,
       );
 
-      expect(result['success'], true);
-      expect(result['data']['name'], "Matias");
-      expect(result['data']['email'], "matias3@22e.com");
+      expect(result.success, true);
+      expect(result.data?['name'], "Matias");
+      expect(result.data?['email'], "matias3@22e.com");
     });
 
-    test('returns error map when the CPF already exists', () async {
+    test('returns error ApiResponse when the CPF already exists', () async {
       final errorResponse = {
         "result": {
           "success": false,
@@ -74,14 +75,16 @@ void main() {
         name: "Matias",
         email: "matias3@22e.com",
         phone: "11930541768",
-        password: "123456"
+        password: "123456",
+        client: mockClient,
       );
 
-      expect(result['success'], false);
-      expect(result['error'], "CPF já cadastrado no sistema.");
+      expect(result.success, false);
+      expect(result.message, "CPF já cadastrado no sistema.");
+      expect(result.errorCode, "already-exists");
     });
 
-    test('returns error map when connection fails', () async {
+    test('returns error ApiResponse when connection fails', () async {
       when(mockClient.post(
         Uri.parse(signUpUrl),
         headers: anyNamed('headers'),
@@ -93,11 +96,12 @@ void main() {
         name: "Matias",
         email: "matias3@22e.com",
         phone: "11930541768",
-        password: "123456"
+        password: "123456",
+        client: mockClient,
       );
 
-      expect(result['success'], false);
-      expect(result['error'], contains("Falha na conexão"));
+      expect(result.success, false);
+      expect(result.message, contains("Falha na conexão"));
     });
   });
 }

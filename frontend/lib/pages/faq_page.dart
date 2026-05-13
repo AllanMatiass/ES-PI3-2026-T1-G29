@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 import '../models/startup.dart';
 import '../services/startup_service.dart';
 
@@ -37,66 +38,67 @@ class _FAQPageState extends State<FAQPage> {
 
   Future<void> _handleRefresh() async {
     setState(() => _isRefreshing = true);
-    try {
-      final startupData =
-          await StartupService.getStartupDetails(widget.startupId);
-      setState(() {
-        _questions = startupData.questions;
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao atualizar FAQ: $e')),
+    final result = await StartupService.getStartupDetails(widget.startupId);
+    if (mounted) {
+      if (result.success) {
+        setState(() {
+          _questions = result.data!.questions;
+        });
+      } else {
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro ao atualizar',
+          message: result.message ?? 'Não foi possível carregar as perguntas',
+          type: FeedbackType.error,
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isRefreshing = false);
-      }
+      setState(() => _isRefreshing = false);
     }
   }
 
   Future<void> _submitQuestion() async {
     final text = _questionController.text.trim();
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, digite sua pergunta.')),
+      FeedbackModal.show(
+        context: context,
+        title: 'Campo Vazio',
+        message: 'Por favor, digite sua pergunta.',
+        type: FeedbackType.info,
       );
       return;
     }
 
     setState(() => _isLoading = true);
+    final visibility = _isPrivate ? 'privada' : 'publica';
 
-    try {
-      final visibility = _isPrivate ? 'privada' : 'publica';
+    final result = await StartupService.createQuestion(
+      startupId: widget.startupId,
+      text: text,
+      visibility: visibility,
+    );
 
-      final newQuestion = await StartupService.createQuestion(
-        startupId: widget.startupId,
-        text: text,
-        visibility: visibility,
-      );
-
-      setState(() {
-        _questions.insert(0, newQuestion);
-        _questionController.clear();
-        _isPrivate = false;
-      });
-
-      if (mounted) {
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (result.success) {
+        setState(() {
+          _questions.insert(0, result.data!);
+          _questionController.clear();
+          _isPrivate = false;
+        });
         Navigator.pop(context); // Fecha o bottom sheet
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pergunta enviada com sucesso!')),
+        FeedbackModal.show(
+          context: context,
+          title: 'Sucesso!',
+          message: 'Sua pergunta foi enviada com sucesso.',
+          type: FeedbackType.success,
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao enviar pergunta: ${e.toString()}')),
+      } else {
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro ao enviar',
+          message: result.message ?? 'Não foi possível enviar sua pergunta',
+          type: FeedbackType.error,
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
       }
     }
   }

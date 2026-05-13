@@ -1,5 +1,6 @@
 // Autor: Allan Giovanni Matias Paes e Pedro Vinicius Romanato
 import 'package:flutter/material.dart';
+import 'package:frontend/models/api_response.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/pages/buy_from_startup_page.dart';
@@ -16,7 +17,7 @@ class CatalogPage extends StatefulWidget {
 }
 
 class _CatalogPageState extends State<CatalogPage> {
-  late Future<List<StartupListItem>> _startupsFuture;
+  late Future<ApiResponse<List<StartupListItem>>> _startupsFuture;
   String _searchQuery = "";
   StartupStage? _selectedStage;
 
@@ -111,14 +112,30 @@ class _CatalogPageState extends State<CatalogPage> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _handleRefresh,
-              child: FutureBuilder<List<StartupListItem>>(
+              child: FutureBuilder<ApiResponse<List<StartupListItem>>>(
                 future: _startupsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return _buildSkeletonLoading();
-                  } else if (snapshot.hasError) {
+                  }
+                  
+                  if (snapshot.hasError) {
                     return _buildErrorState(snapshot.error.toString());
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  }
+                  
+                  if (!snapshot.hasData) {
+                    return _buildErrorState('Nenhum dado recebido');
+                  }
+
+                  final response = snapshot.data!;
+                  
+                  if (!response.success) {
+                    return _buildErrorState(response.message ?? 'Erro desconhecido');
+                  }
+
+                  var startups = response.data!;
+
+                  if (startups.isEmpty) {
                     return ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: [
@@ -129,8 +146,6 @@ class _CatalogPageState extends State<CatalogPage> {
                       ],
                     );
                   }
-
-                  var startups = snapshot.data!;
 
                   if (_searchQuery.isNotEmpty) {
                     startups = startups
