@@ -1,3 +1,5 @@
+// Autor: Allan Giovanni Matias Paes
+// Classe genérica para representar a resposta da API.
 class ApiResponse<T> {
   final bool success;
   final T? data;
@@ -11,6 +13,7 @@ class ApiResponse<T> {
     this.errorCode,
   });
 
+  // Fábrica para criar uma instância de sucesso com dados.
   factory ApiResponse.success(T data) {
     return ApiResponse(
       success: true,
@@ -18,6 +21,7 @@ class ApiResponse<T> {
     );
   }
 
+  // Fábrica para criar uma instância de erro com mensagem e código opcional.
   factory ApiResponse.error(String message, {String? errorCode}) {
     return ApiResponse(
       success: false,

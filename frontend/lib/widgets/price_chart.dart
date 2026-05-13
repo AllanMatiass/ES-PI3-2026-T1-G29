@@ -1,8 +1,10 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import '../models/startup.dart';
 import '../services/startup_service.dart';
 
+/// Widget que exibe um gráfico de histórico de preços de uma startup.
 class PriceHistoryChart extends StatefulWidget {
   final String startupId;
   final List<PriceHistoryItem> initialHistory;
@@ -31,6 +33,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   void initState() {
     super.initState();
     history = widget.initialHistory;
+    // Carrega o filtro inicial YTD (Year To Date)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateFilter('YTD');
     });
@@ -39,6 +42,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   @override
   void didUpdateWidget(PriceHistoryChart oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Atualiza o histórico se as propriedades do widget mudarem
     if (oldWidget.initialHistory != widget.initialHistory) {
       setState(() {
         history = widget.initialHistory;
@@ -49,6 +53,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     }
   }
 
+  /// Exibe diálogo para seleção de intervalo personalizado de datas.
   Future<void> _selectCustomRange() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -69,6 +74,8 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     }
   }
 
+  /// Atualiza os dados do gráfico com base no filtro selecionado (6M, 1Y, YTD, Custom).
+  /// Realiza cálculos de datas para definir o intervalo da busca na API.
   Future<void> _updateFilter(String filter) async {
     setState(() {
       selectedFilter = filter;
@@ -84,6 +91,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
       final now = DateTime.now();
       final toDateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
+      // Define o intervalo de tempo retroativo com base no filtro
       if (filter == '6M') {
         interval = 'monthly';
         final from = DateTime(now.year, now.month - 6, now.day);
@@ -102,10 +110,6 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
         limit = 12;
       } else if (filter == 'YTD') {
         interval = 'ytd';
-        range = {
-          "from": "${now.year}-01-01",
-          "to": toDateStr
-        };
       } else if (filter == 'Custom' && customRange != null) {
         interval = customInterval;
         range = {
@@ -114,6 +118,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
         };
       }
 
+      // Busca os dados históricos no serviço
       final result = await StartupService.getStartupPriceHistory(
         id: widget.startupId,
         historyInterval: interval,
@@ -152,10 +157,13 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     }
   }
 
+  /// Identifica qual ponto do gráfico foi tocado com base na posição X do toque.
   void _handleTap(Offset localPosition, Size size) {
     if (history.length < 2) return;
     
+    // Divide a largura total pela quantidade de intervalos entre os pontos
     final double stepX = size.width / (history.length - 1);
+    // Calcula o índice arredondando a posição X pelo tamanho do passo
     final int index = (localPosition.dx / stepX).round().clamp(0, history.length - 1);
     
     setState(() {
@@ -192,6 +200,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                           fontSize: 16, 
                           color: theme.colorScheme.onSurface
                         )),
+                    // Exibe o preço do ponto selecionado pelo usuário
                     if (selectedIndex != null)
                       Text(
                         '${_formatDate(history[selectedIndex!].timestamp)}: ${widget.currency} ${history[selectedIndex!].price.toStringAsFixed(2)}',
@@ -210,6 +219,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
             ],
           ),
           const SizedBox(height: 12),
+          // Botões de filtro
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -225,13 +235,14 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
             ),
           ),
           const SizedBox(height: 15),
+          // Área do gráfico
           SizedBox(
-            height: 200, // Fixed height to avoid errors in scrollable views like StartupDetails
+            height: 200, 
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return GestureDetector(
-                  onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest),
                   onPanUpdate: (details) => _handleTap(details.localPosition, constraints.biggest),
+                  onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest),
                   child: SizedBox(
                     width: double.infinity,
                     child: isLoading
@@ -255,6 +266,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
             ),
           ),
           const SizedBox(height: 10),
+          // Exibe a primeira e última data do intervalo no eixo X
           if (history.isNotEmpty && !isLoading)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -270,6 +282,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     );
   }
 
+  /// Constrói botão de filtro padrão.
   Widget _buildFilterButton(String label) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -299,6 +312,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     );
   }
 
+  /// Botão para acionar o calendário e escolher datas customizadas.
   Widget _buildCustomRangeButton() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -322,6 +336,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     );
   }
 
+  /// Formata a data ISO para o padrão brasileiro DD/MM/AAAA.
   String _formatDate(String timestamp) {
     try {
       final date = DateTime.parse(timestamp);
@@ -332,6 +347,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   }
 }
 
+/// Painter responsável por desenhar a linha do gráfico e o preenchimento gradiente.
 class _LineChartPainter extends CustomPainter {
   final List<PriceHistoryItem> history;
   final Color lineColor;
@@ -355,12 +371,15 @@ class _LineChartPainter extends CustomPainter {
       return;
     }
 
+    // Identifica os valores mínimo e máximo para escalar o gráfico verticalmente
     final double minPrice = history.map((e) => e.price).reduce((a, b) => a < b ? a : b);
     final double maxPrice = history.map((e) => e.price).reduce((a, b) => a > b ? a : b);
     
+    // Cálculo de margem: adiciona 20% de respiro no topo e base para o gráfico não encostar nas bordas
     final double range = maxPrice - minPrice == 0 ? 1 : (maxPrice - minPrice) * 1.2;
     final double offsetMin = minPrice - (range * 0.1);
 
+    // Distância horizontal entre cada ponto
     final double stepX = size.width / (history.length - 1);
     
     final Paint linePaint = Paint()
@@ -372,8 +391,10 @@ class _LineChartPainter extends CustomPainter {
 
     final Path path = Path();
     
+    // Mapeamento de coordenadas: transforma valores de preço em coordenadas Y da tela
     for (int i = 0; i < history.length; i++) {
       final double x = i * stepX;
+      // Inverte o Y (0 é o topo da tela) e aplica a proporção do preço dentro do range calculado
       final double y = size.height - ((history[i].price - offsetMin) / range * size.height);
       
       if (i == 0) {
@@ -383,6 +404,7 @@ class _LineChartPainter extends CustomPainter {
       }
     }
 
+    // Desenha o preenchimento gradiente abaixo da linha
     final Path fillPath = Path.from(path);
     fillPath.lineTo(size.width, size.height);
     fillPath.lineTo(0, size.height);
@@ -398,7 +420,7 @@ class _LineChartPainter extends CustomPainter {
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
 
-    // Draw selection indicator
+    // Desenha o indicador visual (linha vertical e ponto) quando o usuário interage
     if (selectedIndex != null && selectedIndex! < history.length) {
       final double x = selectedIndex! * stepX;
       final double y = size.height - ((history[selectedIndex!].price - offsetMin) / range * size.height);
@@ -408,10 +430,10 @@ class _LineChartPainter extends CustomPainter {
         ..strokeWidth = 1
         ..style = PaintingStyle.stroke;
 
-      // Vertical line
+      // Linha vertical de guia
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), selectionPaint);
 
-      // Selected point
+      // Círculos concêntricos para destacar o ponto selecionado
       canvas.drawCircle(Offset(x, y), 6, Paint()..color = isDark ? Colors.black : Colors.white);
       canvas.drawCircle(Offset(x, y), 4, Paint()..color = lineColor);
     }
@@ -423,6 +445,7 @@ class _LineChartPainter extends CustomPainter {
   }
 }
 
+/// Diálogo para seleção de mês/ano e periodicidade do gráfico.
 class _MonthYearRangeDialog extends StatefulWidget {
   final DateTimeRange? initialRange;
   final String initialInterval;
@@ -508,6 +531,7 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
     );
   }
 
+  /// Dropdown para escolher a granularidade dos dados (mensal, semestral, anual).
   Widget _buildIntervalPicker() {
     final theme = Theme.of(context);
     return Column(
@@ -527,6 +551,7 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
     );
   }
 
+  /// Constrói linha com seletores de mês e ano.
   Widget _buildPickerRow(String label, int currentMonth, int currentYear, Function(int) onMonthChange, Function(int) onYearChange) {
     final theme = Theme.of(context);
     return Column(

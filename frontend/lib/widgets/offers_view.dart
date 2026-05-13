@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/offer.dart';
@@ -10,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
 
+// Visão que exibe todas as ofertas abertas de tokens no mercado secundário.
 class OffersView extends StatefulWidget {
   const OffersView({super.key});
 
@@ -47,6 +49,7 @@ class _OffersViewState extends State<OffersView> {
     super.dispose();
   }
 
+  // Monitora o scroll para carregar mais itens quando o usuário chegar ao final da lista.
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -54,6 +57,7 @@ class _OffersViewState extends State<OffersView> {
     }
   }
 
+  // Busca mais ofertas no servidor, gerenciando o estado de carregamento e paginação.
   Future<void> _loadMoreOffers({bool refresh = false}) async {
     if (_isLoading || (!_hasMore && !refresh)) return;
 
@@ -96,9 +100,10 @@ class _OffersViewState extends State<OffersView> {
     }
   }
 
+  // Filtra a lista de ofertas carregadas localmente com base na busca e preço máximo.
   List<OfferWithId> get _filteredOffers {
     return _offers.where((offer) {
-      // Don't show offers from the current user
+      // Não exibe ofertas criadas pelo próprio usuário logado.
       if (_currentUserId != null && offer.seller.id == _currentUserId) {
         return false;
       }
@@ -107,6 +112,7 @@ class _OffersViewState extends State<OffersView> {
           .toLowerCase()
           .contains(_searchStartup.toLowerCase());
       
+      // Converte o preço de centavos para reais para comparar com o filtro de preço máximo.
       final matchesPrice = _maxPrice == null || 
           (offer.tokenPriceCents / 100) <= _maxPrice!;
           
@@ -114,6 +120,7 @@ class _OffersViewState extends State<OffersView> {
     }).toList();
   }
 
+  // Auxiliar para formatar valores em centavos para a moeda Real (R$).
   String _formatCurrency(int cents) {
     return _currencyFormat.format(cents / 100);
   }
@@ -190,6 +197,7 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Constrói os campos de filtro de busca por startup e por preço máximo.
   Widget _buildFilters() {
     final theme = Theme.of(context);
     return Padding(
@@ -231,7 +239,7 @@ class _OffersViewState extends State<OffersView> {
               ],
               onChanged: (value) {
                 setState(() {
-                  // Replace comma with dot for parsing
+                  // Normaliza vírgula para ponto antes de converter para double.
                   String normalizedValue = value.replaceAll(',', '.');
                   _maxPrice = double.tryParse(normalizedValue);
                 });
@@ -254,6 +262,7 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Constrói o card individual de cada oferta com detalhes de quantidade, preço e ação de compra.
   Widget _buildOfferCard(OfferWithId offer) {
     final theme = Theme.of(context);
     return Container(
@@ -341,7 +350,7 @@ class _OffersViewState extends State<OffersView> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // Show loading indicator
+                  // Exibe indicador de carregamento enquanto verifica a expiração da oferta.
                   showDialog(
                     context: context,
                     barrierDismissible: false,
@@ -351,7 +360,7 @@ class _OffersViewState extends State<OffersView> {
                   final resultCheck = await OfferService.isOfferExpired(offerId: offer.id);
 
                   if (context.mounted) {
-                    Navigator.of(context).pop(); // Close loading indicator
+                    Navigator.of(context).pop(); // Fecha o indicador de carregamento.
                   }
 
                   if (resultCheck.success) {
@@ -405,6 +414,7 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Helper para construir itens de informação com ícone e texto.
   Widget _buildInfoItem(IconData icon, String value, {String? label}) {
     final theme = Theme.of(context);
     return Row(
@@ -429,6 +439,7 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Badge colorido que indica o status atual da oferta.
   Widget _buildStatusBadge(OfferStatus status) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -447,6 +458,7 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Retorna a cor correspondente a cada status de oferta.
   Color _getStatusColor(OfferStatus status) {
     switch (status) {
       case OfferStatus.open:
