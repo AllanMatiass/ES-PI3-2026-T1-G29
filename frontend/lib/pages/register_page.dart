@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/validators.dart';
 import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -56,32 +57,32 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _isLoading = false);
 
     if (mounted) {
-      if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Conta criada com sucesso! Redirecionando...'),
-            backgroundColor: Colors.green,
-          ),
+      if (result.success) {
+        FeedbackModal.show(
+          context: context,
+          title: 'Conta criada!',
+          message: 'Sua conta foi criada com sucesso. Bem-vindo!',
+          type: FeedbackType.success,
         );
 
         // Wait a bit to show success message then navigate
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 2));
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => HomePage(
-                userName: result['data']['name'] ?? _nameController.text,
+                userName: result.data?['name'] ?? _nameController.text,
               ),
             ),
             (route) => false,
           );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['error'] ?? 'Erro ao criar conta'),
-            backgroundColor: Colors.red,
-          ),
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro no cadastro',
+          message: result.message ?? 'Erro ao criar conta',
+          type: FeedbackType.error,
         );
       }
     }

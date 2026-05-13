@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/offer_service.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -33,17 +34,21 @@ class _MyOffersViewState extends State<MyOffersView> {
 
   Future<void> _loadMyOffers() async {
     setState(() => _isLoading = true);
-    try {
-      final offers = await OfferService.getMyOffers();
-      setState(() {
-        _myOffers = offers;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar minhas ofertas: $e')),
+    final result = await OfferService.getMyOffers();
+    
+    if (mounted) {
+      if (result.success) {
+        setState(() {
+          _myOffers = result.data!;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro ao carregar',
+          message: result.message ?? 'Erro ao carregar minhas ofertas',
+          type: FeedbackType.error,
         );
       }
     }

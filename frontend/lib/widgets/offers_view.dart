@@ -66,30 +66,31 @@ class _OffersViewState extends State<OffersView> {
       }
     });
 
-    try {
-      final result = await OfferService.getOffers(
-        limit: 15,
-        startAfter: _lastOfferId,
-      );
+    final result = await OfferService.getOffers(
+      limit: 15,
+      startAfter: _lastOfferId,
+    );
 
-      final List<OfferWithId> newOffers = result['offers'];
-      final String? lastId = result['lastOfferId'];
+    if (mounted) {
+      if (result.success) {
+        final List<OfferWithId> newOffers = result.data!['offers'];
+        final String? lastId = result.data!['lastOfferId'];
 
-      setState(() {
-        _offers.addAll(newOffers);
-        _lastOfferId = lastId;
-        _isLoading = false;
-        if (newOffers.length < 15 || lastId == null) {
-          _hasMore = false;
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar ofertas: $e')),
+        setState(() {
+          _offers.addAll(newOffers);
+          _lastOfferId = lastId;
+          _isLoading = false;
+          if (newOffers.length < 15 || lastId == null) {
+            _hasMore = false;
+          }
+        });
+      } else {
+        setState(() => _isLoading = false);
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro ao carregar',
+          message: result.message ?? 'Erro ao carregar ofertas',
+          type: FeedbackType.error,
         );
       }
     }
@@ -340,21 +341,21 @@ class _OffersViewState extends State<OffersView> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  try {
-                    // Show loading indicator
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E))),
-                    );
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E))),
+                  );
 
-                    final isExpired = await OfferService.isOfferExpired(offerId: offer.id);
+                  final resultCheck = await OfferService.isOfferExpired(offerId: offer.id);
 
-                    if (context.mounted) {
-                      Navigator.of(context).pop(); // Close loading indicator
-                    }
+                  if (context.mounted) {
+                    Navigator.of(context).pop(); // Close loading indicator
+                  }
 
-                    if (isExpired) {
+                  if (resultCheck.success) {
+                    if (resultCheck.data == true) {
                       if (context.mounted) {
                         FeedbackModal.show(
                           context: context,
@@ -364,26 +365,24 @@ class _OffersViewState extends State<OffersView> {
                           onConfirm: () => _loadMoreOffers(refresh: true),
                         );
                       }
-                      return;
-                    }
-
-                    if (context.mounted) {
-                      final result = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute(
-                          builder: (context) => BuyOfferPage(offer: offer),
-                        ),
-                      );
-                      if (result == true) {
-                        _loadMoreOffers(refresh: true);
+                    } else {
+                      if (context.mounted) {
+                        final result = await Navigator.of(context).push<bool>(
+                          MaterialPageRoute(
+                            builder: (context) => BuyOfferPage(offer: offer),
+                          ),
+                        );
+                        if (result == true) {
+                          _loadMoreOffers(refresh: true);
+                        }
                       }
                     }
-                  } catch (e) {
+                  } else {
                     if (context.mounted) {
-                      Navigator.of(context).pop(); // Close loading indicator
                       FeedbackModal.show(
                         context: context,
                         title: 'Erro ao Verificar',
-                        message: 'Não foi possível verificar o status da oferta: $e',
+                        message: resultCheck.message ?? 'Não foi possível verificar o status da oferta',
                         type: FeedbackType.error,
                       );
                     }

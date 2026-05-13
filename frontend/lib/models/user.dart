@@ -20,7 +20,7 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
-    final data = json['result'] != null ? json['result']['data'] : json;
+    final data = json;
     
     return UserProfile(
       uid: data['uid'] ?? '',

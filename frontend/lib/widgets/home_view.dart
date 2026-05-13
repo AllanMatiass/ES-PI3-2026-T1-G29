@@ -8,6 +8,8 @@ import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/user_service.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/pages/my_offers_page.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/models/api_response.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:intl/intl.dart';
 
@@ -58,29 +60,23 @@ class _HomeViewState extends State<HomeView> {
     }
 
     try {
-      final token = await user.getIdToken(true);
-      
-      if (token == null) {
-        throw Exception("Falha ao obter token de acesso");
-      }
-
       // Load user data and startups in parallel
       final results = await Future.wait([
-        UserService.getUserData(user.uid, token),
+        UserService.getUserData(),
         StartupService.listStartups(),
       ]);
 
-      final userResult = results[0] as Map<String, dynamic>;
-      final startupsList = results[1] as List<StartupListItem>;
+      final userResult = results[0] as ApiResponse<UserProfile>;
+      final startupsResult = results[1] as ApiResponse<List<StartupListItem>>;
 
       if (mounted) {
         setState(() {
-          if (userResult['success']) {
-            _userData = userResult['data'];
-            _startupsMap = {for (var s in startupsList) s.id: s};
+          if (userResult.success && startupsResult.success) {
+            _userData = userResult.data;
+            _startupsMap = {for (var s in startupsResult.data!) s.id: s};
           } else {
-            _error = userResult['error'];
-            if (userResult['code'] == 'unauthenticated' || userResult['code'] == 'permission-denied') {
+            _error = userResult.message ?? startupsResult.message;
+            if (userResult.errorCode == 'unauthenticated' || userResult.errorCode == 'permission-denied') {
               AuthService.signOut();
               Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
             }
@@ -154,8 +150,11 @@ class _HomeViewState extends State<HomeView> {
                         Icons.swap_horiz,
                         'Transferir',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
+                          FeedbackModal.show(
+                            context: context,
+                            title: 'Em breve',
+                            message: 'Funcionalidade em desenvolvimento',
+                            type: FeedbackType.info,
                           );
                         },
                       ),

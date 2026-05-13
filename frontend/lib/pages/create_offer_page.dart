@@ -83,26 +83,22 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
   }
 
   Future<void> _loadUserTokens() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    setState(() => _isLoading = true);
+    final result = await UserService.getUserData();
 
-    try {
-      final idToken = await user.getIdToken();
-      final result = await UserService.getUserData(user.uid, idToken!);
-
-      if (result['success'] == true) {
-        final UserProfile profile = result['data'];
+    if (mounted) {
+      if (result.success) {
+        final UserProfile profile = result.data!;
         setState(() {
           _positions = profile.wallet.positions.where((p) => p.qtdTokens > 0).toList();
           _isLoading = false;
         });
       } else {
-        throw Exception(result['error']);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar seus tokens: $e')),
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro ao carregar',
+          message: result.message ?? 'Erro ao carregar seus tokens',
+          type: FeedbackType.error,
         );
         Navigator.of(context).pop();
       }
@@ -111,20 +107,18 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
 
   Future<void> _loadStartupDetails(String startupId) async {
     setState(() => _isLoadingChart = true);
-    try {
-      final data = await StartupService.getStartupDetails(startupId);
-      setState(() {
-        _selectedStartupData = data;
-        _isLoadingChart = false;
-      });
-    } catch (e) {
-      if (mounted) {
+    final result = await StartupService.getStartupDetails(startupId);
+    if (mounted) {
+      if (result.success) {
+        setState(() {
+          _selectedStartupData = result.data;
+          _isLoadingChart = false;
+        });
+      } else {
         setState(() => _isLoadingChart = false);
       }
     }
   }
-
-// ... (keep class definition and logic)
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || _selectedPosition == null) return;
@@ -144,16 +138,14 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
       return;
     }
 
-    setState(() {
-      _isSubmitting = true;
-    });
+    setState(() => _isSubmitting = true);
 
     try {
       final int qtd = int.parse(_qtdController.text);
       String priceText = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
       final int priceCents = int.parse(priceText);
 
-      await OfferService.createOffer(
+      final result = await OfferService.createOffer(
         startupId: _selectedPosition!.startupId,
         qtdTokens: qtd,
         tokenPriceCents: priceCents,
@@ -161,29 +153,34 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
       );
 
       if (mounted) {
-        FeedbackModal.show(
-          context: context,
-          title: 'Oferta Publicada!',
-          message: 'Sua oferta agora está visível para outros investidores no catálogo.',
-          type: FeedbackType.success,
-          onConfirm: () => Navigator.of(context).pop(true),
-          buttonText: 'Ótimo!',
-        );
+        setState(() => _isSubmitting = false);
+        if (result.success) {
+          FeedbackModal.show(
+            context: context,
+            title: 'Oferta Publicada!',
+            message: 'Sua oferta agora está visível para outros investidores no catálogo.',
+            type: FeedbackType.success,
+            onConfirm: () => Navigator.of(context).pop(true),
+            buttonText: 'Ótimo!',
+          );
+        } else {
+          FeedbackModal.show(
+            context: context,
+            title: 'Erro na Publicação',
+            message: result.message ?? 'Não foi possível publicar sua oferta',
+            type: FeedbackType.error,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isSubmitting = false);
         FeedbackModal.show(
           context: context,
           title: 'Erro na Publicação',
           message: 'Não foi possível publicar sua oferta: $e',
           type: FeedbackType.error,
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
       }
     }
   }
