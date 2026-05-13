@@ -50,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
         FeedbackModal.show(
           context: context,
           title: 'Erro no login',
-          message: result.message ?? 'Credenciais Inválidas',
+          message: 'Credenciais Inválidas',
           type: FeedbackType.error,
         );
       }

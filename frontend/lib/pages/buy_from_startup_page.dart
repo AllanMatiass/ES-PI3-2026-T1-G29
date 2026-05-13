@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/models/startup.dart';
+import 'package:frontend/models/user.dart';
 import 'package:frontend/services/startup_service.dart';
+import 'package:frontend/services/user_service.dart';
+import 'package:frontend/services/user_state.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:frontend/widgets/price_chart.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +29,7 @@ class MaxValueInputFormatter extends TextInputFormatter {
     return newValue;
   }
 }
+
 
 class BuyFromStartupPage extends StatefulWidget {
   final String startupId;
@@ -61,13 +65,26 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
   void initState() {
     super.initState();
     _quantityController.text = _selectedTokens.toString();
-    _loadStartupDetails();
+    _loadInitialData();
   }
 
   @override
   void dispose() {
     _quantityController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadInitialData() async {
+    // Check if we have user data, if not refresh it
+    if (UserState.userNotifier.value == null) {
+      await UserState.refreshUser();
+    }
+    await _loadStartupDetails();
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadStartupDetails() async {
@@ -82,17 +99,18 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
         type: FeedbackType.error,
       );
       Navigator.of(context).pop();
+      return;
     }
 
     setState(() {
       _startupData = result.data;
-      _isLoading = false;
     });
-
-
   }
 
   Future<void> _handlePurchase() async {
+    final userBalanceCents = UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
+    final totalCents = _selectedTokens * widget.tokenPriceCents;
+
     if (_selectedTokens <= 0) {
       FeedbackModal.show(
         context: context,
@@ -103,34 +121,48 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       return;
     }
 
+    if (totalCents > userBalanceCents) {
+      FeedbackModal.show(
+        context: context,
+        title: 'Saldo Insuficiente',
+        message: 'Você não possui saldo suficiente para este investimento. Seu saldo atual é ${_formatCurrency(userBalanceCents)}.',
+        type: FeedbackType.error,
+        buttonText: 'Entendido',
+      );
+      return;
+    }
+
     setState(() => _isPurchasing = true);
     final result = await StartupService.buyTokensFromStartup(
       startupId: widget.startupId,
       qtdTokens: _selectedTokens,
     );
 
-    if (mounted) return;
-      setState(() => _isPurchasing = false);
-      if (result.success) {
-        FeedbackModal.show(
-          context: context,
-          title: 'Investimento Realizado!',
-          message: 'Você adquiriu $_selectedTokens tokens da ${widget.startupName}.',
-          type: FeedbackType.success,
-          onConfirm: () => Navigator.of(context).pop(true),
-          buttonText: 'Voltar para o Portfólio',
-        );
-        return;
-      }
-
+    if (!mounted) return;
+    
+    setState(() => _isPurchasing = false);
+    
+    if (result.success) {
+      // Background refresh of user data
+      UserState.refreshUser();
+      
       FeedbackModal.show(
         context: context,
-        title: 'Erro no Investimento',
-        message: result.message ?? 'Não foi possível completar seu investimento',
-        type: FeedbackType.error,
+        title: 'Investimento Realizado!',
+        message: 'Você adquiriu $_selectedTokens tokens da ${widget.startupName}.',
+        type: FeedbackType.success,
+        onConfirm: () => Navigator.of(context).pop(true),
+        buttonText: 'Voltar para o Portfólio',
       );
+      return;
+    }
 
-
+    FeedbackModal.show(
+      context: context,
+      title: 'Erro no Investimento',
+      message: result.message ?? 'Não foi possível completar seu investimento',
+      type: FeedbackType.error,
+    );
   }
 
   String _formatCurrency(num cents) {
@@ -142,37 +174,42 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     final totalCents = _selectedTokens * widget.tokenPriceCents;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Confirmar Investimento',
-          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
-      ),
-      body: _isLoading
-          ? _buildLoadingState()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildStartupInfo(),
-                  const SizedBox(height: 24),
-                  _buildFinancialAnalysis(),
-                  const SizedBox(height: 24),
-                  _buildPriceChart(),
-                  const SizedBox(height: 24),
-                  _buildPurchaseSelector(),
-                  const SizedBox(height: 32),
-                  _buildBottomButton(totalCents),
-                ],
-              ),
+    return ValueListenableBuilder<UserProfile?>(
+      valueListenable: UserState.userNotifier,
+      builder: (context, userData, child) {
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          appBar: AppBar(
+            title: Text(
+              'Confirmar Investimento',
+              style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
             ),
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
+          ),
+          body: _isLoading
+              ? _buildLoadingState()
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStartupInfo(),
+                      const SizedBox(height: 24),
+                      _buildFinancialAnalysis(),
+                      const SizedBox(height: 24),
+                      _buildPriceChart(),
+                      const SizedBox(height: 24),
+                      _buildPurchaseSelector(),
+                      const SizedBox(height: 32),
+                      _buildBottomButton(totalCents, userData),
+                    ],
+                  ),
+                ),
+        );
+      }
     );
   }
 
@@ -400,10 +437,34 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     );
   }
 
-  Widget _buildBottomButton(int totalCents) {
+  Widget _buildBottomButton(int totalCents, UserProfile? userData) {
     final theme = Theme.of(context);
+    final userBalanceCents = userData?.wallet.balanceInCents ?? 0.0;
+    final isInsufficient = totalCents > userBalanceCents;
+
     return Column(
       children: [
+        if (userData != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Seu Saldo Disponível',
+                  style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                ),
+                Text(
+                  _formatCurrency(userBalanceCents),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isInsufficient ? const Color(0xFFEF4444) : theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -413,10 +474,10 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
             ),
             Text(
               _formatCurrency(totalCents),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF00A84E),
+                color: isInsufficient ? const Color(0xFFEF4444) : const Color(0xFF00A84E),
               ),
             ),
           ],
@@ -425,9 +486,9 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _isPurchasing ? null : _handlePurchase,
+            onPressed: (_isPurchasing || isInsufficient) ? null : _handlePurchase,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00A84E),
+              backgroundColor: isInsufficient ? theme.disabledColor : const Color(0xFF00A84E),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -441,9 +502,9 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text(
-                    'Confirmar Investimento',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                : Text(
+                    isInsufficient ? 'Saldo Insuficiente' : 'Confirmar Investimento',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
           ),
         ),
