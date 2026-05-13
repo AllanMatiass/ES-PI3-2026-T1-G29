@@ -5,6 +5,7 @@ import '../models/startup.dart';
 import '../models/api_response.dart';
 import 'base_service.dart';
 
+// Serviço responsável pela consulta e interação com os dados das startups.
 class StartupService {
   static const String _listUrl = 'https://liststartups-obpz3whteq-uc.a.run.app/';
   static const String _detailsUrl = 'https://getstartupdetails-obpz3whteq-uc.a.run.app';
@@ -12,6 +13,7 @@ class StartupService {
   static const String _createQuestionUrl = 'https://createstartupquestion-obpz3whteq-uc.a.run.app';
   static const String _buyTokensUrl = 'https://buytokensfromstartup-obpz3whteq-uc.a.run.app';
 
+  // Lista todas as startups cadastradas no sistema.
   static Future<ApiResponse<List<StartupListItem>>> listStartups({
     http.Client? client,
     FirebaseAuth? auth,
@@ -32,6 +34,7 @@ class StartupService {
     );
   }
 
+  // Obtém informações detalhadas de uma startup específica pelo seu ID.
   static Future<ApiResponse<StartupData>> getStartupDetails(
     String id, {
     http.Client? client,
@@ -46,6 +49,7 @@ class StartupService {
     );
   }
 
+  // Busca o histórico de preços dos tokens de uma startup com filtros de intervalo e limite.
   static Future<ApiResponse<Map<String, dynamic>>> getStartupPriceHistory({
     required String id,
     String historyInterval = 'monthly',
@@ -84,6 +88,7 @@ class StartupService {
     );
   }
 
+  // Cria uma nova pergunta direcionada a uma startup.
   static Future<ApiResponse<Question>> createQuestion({
     required String startupId,
     required String text,
@@ -104,6 +109,7 @@ class StartupService {
     );
   }
 
+  // Realiza a compra de tokens diretamente da tesouraria da startup.
   static Future<ApiResponse<void>> buyTokensFromStartup({
     required String startupId,
     required int qtdTokens,

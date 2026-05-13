@@ -1,9 +1,11 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/offer.dart';
 import '../models/api_response.dart';
 import 'base_service.dart';
 
+// Serviço responsável pelo gerenciamento de ofertas de tokens no mercado secundário.
 class OfferService {
   static const String _getOffersUrl = 'https://getoffers-obpz3whteq-uc.a.run.app';
   static const String _getMyOffersUrl = 'https://getmyoffers-obpz3whteq-uc.a.run.app';
@@ -11,6 +13,7 @@ class OfferService {
   static const String _acceptOfferUrl = 'https://acceptoffer-obpz3whteq-uc.a.run.app';
   static const String _expireOfferUrl = 'https://expireoffer-obpz3whteq-uc.a.run.app';
 
+  // Obtém a lista de ofertas globais disponíveis, suportando paginação.
   static Future<ApiResponse<Map<String, dynamic>>> getOffers({
     int limit = 15,
     String? startAfter,
@@ -42,6 +45,7 @@ class OfferService {
     );
   }
 
+  // Busca as ofertas específicas criadas pelo usuário logado.
   static Future<ApiResponse<List<Map<String, dynamic>>>> getMyOffers({
     http.Client? client,
     FirebaseAuth? auth,
@@ -59,6 +63,7 @@ class OfferService {
     );
   }
 
+  // Cria uma nova oferta de venda de tokens.
   static Future<ApiResponse<OfferWithId>> createOffer({
     required String startupId,
     required int qtdTokens,
@@ -82,6 +87,7 @@ class OfferService {
     );
   }
 
+  // Aceita uma oferta existente, efetuando a troca de tokens/saldo.
   static Future<ApiResponse<Map<String, dynamic>>> acceptOffer({
     required String offerId,
     required int qtdTokens,
@@ -101,6 +107,7 @@ class OfferService {
     );
   }
 
+  // Verifica no servidor se uma determinada oferta já expirou.
   static Future<ApiResponse<bool>> isOfferExpired({
     required String offerId,
     http.Client? client,

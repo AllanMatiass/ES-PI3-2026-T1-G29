@@ -1,7 +1,10 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 
+// Define os tipos de feedback que o modal pode exibir.
 enum FeedbackType { success, error, info }
 
+// Modal de feedback personalizado para exibir mensagens de sucesso, erro ou informação.
 class FeedbackModal extends StatelessWidget {
   final String title;
   final String message;
@@ -18,6 +21,7 @@ class FeedbackModal extends StatelessWidget {
     this.buttonText,
   });
 
+  // Método estático para exibir o modal de feedback com uma animação de escala personalizada.
   static Future<T?> show<T>({
     required BuildContext context,
     required String title,
@@ -59,6 +63,7 @@ class FeedbackModal extends StatelessWidget {
     IconData icon;
     Color color;
 
+    // Define o ícone e a cor com base no tipo de feedback recebido.
     switch (type) {
       case FeedbackType.success:
         icon = Icons.check_rounded;

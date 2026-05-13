@@ -1,11 +1,13 @@
 // Autor: Allan Giovanni Matias Paes
 import  './firebase.dart';
 
+// Enumeração que define os estágios de maturação de uma startup.
 enum StartupStage {
   nova,
   em_operacao,
   em_expansao;
 
+  // Converte uma string para o enum StartupStage correspondente.
   static StartupStage fromString(String value) {
     switch (value) {
       case 'nova':
@@ -19,6 +21,7 @@ enum StartupStage {
     }
   }
 
+  // Retorna o nome amigável para exibição do estágio.
   String toDisplayString() {
     switch (this) {
       case StartupStage.nova:
@@ -31,6 +34,7 @@ enum StartupStage {
   }
 }
 
+// Representa um item resumido de startup para exibição em listas.
 class StartupListItem {
   final String id;
   final String name;
@@ -58,6 +62,7 @@ class StartupListItem {
     required this.tags,
   });
 
+  // Converte dados do JSON para uma instância de StartupListItem.
   factory StartupListItem.fromJson(String id, Map<String, dynamic> json) {
     return StartupListItem(
       id: id,
@@ -76,6 +81,7 @@ class StartupListItem {
 
 }
 
+// Representa um fundador da startup com suas informações básicas.
 class Founder {
   final String name;
   final String role;
@@ -99,6 +105,7 @@ class Founder {
   }
 }
 
+// Representa um ponto no histórico de preços do token.
 class PriceHistoryItem {
   final String timestamp;
   final double price;
@@ -122,6 +129,7 @@ class PriceHistoryItem {
   }
 }
 
+// Resumo dos preços (atual, máximo, mínimo e médio).
 class PriceSummary {
   final double currentPrice;
   final double highestPrice;
@@ -145,6 +153,7 @@ class PriceSummary {
   }
 }
 
+// Metadados sobre a série de preços.
 class PriceMeta {
   final int count;
   final String currency;
@@ -165,6 +174,7 @@ class PriceMeta {
   }
 }
 
+// Representa um membro externo (conselheiro, etc).
 class ExternalMember {
   final String name;
   final String role;
@@ -185,6 +195,7 @@ class ExternalMember {
   }
 }
 
+// Representa uma resposta a uma pergunta.
 class Answer {
   final String answer;
   final FirestoreTimestamp answeredAt;
@@ -202,6 +213,7 @@ class Answer {
   }
 }
 
+// Representa uma pergunta feita sobre a startup.
 class Question {
   final String id;
   final String startupId;
@@ -239,6 +251,7 @@ class Question {
   }
 }
 
+// Define as permissões de acesso do usuário logado em relação à startup.
 class Access {
   final bool isInvestor;
   final bool canTradeTokens;
@@ -262,7 +275,7 @@ class Access {
 
 
 //Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
-
+// Classe que contém todos os dados detalhados de uma startup.
 class StartupData {
   // 🔹 básicos
   final String id;
@@ -343,6 +356,7 @@ class StartupData {
     required this.access,
   });
 
+  // Converte a estrutura complexa do JSON para o modelo StartupData.
   factory StartupData.fromJson(Map<String, dynamic> json) {
     final data = json;
     final details = data['details'];
