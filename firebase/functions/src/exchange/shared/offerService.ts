@@ -49,6 +49,16 @@ export class OfferService {
       tokenPriceCents,
     });
 
+    const maxPrice = startup.currentTokenPriceCents * 1.5; // +50%
+    const minPrice = startup.currentTokenPriceCents * 0.5; // -50%
+
+    if (tokenPriceCents > maxPrice || tokenPriceCents < minPrice) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Preço fora da banda permitida de mercado.",
+      );
+    }
+
     const now = Timestamp.now();
 
     const sellerPosition = sellerUser?.wallet?.positions?.find(
