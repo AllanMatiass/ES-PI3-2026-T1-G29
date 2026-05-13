@@ -5,13 +5,16 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/auth.dart';
-import 'package:frontend/services/user_service.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/pages/my_offers_page.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:intl/intl.dart';
+
+import 'package:frontend/services/user_state.dart';
+import 'package:frontend/widgets/animated_currency.dart';
+import 'package:frontend/widgets/animated_counter.dart';
 
 class HomeView extends StatefulWidget {
   final String userName;
@@ -28,28 +31,24 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  UserProfile? _userData;
   Map<String, StartupListItem> _startupsMap = {};
-  bool _isLoading = true;
+  bool _isLoadingStartups = true;
   String? _error;
   bool _isBalanceVisible = true;
-
-  final NumberFormat _currencyFormat = NumberFormat.currency(
-    locale: 'pt_BR',
-    symbol: 'R\$',
-  );
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadInitialData();
   }
 
-  Future<void> _loadUserData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  Future<void> _loadInitialData() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingStartups = true;
+        _error = null;
+      });
+    }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -60,42 +59,32 @@ class _HomeViewState extends State<HomeView> {
     }
 
     try {
-      // Load user data and startups in parallel
+      // Load user data in background via UserState and startups locally
       final results = await Future.wait([
-        UserService.getUserData(),
+        UserState.refreshUser(),
         StartupService.listStartups(),
       ]);
 
-      final userResult = results[0] as ApiResponse<UserProfile>;
       final startupsResult = results[1] as ApiResponse<List<StartupListItem>>;
 
       if (mounted) {
         setState(() {
-          if (userResult.success && startupsResult.success) {
-            _userData = userResult.data;
+          if (startupsResult.success) {
             _startupsMap = {for (var s in startupsResult.data!) s.id: s};
           } else {
-            _error = userResult.message ?? startupsResult.message;
-            if (userResult.errorCode == 'unauthenticated' || userResult.errorCode == 'permission-denied') {
-              AuthService.signOut();
-              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-            }
+            _error = startupsResult.message;
           }
-          _isLoading = false;
+          _isLoadingStartups = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _error = "Erro ao carregar dados: $e";
-          _isLoading = false;
+          _isLoadingStartups = false;
         });
       }
     }
-  }
-
-  String _formatCents(double cents) {
-    return _currencyFormat.format(cents / 100);
   }
 
   String getInitials(String name) {
@@ -115,83 +104,98 @@ class _HomeViewState extends State<HomeView> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadUserData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                _buildHeader(isDark),
-                const SizedBox(height: 32),
+    return ValueListenableBuilder<UserProfile?>(
+      valueListenable: UserState.userNotifier,
+      builder: (context, userData, child) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: UserState.isLoadingNotifier,
+          builder: (context, isUserLoading, child) {
+            final isLoading = _isLoadingStartups || (userData == null && isUserLoading);
+            
+            return Scaffold(
+              backgroundColor: theme.scaffoldBackgroundColor,
+              body: SafeArea(
+                child: RefreshIndicator(
+                  onRefresh: () => Future.wait([
+                    UserState.refreshUser(),
+                    _loadInitialData(),
+                  ]),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        _buildHeader(isDark, userData),
+                        const SizedBox(height: 32),
 
-                // Saldo
-                _isLoading ? _buildBalanceShimmer() : _buildBalanceCard(),
-                const SizedBox(height: 32),
+                        // Saldo
+                        isLoading ? _buildBalanceShimmer() : _buildBalanceCard(userData),
+                        const SizedBox(height: 32),
 
-                // Botões
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildActionButton(
-                        Icons.account_balance_wallet,
-                        'Investir',
-                        onTap: widget.onNavigateToCatalog,
-                      ),
+                        // Botões
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildActionButton(
+                                Icons.account_balance_wallet,
+                                'Investir',
+                                onTap: widget.onNavigateToCatalog,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildActionButton(
+                                Icons.swap_horiz,
+                                'Transferir',
+                                onTap: () {
+                                  FeedbackModal.show(
+                                    context: context,
+                                    title: 'Em breve',
+                                    message: 'Funcionalidade em desenvolvimento',
+                                    type: FeedbackType.info,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Investimentos
+                        Text(
+                          'Meus Investimentos',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        isLoading
+                            ? _buildInvestmentsShimmer()
+                            : (_error != null
+                                ? _buildErrorState()
+                                : (userData?.wallet.positions.isEmpty ?? true
+                                    ? _buildEmptyState()
+                                    : _buildInvestmentsList(userData!))),
+
+                        const SizedBox(height: 32),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildActionButton(
-                        Icons.swap_horiz,
-                        'Transferir',
-                        onTap: () {
-                          FeedbackModal.show(
-                            context: context,
-                            title: 'Em breve',
-                            message: 'Funcionalidade em desenvolvimento',
-                            type: FeedbackType.info,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
-                // Investimentos
-                Text(
-                  'Meus Investimentos',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                _isLoading
-                    ? _buildInvestmentsShimmer()
-                    : (_error != null
-                        ? _buildErrorState()
-                        : (_userData?.wallet.positions.isEmpty ?? true
-                            ? _buildEmptyState()
-                            : _buildInvestmentsList())),
-
-                const SizedBox(height: 32),
-              ],
-            ),
-          ),
-        ),
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildHeader(bool isDark) {
+  Widget _buildHeader(bool isDark, UserProfile? userData) {
     final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -204,7 +208,7 @@ class _HomeViewState extends State<HomeView> {
               style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
             ),
             Text(
-              _userData?.name ?? widget.userName,
+              userData?.name ?? widget.userName,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -269,7 +273,7 @@ class _HomeViewState extends State<HomeView> {
                 radius: 24,
                 backgroundColor: const Color(0xFF00A84E),
                 child: Text(
-                  getInitials(_userData?.name ?? widget.userName),
+                  getInitials(userData?.name ?? widget.userName),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -283,7 +287,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildBalanceCard() {
+  Widget _buildBalanceCard(UserProfile? userData) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -327,10 +331,9 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            _isBalanceVisible
-                ? _formatCents(_userData?.wallet.balanceInCents ?? 0)
-                : '••••••',
+          AnimatedCurrency(
+            valueCents: userData?.wallet.balanceInCents ?? 0,
+            isVisible: _isBalanceVisible,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
@@ -349,11 +352,14 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 const Icon(Icons.trending_up, color: Colors.white, size: 16),
                 const SizedBox(width: 8),
-                Text(
-                  _isBalanceVisible 
-                      ? 'Total Investido: ${_formatCents(_userData?.wallet.totalInvestedCents ?? 0)}'
-                      : 'Total Investido: ••••••',
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                const Text(
+                  'Total Investido: ',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+                AnimatedCurrency(
+                  valueCents: userData?.wallet.totalInvestedCents ?? 0,
+                  isVisible: _isBalanceVisible,
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -379,10 +385,10 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildInvestmentsList() {
+  Widget _buildInvestmentsList(UserProfile userData) {
     final theme = Theme.of(context);
     return Column(
-      children: _userData!.wallet.positions.map((position) {
+      children: userData.wallet.positions.map((position) {
         final startup = _startupsMap[position.startupId];
         final currentPriceCents = startup?.currentTokenPriceCents.toDouble() ?? 0.0;
         
@@ -434,8 +440,10 @@ class _HomeViewState extends State<HomeView> {
                             color: theme.colorScheme.onSurface,
                           ),
                         ),
-                        Text(
-                          _isBalanceVisible ? '${position.qtdTokens} tokens' : '•••• tokens',
+                        AnimatedCounter(
+                          value: position.qtdTokens,
+                          suffix: 'tokens',
+                          isVisible: _isBalanceVisible,
                           style: TextStyle(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 14,
@@ -469,20 +477,19 @@ class _HomeViewState extends State<HomeView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildInvestmentDetail('Investido', _isBalanceVisible ? _formatCents(position.investedCents) : '••••••'),
-                  _buildInvestmentDetail('Valor atual', _isBalanceVisible ? _formatCents(currentValueCents) : '••••••'),
+                  _buildInvestmentDetailAnimated('Investido', position.investedCents),
+                  _buildInvestmentDetailAnimated('Valor atual', currentValueCents),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildInvestmentDetail(
+                  _buildInvestmentDetailAnimated(
                     'Lucro',
-                    _isBalanceVisible 
-                        ? '${profitCents >= 0 ? '+' : ''}${_formatCents(profitCents)}'
-                        : '••••••',
+                    profitCents,
                     valueColor: profitCents >= 0 || !_isBalanceVisible ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
+                    showSign: true,
                   ),
                 ],
               ),
@@ -493,7 +500,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildInvestmentDetail(String label, String value, {Color? valueColor}) {
+  Widget _buildInvestmentDetailAnimated(String label, double valueCents, {Color? valueColor, bool showSign = false}) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,8 +510,10 @@ class _HomeViewState extends State<HomeView> {
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
         ),
         const SizedBox(height: 4),
-        Text(
-          value,
+        AnimatedCurrency(
+          valueCents: valueCents,
+          isVisible: _isBalanceVisible,
+          prefix: showSign && valueCents >= 0 ? '+R\$' : 'R\$',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
@@ -589,7 +598,7 @@ class _HomeViewState extends State<HomeView> {
           ),
           const SizedBox(height: 16),
           TextButton(
-            onPressed: _loadUserData,
+            onPressed: _loadInitialData,
             child: const Text('Tentar novamente'),
           ),
         ],
@@ -607,6 +616,25 @@ class _HomeViewState extends State<HomeView> {
           margin: const EdgeInsets.only(bottom: 16),
           width: double.infinity,
           height: 80,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      )),
+    );
+  }
+
+  Widget _buildInvestmentsShimmerFixed() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      children: List.generate(3, (index) => Shimmer.fromColors(
+        baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+        highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          width: double.infinity,
+          height: 120,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
