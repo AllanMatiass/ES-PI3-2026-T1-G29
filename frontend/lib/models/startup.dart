@@ -344,7 +344,7 @@ class StartupData {
   });
 
   factory StartupData.fromJson(Map<String, dynamic> json) {
-    final data = json['result']['data'];
+    final data = json;
     final details = data['details'];
     final startup = details['startup'];
     final priceHistory = data['priceHistory'];

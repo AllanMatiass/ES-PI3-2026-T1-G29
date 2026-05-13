@@ -6,6 +6,7 @@ import 'package:mockito/mockito.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
+import 'package:frontend/models/api_response.dart';
 
 @GenerateMocks([http.Client, FirebaseAuth, User])
 import 'startup_service_test.mocks.dart';
@@ -21,7 +22,7 @@ void main() {
     mockUser = MockUser();
 
     when(mockAuth.currentUser).thenReturn(mockUser);
-    when(mockUser.getIdToken()).thenAnswer((_) async => 'fake_token');
+    when(mockUser.getIdToken(any)).thenAnswer((_) async => 'fake_token');
   });
 
   group('StartupService.getStartupPriceHistory', () {
@@ -71,26 +72,27 @@ void main() {
         auth: mockAuth,
       );
 
-      expect(result['history'], isA<List<PriceHistoryItem>>());
-      expect(result['history'].length, 2);
-      expect(result['history'][0].price, 4.53);
-      expect(result['history'][1].price, 4.92);
-      expect(result['summary'], isA<PriceSummary>());
-      expect(result['summary'].currentPrice, 4.92);
-      expect(result['meta'].currency, 'BRL');
+      expect(result.success, true);
+      expect(result.data!['history'], isA<List<PriceHistoryItem>>());
+      expect(result.data!['history'].length, 2);
+      expect(result.data!['history'][0].price, 4.53);
+      expect(result.data!['history'][1].price, 4.92);
+      expect(result.data!['summary'], isA<PriceSummary>());
+      expect(result.data!['summary'].currentPrice, 4.92);
+      expect(result.data!['meta'].currency, 'BRL');
     });
 
-    test('throws exception on error', () async {
+    test('returns error ApiResponse on failure', () async {
       when(mockClient.post(
         any,
         headers: anyNamed('headers'),
         body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode({"result": {"success": false}}), 400));
+      )).thenAnswer((_) async => http.Response(jsonEncode({"result": {"success": false, "error": {"message": "Error"}}}), 400));
 
-      expect(
-        () => StartupService.getStartupPriceHistory(id: 'ecotech', client: mockClient, auth: mockAuth),
-        throwsException,
-      );
+      final result = await StartupService.getStartupPriceHistory(id: 'ecotech', client: mockClient, auth: mockAuth);
+      
+      expect(result.success, false);
+      expect(result.message, isNotNull);
     });
   });
 
@@ -128,10 +130,11 @@ void main() {
         auth: mockAuth,
       );
 
-      expect(result, isA<List<StartupListItem>>());
-      expect(result.length, 1);
-      expect(result[0].name, "EcoTech Solutions");
-      expect(result[0].stage, StartupStage.em_operacao);
+      expect(result.success, true);
+      expect(result.data, isA<List<StartupListItem>>());
+      expect(result.data!.length, 1);
+      expect(result.data![0].name, "EcoTech Solutions");
+      expect(result.data![0].stage, StartupStage.em_operacao);
     });
 
     test('returns empty list if no startups found', () async {
@@ -153,7 +156,8 @@ void main() {
         auth: mockAuth,
       );
 
-      expect(result, isEmpty);
+      expect(result.success, true);
+      expect(result.data, isEmpty);
     });
   });
 
@@ -237,10 +241,11 @@ void main() {
         auth: mockAuth,
       );
 
-      expect(result.name, "EcoTech");
-      expect(result.questions.length, 1);
-      expect(result.questions[0].text, "How does it work?");
-      expect(result.questions[0].answers[0].answer, "It works well.");
+      expect(result.success, true);
+      expect(result.data!.name, "EcoTech");
+      expect(result.data!.questions.length, 1);
+      expect(result.data!.questions[0].text, "How does it work?");
+      expect(result.data!.questions[0].answers[0].answer, "It works well.");
     });
   });
 
@@ -276,12 +281,13 @@ void main() {
         auth: mockAuth,
       );
 
-      expect(result.id, "q2");
-      expect(result.text, "New question?");
-      expect(result.visibility, "publica");
+      expect(result.success, true);
+      expect(result.data!.id, "q2");
+      expect(result.data!.text, "New question?");
+      expect(result.data!.visibility, "publica");
     });
 
-    test('throws exception on error with message', () async {
+    test('returns error ApiResponse on failure', () async {
       final mockResponse = {
         "result": {
           "success": false,
@@ -295,16 +301,16 @@ void main() {
         body: anyNamed('body'),
       )).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 400));
 
-      expect(
-        () => StartupService.createQuestion(
-          startupId: "startup1",
-          text: "Fail",
-          visibility: "publica",
-          client: mockClient,
-          auth: mockAuth,
-        ),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('Unauthorized'))),
+      final result = await StartupService.createQuestion(
+        startupId: "startup1",
+        text: "Fail",
+        visibility: "publica",
+        client: mockClient,
+        auth: mockAuth,
       );
+
+      expect(result.success, false);
+      expect(result.message, contains('Unauthorized'));
     });
   });
 }

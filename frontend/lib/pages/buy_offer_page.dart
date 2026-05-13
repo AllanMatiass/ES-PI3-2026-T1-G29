@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:frontend/models/startup.dart';
+import 'package:frontend/models/user.dart';
 import 'package:frontend/services/offer_service.dart';
 import 'package:frontend/services/startup_service.dart';
+import 'package:frontend/services/user_state.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:frontend/widgets/price_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+
+import '../services/user_service.dart';
 
 class MaxValueInputFormatter extends TextInputFormatter {
   final int maxValue;
@@ -29,6 +33,7 @@ class MaxValueInputFormatter extends TextInputFormatter {
     return newValue;
   }
 }
+
 
 class BuyOfferPage extends StatefulWidget {
   final OfferWithId offer;
@@ -55,7 +60,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   void initState() {
     super.initState();
     _quantityController.text = _selectedTokens.toString();
-    _loadStartupDetails();
+    _loadInitialData();
   }
 
   @override
@@ -64,17 +69,32 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     super.dispose();
   }
 
-  Future<void> _loadStartupDetails() async {
-    try {
-      final data = await StartupService.getStartupDetails(widget.offer.startupId);
+  Future<void> _loadInitialData() async {
+    // If we don't have user data yet, fetch it
+    if (UserState.userNotifier.value == null) {
+      await UserState.refreshUser();
+    }
+    await _loadStartupDetails();
+    if (mounted) {
       setState(() {
-        _startupData = data;
         _isLoading = false;
       });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar detalhes: $e')),
+    }
+  }
+
+  Future<void> _loadStartupDetails() async {
+    final result = await StartupService.getStartupDetails(widget.offer.startupId);
+    if (mounted) {
+      if (result.success) {
+        setState(() {
+          _startupData = result.data;
+        });
+      } else {
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro ao carregar',
+          message: result.message ?? 'Não foi possível carregar os detalhes da startup',
+          type: FeedbackType.error,
         );
         Navigator.of(context).pop();
       }
@@ -82,21 +102,42 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   Future<void> _handlePurchase() async {
+    final userBalanceCents = UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
+    final totalCents = _selectedTokens * widget.offer.tokenPriceCents;
+
     if (_selectedTokens <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A quantidade deve ser maior que zero')),
+      FeedbackModal.show(
+        context: context,
+        title: 'Quantidade Inválida',
+        message: 'A quantidade deve ser maior que zero',
+        type: FeedbackType.info,
+      );
+      return;
+    }
+
+    if (totalCents > userBalanceCents) {
+      FeedbackModal.show(
+        context: context,
+        title: 'Saldo Insuficiente',
+        message: 'Você não possui saldo suficiente para esta compra. Seu saldo atual é ${_formatCurrency(userBalanceCents)}.',
+        type: FeedbackType.error,
+        buttonText: 'Entendido',
       );
       return;
     }
 
     setState(() => _isPurchasing = true);
-    try {
-      await OfferService.acceptOffer(
-        offerId: widget.offer.id,
-        qtdTokens: _selectedTokens,
-      );
+    final result = await OfferService.acceptOffer(
+      offerId: widget.offer.id,
+      qtdTokens: _selectedTokens,
+    );
 
-      if (mounted) {
+    if (mounted) {
+      setState(() => _isPurchasing = false);
+      if (result.success) {
+        // Refresh user data in background
+        UserState.refreshUser();
+
         FeedbackModal.show(
           context: context,
           title: 'Compra Realizada!',
@@ -105,24 +146,16 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
           onConfirm: () => Navigator.of(context).pop(true),
           buttonText: 'Ir para Ofertas',
         );
+        return;
       }
-    } catch (e) {
-      if (mounted) {
-        FeedbackModal.show(
-          context: context,
-          title: 'Erro na Compra',
-          message: 'Não foi possível completar sua compra: $e',
-          type: FeedbackType.error,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isPurchasing = false);
-      }
-    }
-  }
 
-  // Remove the old _showSuccessDialog method entirely
+      FeedbackModal.show(
+        context: context,
+        title: 'Erro na Compra',
+        message: result.message ?? 'Não foi possível completar sua compra',
+        type: FeedbackType.error,
+      );
+      }  }
 
 
   String _formatCurrency(num cents) {
@@ -134,37 +167,42 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     final totalCents = _selectedTokens * widget.offer.tokenPriceCents;
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Confirmar Compra',
-          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
-      ),
-      body: _isLoading
-          ? _buildLoadingState()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildStartupInfo(),
-                  const SizedBox(height: 24),
-                  _buildFinancialAnalysis(),
-                  const SizedBox(height: 24),
-                  _buildPriceChart(),
-                  const SizedBox(height: 24),
-                  _buildPurchaseSelector(),
-                  const SizedBox(height: 32),
-                  _buildBottomButton(totalCents),
-                ],
-              ),
+    return ValueListenableBuilder<UserProfile?>(
+      valueListenable: UserState.userNotifier,
+      builder: (context, userData, child) {
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          appBar: AppBar(
+            title: Text(
+              'Confirmar Compra',
+              style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
             ),
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
+          ),
+          body: _isLoading
+              ? _buildLoadingState()
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStartupInfo(),
+                      const SizedBox(height: 24),
+                      _buildFinancialAnalysis(),
+                      const SizedBox(height: 24),
+                      _buildPriceChart(),
+                      const SizedBox(height: 24),
+                      _buildPurchaseSelector(),
+                      const SizedBox(height: 32),
+                      _buildBottomButton(totalCents, userData),
+                    ],
+                  ),
+                ),
+        );
+      }
     );
   }
 
@@ -402,10 +440,34 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     );
   }
 
-  Widget _buildBottomButton(int totalCents) {
+  Widget _buildBottomButton(int totalCents, UserProfile? userData) {
     final theme = Theme.of(context);
+    final userBalanceCents = userData?.wallet.balanceInCents ?? 0.0;
+    final isInsufficient = totalCents > userBalanceCents;
+
     return Column(
       children: [
+        if (userData != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Seu Saldo Disponível',
+                  style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                ),
+                Text(
+                  _formatCurrency(userBalanceCents),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isInsufficient ? const Color(0xFFEF4444) : theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -415,10 +477,10 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
             ),
             Text(
               _formatCurrency(totalCents),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF00A84E),
+                color: isInsufficient ? const Color(0xFFEF4444) : const Color(0xFF00A84E),
               ),
             ),
           ],
@@ -427,9 +489,9 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _isPurchasing ? null : _handlePurchase,
+            onPressed: (_isPurchasing || isInsufficient) ? null : _handlePurchase,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00A84E),
+              backgroundColor: isInsufficient ? theme.disabledColor : const Color(0xFF00A84E),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -443,9 +505,9 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text(
-                    'Confirmar Compra',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                : Text(
+                    isInsufficient ? 'Saldo Insuficiente' : 'Confirmar Compra',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
           ),
         ),

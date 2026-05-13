@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 import '../models/startup.dart';
 import '../services/startup_service.dart';
 
@@ -121,18 +122,31 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
       );
 
       if (mounted) {
-        setState(() {
-          history = List<PriceHistoryItem>.from(result['history']);
-          isLoading = false;
-        });
+        if (result.success) {
+          setState(() {
+            history = List<PriceHistoryItem>.from(result.data!['history']);
+            isLoading = false;
+          });
+        } else {
+          setState(() => isLoading = false);
+          FeedbackModal.show(
+            context: context,
+            title: 'Erro ao carregar',
+            message: result.message ?? 'Erro ao atualizar gráfico',
+            type: FeedbackType.error,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao atualizar gráfico: $e')),
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro',
+          message: 'Erro ao atualizar gráfico: $e',
+          type: FeedbackType.error,
         );
       }
     }
@@ -474,7 +488,12 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
             final start = DateTime(startYear, startMonth);
             final end = DateTime(endYear, endMonth + 1, 0);
             if (start.isAfter(end)) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Data inicial deve ser anterior à final')));
+              FeedbackModal.show(
+                context: context,
+                title: 'Data Inválida',
+                message: 'Data inicial deve ser anterior à final',
+                type: FeedbackType.info,
+              );
               return;
             }
             Navigator.pop(context, {
@@ -544,4 +563,3 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
     );
   }
 }
-

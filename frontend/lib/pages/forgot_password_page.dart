@@ -4,6 +4,7 @@ import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -109,20 +110,22 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         );
 
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'Email de recuperação enviado! '
-                                    'Considere verificar sua caixa de Spam.'
-                                )),
+                          FeedbackModal.show(
+                            context: context,
+                            title: 'Email Enviado',
+                            message: 'Email de recuperação enviado! Considere verificar sua caixa de Spam.',
+                            type: FeedbackType.success,
+                            onConfirm: () => Navigator.of(context).pushNamed('/login'),
                           );
-                          Navigator.of(context).pushNamed('/login');
                         }
                       } catch (e) {
-                        print('Error on password recovery: $e');
+                        log('Error on password recovery: $e');
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Erro ao enviar link de recuperação de senha.')),
+                          FeedbackModal.show(
+                            context: context,
+                            title: 'Erro',
+                            message: 'Erro ao enviar link de recuperação de senha.',
+                            type: FeedbackType.error,
                           );
                         }
                       }
