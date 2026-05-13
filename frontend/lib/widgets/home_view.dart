@@ -16,6 +16,7 @@ import 'package:frontend/services/user_state.dart';
 import 'package:frontend/widgets/animated_currency.dart';
 import 'package:frontend/widgets/animated_counter.dart';
 
+// Visão principal da tela inicial, responsável por exibir saldo, ações rápidas e lista de investimentos.
 class HomeView extends StatefulWidget {
   final String userName;
   final VoidCallback onNavigateToCatalog;
@@ -42,6 +43,7 @@ class _HomeViewState extends State<HomeView> {
     _loadInitialData();
   }
 
+  // Carrega os dados do usuário e a lista de startups em paralelo para otimizar o tempo de carregamento.
   Future<void> _loadInitialData() async {
     if (mounted) {
       setState(() {
@@ -59,7 +61,7 @@ class _HomeViewState extends State<HomeView> {
     }
 
     try {
-      // Load user data in background via UserState and startups locally
+      // Executa as chamadas de API simultaneamente utilizando Future.wait.
       final results = await Future.wait([
         UserState.refreshUser(),
         StartupService.listStartups(),
@@ -87,6 +89,7 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
+  // Extrai as iniciais do primeiro e último nome para compor o avatar circular.
   String getInitials(String name) {
     List<String> names = name.trim().split(" ");
     String initials = "";
@@ -195,6 +198,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // Constrói o widget de cabeçalho com saudação e controles de tema/menu.
   Widget _buildHeader(bool isDark, UserProfile? userData) {
     final theme = Theme.of(context);
     return Row(
@@ -287,6 +291,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // Constrói o card principal que exibe o saldo do usuário com opção de ocultar valores.
   Widget _buildBalanceCard(UserProfile? userData) {
     return Container(
       width: double.infinity,
@@ -385,6 +390,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // Gera a lista de cards de investimento, calculando lucros e variações de mercado para cada startup.
   Widget _buildInvestmentsList(UserProfile userData) {
     final theme = Theme.of(context);
     return Column(
@@ -392,8 +398,11 @@ class _HomeViewState extends State<HomeView> {
         final startup = _startupsMap[position.startupId];
         final currentPriceCents = startup?.currentTokenPriceCents.toDouble() ?? 0.0;
         
+        // O cálculo do valor atual multiplica a quantidade de tokens pelo preço de mercado.
         final currentValueCents = position.qtdTokens * currentPriceCents;
+        // O lucro em centavos é a diferença entre o valor atual e o valor total investido.
         final profitCents = currentValueCents - position.investedCents;
+        // A porcentagem de lucro é calculada dividindo o lucro pelo investimento inicial.
         final profitPercentage = position.investedCents <= 0
             ? 0.0
             : (profitCents / position.investedCents) * 100;
@@ -500,6 +509,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // Constrói uma linha de detalhe do investimento com animação de valor monetário.
   Widget _buildInvestmentDetailAnimated(String label, double valueCents, {Color? valueColor, bool showSign = false}) {
     final theme = Theme.of(context);
     return Column(
@@ -524,6 +534,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // Exibe um estado vazio amigável quando o usuário não possui investimentos.
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
     return Container(
@@ -570,6 +581,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // Exibe uma mensagem de erro com opção de tentar novamente.
   Widget _buildErrorState() {
     return Container(
       width: double.infinity,
@@ -644,6 +656,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // Constrói um botão de ação rápida (Investir, Transferir, etc).
   Widget _buildActionButton(IconData icon, String label, {required VoidCallback onTap}) {
     final theme = Theme.of(context);
     return Material(

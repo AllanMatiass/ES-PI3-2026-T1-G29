@@ -1,6 +1,7 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 
+// Widget genérico para exibir uma tela de "Em breve" para funcionalidades ainda não implementadas.
 class SoonView extends StatelessWidget {
   final String title;
   const SoonView({super.key, required this.title});

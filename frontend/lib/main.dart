@@ -9,26 +9,33 @@ import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/pages/login_page.dart';
 import 'package:frontend/pages/register_page.dart';
 
+/// Notificador global para alternar entre os temas Light e Dark.
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 
 void main() async {
+  // Garante que os bindings do Flutter estejam inicializados antes de chamadas assíncronas
   WidgetsFlutterBinding.ensureInitialized();
+  
   try {
+    // Carrega variáveis de ambiente do arquivo .env
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    // .env might not exist or be empty, we can continue if not strictly needed for all environments
     print("Warning: Could not load .env file: $e");
   }
 
+  // Inicializa o Firebase com as configurações da plataforma atual
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
   runApp(const MesclaInvest());
 }
 
+/// Widget principal da aplicação.
 class MesclaInvest extends StatelessWidget {
   const MesclaInvest({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Verifica se existe um usuário autenticado no Firebase
     final User? user = FirebaseAuth.instance.currentUser;
 
     return ValueListenableBuilder<ThemeMode>(
@@ -38,6 +45,7 @@ class MesclaInvest extends StatelessWidget {
           title: 'Mescla Invest',
           debugShowCheckedModeBanner: false,
           themeMode: currentMode,
+          // Configuração do Tema Claro
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF00A84E),
@@ -47,6 +55,7 @@ class MesclaInvest extends StatelessWidget {
             fontFamily: 'Inter',
             scaffoldBackgroundColor: Colors.white,
           ),
+          // Configuração do Tema Escuro
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF00A84E),
@@ -57,9 +66,11 @@ class MesclaInvest extends StatelessWidget {
             fontFamily: 'Inter',
             scaffoldBackgroundColor: const Color(0xFF0F172A),
           ),
+          // Página inicial: Login se deslogado, Home se autenticado
           home: user == null 
               ? const LoginPage() 
               : HomePage(userName: user.displayName ?? 'Desconhecido'),
+          // Definição das rotas nomeadas do aplicativo
           routes: {
             '/login': (context) => const LoginPage(),
             '/register': (context) => const RegisterPage(),

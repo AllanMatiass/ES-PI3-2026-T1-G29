@@ -1,13 +1,17 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/user_service.dart';
 
+// Classe responsável por gerenciar o estado global do usuário de forma reativa.
 class UserState {
+  // Notificadores para mudanças no perfil do usuário e no estado de carregamento.
   static final ValueNotifier<UserProfile?> userNotifier = ValueNotifier<UserProfile?>(null);
   static final ValueNotifier<bool> isLoadingNotifier = ValueNotifier<bool>(false);
 
+  // Busca novamente os dados do usuário no servidor e atualiza o estado global.
   static Future<void> refreshUser() async {
-    // If already loading, don't start another fetch
+    // Se já estiver carregando, evita chamadas duplicadas.
     if (isLoadingNotifier.value) return;
 
     try {
@@ -23,6 +27,7 @@ class UserState {
     }
   }
 
+  // Define manualmente um novo perfil de usuário para o estado global.
   static void setUser(UserProfile profile) {
     userNotifier.value = profile;
   }

@@ -1,9 +1,13 @@
+// Autor: Allan Giovanni Matias Paes
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/api_response.dart';
 
+// Classe abstrata que fornece funcionalidades base para chamadas de API.
 abstract class BaseService {
+  // Realiza uma requisição HTTP POST genérica. 
+  // Gerencia o token de autenticação do Firebase e converte a resposta para o modelo desejado.
   static Future<ApiResponse<T>> post<T>(
     String url, {
     Map<String, dynamic>? data,
@@ -21,6 +25,7 @@ abstract class BaseService {
         'Accept': 'application/json',
       };
 
+      // Adiciona o token Bearer se a rota exigir autenticação.
       if (requiresAuth) {
         final firebaseAuth = auth ?? FirebaseAuth.instance;
         final user = firebaseAuth.currentUser;
@@ -44,6 +49,7 @@ abstract class BaseService {
       final body = jsonDecode(response.body);
       final result = body['result'];
 
+      // Verifica o status code e o campo success retornado pela Cloud Function.
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (result != null && result['success'] == false) {
           final error = result['error'];
