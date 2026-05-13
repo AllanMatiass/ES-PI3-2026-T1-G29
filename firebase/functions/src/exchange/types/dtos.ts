@@ -103,3 +103,32 @@ export type ExpireOfferResponseDTO = {
   offerId: string;
   expired: boolean;
 };
+
+export type BuyTokensFromStartupRequestDTO = {
+  startupId: string;
+  qtdTokens: number;
+};
+ 
+export type BuyTokensFromStartupResponseDTO = {
+  transactionId: string;
+  qtdTokens: number;
+  tokenPriceCents: number;
+  totalCents: number;
+  newBalanceCents: number;
+};
+ 
+export type BuyTokensFromUserRequestDTO = {
+  offerId: string;
+  qtdTokens: number;
+};
+ 
+export type BuyTokensFromUserResponseDTO = {
+  transactionId: string;
+  offerId: string;
+  qtdTokens: number;
+  tokenPriceCents: number;
+  totalCents: number;
+  remainingOfferTokens: number;
+  newBalanceCents: number;
+  isOfferFullyAccepted: boolean;
+};
