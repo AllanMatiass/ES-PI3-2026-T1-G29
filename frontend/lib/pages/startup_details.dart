@@ -7,6 +7,7 @@ import '../models/startup.dart';
 import '../services/startup_service.dart';
 import '../widgets/price_chart.dart';
 import './faq_page.dart';
+import 'package:frontend/pages/buy_from_startup_page.dart';
 import 'package:video_player/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -410,7 +411,19 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                     const SizedBox(height: 12),
 
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BuyFromStartupPage(
+                              startupId: data.id,
+                              startupName: data.name,
+                              tokenPriceCents: data.currentTokenPriceCents,
+                              logoUrl: data.logoUrl,
+                            ),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF00A84E),
                         foregroundColor: Colors.white,
