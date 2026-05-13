@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/models/offer.dart';
@@ -13,6 +14,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../services/user_service.dart';
 
+/// Formatador para impedir a entrada de valores superiores ao máximo permitido.
 class MaxValueInputFormatter extends TextInputFormatter {
   final int maxValue;
 
@@ -34,7 +36,7 @@ class MaxValueInputFormatter extends TextInputFormatter {
   }
 }
 
-
+/// Página para confirmação e execução da compra de tokens de uma oferta específica.
 class BuyOfferPage extends StatefulWidget {
   final OfferWithId offer;
 
@@ -69,8 +71,8 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     super.dispose();
   }
 
+  /// Carrega os dados necessários para a página, incluindo perfil do usuário e detalhes da startup.
   Future<void> _loadInitialData() async {
-    // If we don't have user data yet, fetch it
     if (UserState.userNotifier.value == null) {
       await UserState.refreshUser();
     }
@@ -82,6 +84,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     }
   }
 
+  /// Busca detalhes atualizados da startup para análise financeira.
   Future<void> _loadStartupDetails() async {
     final result = await StartupService.getStartupDetails(widget.offer.startupId);
     if (mounted) {
@@ -101,8 +104,10 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     }
   }
 
+  /// Processa a intenção de compra, validando saldo e chamando o serviço de aceite de oferta.
   Future<void> _handlePurchase() async {
     final userBalanceCents = UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
+    // Cálculo do custo total da transação em centavos
     final totalCents = _selectedTokens * widget.offer.tokenPriceCents;
 
     if (_selectedTokens <= 0) {
@@ -115,6 +120,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
       return;
     }
 
+    // Verificação de saldo disponível no perfil do usuário
     if (totalCents > userBalanceCents) {
       FeedbackModal.show(
         context: context,
@@ -135,7 +141,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     if (mounted) {
       setState(() => _isPurchasing = false);
       if (result.success) {
-        // Refresh user data in background
+        // Atualiza o saldo do usuário após a compra bem-sucedida
         UserState.refreshUser();
 
         FeedbackModal.show(
@@ -157,7 +163,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
       );
       }  }
 
-
+  /// Formata valores monetários de centavos para Real (BRL).
   String _formatCurrency(num cents) {
     return _currencyFormat.format(cents / 100);
   }
@@ -206,6 +212,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     );
   }
 
+  /// Cabeçalho com informações básicas da startup.
   Widget _buildStartupInfo() {
     final theme = Theme.of(context);
     return Row(
@@ -239,15 +246,19 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
               ),
             ],
           ),
-        ),
+            ),
       ],
     );
   }
 
+  /// Seção de análise financeira que compara o preço da oferta com o de mercado.
   Widget _buildFinancialAnalysis() {
     final theme = Theme.of(context);
     final marketPrice = _startupData?.currentTokenPriceCents ?? 0;
     final offerPrice = widget.offer.tokenPriceCents;
+    
+    // Cálculo do percentual de desconto/oportunidade em relação ao preço de mercado
+    // Fórmula: ((Mercado - Oferta) / Mercado) * 100
     final discount = marketPrice > 0 ? ((marketPrice - offerPrice) / marketPrice * 100) : 0.0;
 
     return Container(
@@ -315,6 +326,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     );
   }
 
+  /// Gráfico de histórico de preços da startup.
   Widget _buildPriceChart() {
     final theme = Theme.of(context);
     return Column(
@@ -326,7 +338,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 350, // Increased height to accommodate the internal controls of PriceHistoryChart
+          height: 350, 
           child: PriceHistoryChart(
             startupId: widget.offer.startupId,
             initialHistory: _startupData?.history ?? [],
@@ -337,6 +349,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     );
   }
 
+  /// Seletor de quantidade de tokens para compra.
   Widget _buildPurchaseSelector() {
     final theme = Theme.of(context);
     return Column(
@@ -440,6 +453,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     );
   }
 
+  /// Rodapé com exibição do saldo do usuário, total da compra e botão de ação.
   Widget _buildBottomButton(int totalCents, UserProfile? userData) {
     final theme = Theme.of(context);
     final userBalanceCents = userData?.wallet.balanceInCents ?? 0.0;
@@ -515,6 +529,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     );
   }
 
+  /// Exibição de tela de carregamento enquanto os dados iniciais são buscados.
   Widget _buildLoadingState() {
     final theme = Theme.of(context);
     return Center(
