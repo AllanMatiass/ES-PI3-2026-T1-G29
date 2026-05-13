@@ -31,7 +31,11 @@ export class BuyFromStartupService {
 
     const { startupId, qtdTokens } = data;
 
-    if (!startupId || typeof startupId !== "string" || startupId.trim() === "") {
+    if (
+      !startupId ||
+      typeof startupId !== "string" ||
+      startupId.trim() === ""
+    ) {
       throw new HttpsError(
         "invalid-argument",
         "startupId é obrigatório e deve ser uma string não vazia.",
@@ -71,7 +75,10 @@ export class BuyFromStartupService {
       );
     }
 
-    if (!startup.currentTokenPriceCents || startup.currentTokenPriceCents <= 0) {
+    if (
+      !startup.currentTokenPriceCents ||
+      startup.currentTokenPriceCents <= 0
+    ) {
       throw new HttpsError(
         "failed-precondition",
         "Startup sem preço de token definido. Compra indisponível.",
@@ -144,7 +151,7 @@ export class BuyFromStartupService {
       }
 
       const freshStartup = startupSnap.data() as typeof startup;
-      const buyerWallet: Wallet = buyerSnap.data()!.wallet;
+      const buyerWallet: Wallet = buyerSnap.data()?.wallet;
       buyerWallet.positions ??= [];
 
       const freshTokenPriceCents = freshStartup.currentTokenPriceCents;
@@ -182,7 +189,9 @@ export class BuyFromStartupService {
         existingPos.averagePriceCents =
           newQtd > 0 ? Math.round(newInvested / newQtd) : 0;
         existingPos.currentTokenPriceCents = freshTokenPriceCents;
-        existingPos.currentValueCents = Math.round(newQtd * freshTokenPriceCents);
+        existingPos.currentValueCents = Math.round(
+          newQtd * freshTokenPriceCents,
+        );
         existingPos.updatedAt = now;
       } else {
         buyerWallet.positions.push({
@@ -207,6 +216,16 @@ export class BuyFromStartupService {
       );
       buyerWallet.updatedAt = now;
 
+      //Atualiza registro de investidor da startup
+      await upsertStartupInvestor(tx, {
+        startupId,
+        startupName: freshStartup.name,
+        userId: buyerId,
+        userName: buyerUser.name,
+        qtdTokens,
+        tokenPriceCents: freshTokenPriceCents,
+      });
+
       //Atualiza dados da startup
       tx.update(startupRef, {
         circulatingTokens:
@@ -217,24 +236,17 @@ export class BuyFromStartupService {
       });
 
       //Registra histórico de transação
-      const transactionRef = await transactionService.registerTransactionTx(tx, {
-        startupId,
-        startupName: freshStartup.name,
-        buyer: { id: buyerId, name: buyerUser.name, type: "USER" },
-        seller: null,
-        qtdTokens,
-        tokenPriceCents: freshTokenPriceCents,
-      });
-
-      //Atualiza registro de investidor da startup
-      await upsertStartupInvestor(tx, {
-        startupId,
-        startupName: freshStartup.name,
-        userId: buyerId,
-        userName: buyerUser.name,
-        qtdTokens,
-        tokenPriceCents: freshTokenPriceCents,
-      });
+      const transactionRef = await transactionService.registerTransactionTx(
+        tx,
+        {
+          startupId,
+          startupName: freshStartup.name,
+          buyer: { id: buyerId, name: buyerUser.name, type: "USER" },
+          seller: null,
+          qtdTokens,
+          tokenPriceCents: freshTokenPriceCents,
+        },
+      );
 
       //Persiste carteira do comprador
       tx.update(buyerRef, { wallet: buyerWallet });
