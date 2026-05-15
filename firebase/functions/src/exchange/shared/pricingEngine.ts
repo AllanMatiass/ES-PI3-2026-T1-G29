@@ -1,8 +1,6 @@
+// Autor: Allan Giovanni Matias Paes
 /**
- * Motor de Precificação (Pure Math Functions)
- *
  * Este arquivo contém apenas lógica matemática pura, sem efeitos colaterais.
- * Todos os valores monetários são tratados como inteiros (centavos).
  */
 
 import { PRICING_CONFIG } from "./constants";

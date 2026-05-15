@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { HttpsError } from "firebase-functions/https";
 import { PriceHistoryOptions } from "../startups/types/dtos";
 

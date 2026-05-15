@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { onCall } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { AcceptOfferRequestDTO, AcceptOfferResponseDTO } from "../types/dtos";

@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { FieldValue } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
 import { MarketType, StartupDocument } from "../../startups/types";
