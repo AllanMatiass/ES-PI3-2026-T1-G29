@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { db } from "../../shared/firebase";
 import { Timestamp } from "firebase-admin/firestore";
 import { StartupInvestor } from "../types";
