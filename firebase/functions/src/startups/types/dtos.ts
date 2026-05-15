@@ -137,7 +137,12 @@ export type GetStartupDetailsResponse = {
   HISTÓRICO DE PREÇOS
 ===================================================== */
 
-export type PriceHistoryInterval = "monthly" | "semestrely" | "yearly" | "ytd";
+export type PriceHistoryInterval =
+  | "daily"
+  | "monthly"
+  | "semestrely"
+  | "yearly"
+  | "ytd";
 
 export type GetStartupPriceHistoryRequest = {
   id: string;
@@ -173,4 +178,11 @@ export type GetStartupPriceHistoryResponse = {
   history: PriceHistoryItem[];
   summary: PriceHistorySummary;
   meta: PriceHistoryMeta;
+};
+
+export type PricingUpdateResultDTO = {
+  previousPriceCents: number;
+  newPriceCents: number;
+  previousValuationCents: number;
+  newValuationCents: number;
 };

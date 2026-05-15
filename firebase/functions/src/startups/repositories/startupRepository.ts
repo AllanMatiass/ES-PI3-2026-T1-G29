@@ -188,27 +188,43 @@ export async function seedDemoStartups(): Promise<string[]> {
     const { id, ...data } = startup;
     const startupRef = startupsCollection.doc(id);
 
-    const valuation = data.currentTokenPriceCents * data.totalTokensIssued;
+    const initialValuation =
+      data.currentTokenPriceCents * data.totalTokensIssued;
 
     batch.set(
       startupRef,
       {
         ...data,
-        lastValuationCents: valuation,
+        lastValuationCents: initialValuation,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       },
       { merge: true },
     );
 
-    for (let i = 5; i >= 0; i--) {
+    // Gerar 40 pontos históricos (Meses) com Random Walk
+    let currentPrice = data.currentTokenPriceCents;
+
+    // Começa de 40 meses atrás até hoje
+    for (let i = 40; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
 
-      const simulatedValuation = valuation * (1 + (Math.random() - 0.5) * 0.2); // variação ±20%
+      // No gráfico mensal, a variância pode ser um pouco maior (até 12% ao mês)
+      // para mostrar ciclos de mercado mais claros na banca.
+      const variance = (Math.random() - 0.48) * 0.25;
+      currentPrice = Math.round(currentPrice * (1 + variance));
+
+      const simulatedValuation = currentPrice * data.totalTokensIssued;
 
       valuationPromises.push(
-        saveValuationSnapshot(id, Math.round(simulatedValuation), date),
+        saveValuationSnapshot(
+          id,
+          simulatedValuation,
+          currentPrice,
+          date,
+          "seed",
+        ),
       );
     }
   }
@@ -253,13 +269,17 @@ export async function getPreviousStartupValuation(
 export async function saveValuationSnapshot(
   startupId: string,
   valuation: number,
+  tokenPriceCents?: number,
   createdAt?: Date,
+  changeType = "manual",
 ) {
   await startupsCollection
     .doc(startupId)
     .collection("valuations")
     .add({
       value: valuation,
+      tokenPriceCents: tokenPriceCents ?? 0,
+      changeType,
       createdAt: createdAt ?? FieldValue.serverTimestamp(),
     });
 }
@@ -276,7 +296,7 @@ export async function getValuationHistory(
     .where("createdAt", ">=", from)
     .where("createdAt", "<=", to)
     .orderBy("createdAt", "asc")
-    .limit(limit ?? 12)
+    .limit(limit ?? 120)
     .get();
 
   return snapshot.docs.map((doc) => ({
@@ -300,7 +320,13 @@ export async function updateStartupValuation(
     startup.currentTokenPriceCents * startup.totalTokensIssued;
 
   const newValuation = newTokenPriceCents * startup.totalTokensIssued;
-  await saveValuationSnapshot(startupId, newValuation);
+  await saveValuationSnapshot(
+    startupId,
+    newValuation,
+    newTokenPriceCents,
+    undefined,
+    "event",
+  );
 
   await ref.update({
     currentTokenPriceCents: newTokenPriceCents,

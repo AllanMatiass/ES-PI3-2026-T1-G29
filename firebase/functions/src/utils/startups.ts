@@ -7,6 +7,103 @@ import { CreateStartupDocumentDTO } from "../startups/types/dtos";
 // permitindo a criação de dados iniciais no Firestore
 // para testes e desenvolvimento.
 
+const DOCUMENTS = {
+  "biochip-campus": {
+    businessPlan:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/biochip%2FBioChip_Campus_Plano_de_Negocios.pdf?alt=media&token=b0b14d57-89d9-401e-a716-1db1e29ffd09",
+    coverImageUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/biochip%2FGemini_Generated_Image_56vuma56vuma56vu.png?alt=media&token=381fc1a2-957a-496f-8856-3ca4957092bb",
+    demoVideos: ["https://www.youtube.com/watch?v=MIXj36IAyXA"],
+    executiveSummary:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/biochip%2FBioChip_Campus_Executive_Summary.pdf?alt=media&token=3535c661-d920-4be5-8416-8d3dde830242",
+    pitchDeckUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/biochip%2FBioChip%20Campus%20Pitch%20Deck.pdf?alt=media&token=b8e88a7b-09d7-4a75-acf6-b53dcd7a79e7",
+  },
+
+  ecotech: {
+    businessPlan:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/PI3-2026-Mobile-MesclaInvest%20(2).pdf?alt=media&token=fc10b029-fd38-4d09-b5bd-d46357dd87be",
+    coverImageUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/ecotech%2FEcoTech_log.png?alt=media&token=b3b12047-aa61-4c1d-bc8b-8711bd1c4553",
+
+    demoVideos: [
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/projeto%20integrador%203%20-%20G29%20-%20Storage%20-%20Arquivos%20-%20Console%20do%20Firebase%20e%20mais%204%20p%C3%A1ginas%20-%20Perfil%201%20%E2%80%94%20Microsoft%E2%80%8B%20Edge%202026-05-11%2007-14-44.mp4?alt=media&token=4e68de69-93a3-4b6d-aa8f-abccd04cbe6f",
+    ],
+    executiveSummary:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/PI3-2026-Mobile-MesclaInvest%20(2).pdf?alt=media&token=fc10b029-fd38-4d09-b5bd-d46357dd87be",
+    pitchDeckUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/PI3-2026-Mobile-MesclaInvest%20(2).pdf?alt=media&token=fc10b029-fd38-4d09-b5bd-d46357dd87be",
+  },
+
+  eduverse: {
+    businessPlan:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FEduVerse%2FeduVerse_Business_Plan.pdf?alt=media&token=928556e7-1165-4dea-85f5-95f15a81cb49",
+    coverImageUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FEduVerse%2Feduverse-log.png?alt=media&token=f5c4cda8-c634-427d-9e0d-b83332f3df7c",
+    demoVideos: ["https://example.com/videos/eduverse-demo"],
+    executiveSummary:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FEduVerse%2FeduVerse_Executive_Summary.pdf?alt=media&token=1dda59ad-9c52-44f5-ae78-3fa4f3a0abb6",
+    pitchDeckUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FEduVerse%2FeduVerse%20Pitch%20Deck.pdf?alt=media&token=d639ea4a-8dc6-4a8e-90e7-15d65fd4a451",
+  },
+  finai: {
+    businessPlan:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FFinAI%2FFinAI_Business_Plan.pdf?alt=media&token=65b2f8d5-0c9e-4747-85dd-40508403602c",
+    coverImageUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FFinAI%2FFinAI_logo.png?alt=media&token=f14c98ef-6aa2-4317-b7b8-6f8f33b6a69a",
+
+    demoVideos: ["https://example.com/videos/finai-demo"],
+    executiveSummary:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FFinAI%2FFinAI_Executive_Summary.pdf?alt=media&token=0cc01ad3-c7dd-4fa6-a1fd-8603bfc5f8d9",
+    pitchDeckUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FFinAI%2FFinAI%20Pitch%20Deck.pdf?alt=media&token=2b0f6997-1914-4760-9c45-d1c792584f3c",
+  },
+  healthtrack: {
+    businessPlan:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FHealthTrack_Business_Plan.pdf?alt=media&token=3457eeea-7044-4cd6-9fbb-e882882d390f",
+    coverImageUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FhealthTrack_logo.png?alt=media&token=61482885-0696-403b-a6f6-ced6af98c610",
+    demoVideos: ["https://example.com/videos/healthtrack-demo"],
+    executiveSummary:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FHealthTrack_Executive_Summary.pdf?alt=media&token=15daaf80-6735-4263-82f0-8119ae0fdf28",
+    pitchDeckUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FHealthTrack%20Pitch%20Deck.pdf?alt=media&token=22df9e27-5828-41b4-8180-dd375480b7b8",
+  },
+  logissmart: {
+    businessPlan:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FFinAI_Business_Plan.pdf?alt=media&token=07c0bacc-1aaa-469a-8d65-dcb2b6b54b2c",
+    coverImageUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FFinAI_logo.png?alt=media&token=8409ffbb-6f78-475e-8b83-b4dde0cd5f7c",
+    demoVideos: ["https://example.com/videos/logissmart-demo"],
+    executiveSummary:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FFinAI_Executive_Summary.pdf?alt=media&token=823e4f27-51a1-40e0-8bd8-90bd7394791b",
+    pitchDeckUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FFinAI%20Pitch%20Deck.pdf?alt=media&token=db1ca123-e879-4842-9a65-e7fc7c6921a8",
+  },
+  mentorai: {
+    businessPlan:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FMentorAI%2FMentorAI_Business_Plan.pdf?alt=media&token=9a40a278-a042-444c-a74c-956c0a2b2367",
+    coverImageUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FMentorAI%2Fmentorai_logo.png?alt=media&token=69951ca2-a83f-4f53-9a61-faf3114921e8",
+    demoVideos: ["https://example.com/videos/mentorai-demo"],
+    executiveSummary:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FMentorAI%2FMentorAI_Executive_Summary.pdf?alt=media&token=f3616346-9a43-41aa-bd8d-c0d5149cb905",
+    pitchDeckUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FMentorAI%2FMentorAI%20Pitch%20Deck.pdf?alt=media&token=ec0be930-69f7-43d6-983e-77a4f34e30f9",
+  },
+  "rota-verde": {
+    businessPlan:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FRotaVerde%2FRotaVerde_Business_Plan.pdf?alt=media&token=6855a695-c426-403a-9398-27e73b5ada79",
+    coverImageUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FRotaVerde%2FRotaVerde_logo.png?alt=media&token=581514d8-8b6b-44b3-b8e8-a2325ea55b20",
+    demoVideos: ["https://example.com/videos/rota-verde-demo"],
+    executiveSummary:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FRotaVerde%2FRotaVerde_Executive_Summary.pdf?alt=media&token=cec9542e-f9ea-40fc-ad51-e34a9fcde5c5",
+    pitchDeckUrl:
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FRotaVerde%2FRotaVerde%20Pitch%20Deck.pdf?alt=media&token=16718fa5-0aab-4f43-9008-493d70b767de",
+  },
+};
+
 export const startupsData: CreateStartupDocumentDTO[] = [
   {
     id: "biochip-campus",
@@ -16,8 +113,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Sensores portateis para analises laboratoriais didaticas.",
     description:
       "A BioChip Campus simula kits de diagnostico rapido para laboratorios universitarios, conectando sensores de baixo custo a um aplicativo de acompanhamento.",
-    executiveSummary:
-      "Startup em fase de ideacao com foco em prototipagem de sensores educacionais e validacao com cursos da area de saude.",
+    executiveSummary: DOCUMENTS["biochip-campus"].executiveSummary,
     capitalRaisedCents: 1850000,
     totalTokensIssued: 100000,
     circulatingTokens: 72000,
@@ -48,10 +144,10 @@ export const startupsData: CreateStartupDocumentDTO[] = [
         organization: "PUC-Campinas",
       },
     ],
-    demoVideos: ["https://example.com/videos/biochip-campus-demo"],
-    businessPlan: "https://example.com/plans/biochip-campus.pdf",
-    coverImageUrl:
-      "https://images.unsplash.com/photo-1581093458791-9d15482442f6",
+    demoVideos: DOCUMENTS["biochip-campus"].demoVideos,
+    businessPlan: DOCUMENTS["biochip-campus"].businessPlan,
+    pitchDeckUrl: DOCUMENTS["biochip-campus"].pitchDeckUrl,
+    coverImageUrl: DOCUMENTS["biochip-campus"].coverImageUrl,
     tags: ["healthtech", "iot", "educacao"],
     createdAt: FieldValue.serverTimestamp(),
   },
@@ -62,8 +158,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     shortDescription: "Otimizacao de rotas sustentaveis para entregas urbanas.",
     description:
       "A Rota Verde usa dados de distancia, emissao estimada e ocupacao de entregadores para sugerir rotas urbanas com menor impacto ambiental.",
-    executiveSummary:
-      "Startup em operacao piloto com pequenos comercios locais e validacao de indicadores de economia de combustivel.",
+    executiveSummary: DOCUMENTS["rota-verde"].executiveSummary,
     capitalRaisedCents: 7400000,
     totalTokensIssued: 250000,
     circulatingTokens: 185000,
@@ -82,10 +177,10 @@ export const startupsData: CreateStartupDocumentDTO[] = [
         organization: "Rede de Logistica",
       },
     ],
-    demoVideos: ["https://example.com/videos/rota-verde-demo"],
-    businessPlan: "https://example.com/plans/rota-verde.pdf",
-    coverImageUrl:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+    demoVideos: DOCUMENTS["rota-verde"].demoVideos,
+    businessPlan: DOCUMENTS["rota-verde"].businessPlan,
+    pitchDeckUrl: DOCUMENTS["rota-verde"].pitchDeckUrl,
+    coverImageUrl: DOCUMENTS["rota-verde"].coverImageUrl,
     tags: ["logtech", "sustentabilidade", "mobilidade"],
     createdAt: FieldValue.serverTimestamp(),
   },
@@ -97,8 +192,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       "Triagem inteligente para programas de mentoria universitarios.",
     description:
       "A MentorAI organiza perfis de estudantes e mentores para recomendar encontros com base em objetivos, disponibilidade e historico de acompanhamento.",
-    executiveSummary:
-      "Startup em expansao com uso simulado em programas de pre-aceleracao e potencial de integracao a plataformas educacionais.",
+    executiveSummary: DOCUMENTS["mentorai"].executiveSummary,
     capitalRaisedCents: 12350000,
     totalTokensIssued: 500000,
     circulatingTokens: 385000,
@@ -120,9 +214,10 @@ export const startupsData: CreateStartupDocumentDTO[] = [
         organization: "Ecossistema Mescla",
       },
     ],
-    demoVideos: ["https://example.com/videos/mentorai-demo"],
-    businessPlan: "https://example.com/plans/mentorai.pdf",
-    coverImageUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978",
+    demoVideos: DOCUMENTS["mentorai"].demoVideos,
+    businessPlan: DOCUMENTS["mentorai"].businessPlan,
+    pitchDeckUrl: DOCUMENTS["mentorai"].pitchDeckUrl,
+    coverImageUrl: DOCUMENTS["mentorai"].coverImageUrl,
     tags: ["edtech", "ia", "mentoria"],
     createdAt: FieldValue.serverTimestamp(),
   },
@@ -133,8 +228,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     shortDescription: "Soluções sustentáveis para o agro.",
     description:
       "Plataforma para otimização sustentável de recursos agrícolas utilizando IoT e análise de dados.",
-    executiveSummary:
-      "Focada em reduzir o desperdício de água e defensivos em pequenas e médias propriedades.",
+    executiveSummary: DOCUMENTS["ecotech"].executiveSummary,
     capitalRaisedCents: 50000000,
     totalTokensIssued: 100000,
     circulatingTokens: 76000,
@@ -156,10 +250,10 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     externalMembers: [
       { name: "Prof. Carlos", role: "Mentor", organization: "AgroTech Hub" },
     ],
-    demoVideos: ["https://example.com/videos/ecotech-demo"],
-    businessPlan: "https://example.com/plans/ecotech.pdf",
-    coverImageUrl:
-      "https://images.unsplash.com/photo-1464226184884-fa280b87c399",
+    demoVideos: DOCUMENTS["ecotech"].demoVideos,
+    businessPlan: DOCUMENTS["ecotech"].businessPlan,
+    pitchDeckUrl: DOCUMENTS["ecotech"].pitchDeckUrl,
+    coverImageUrl: DOCUMENTS["ecotech"].coverImageUrl,
     tags: ["agronegocio", "sustentabilidade", "iot"],
     createdAt: FieldValue.serverTimestamp(),
   },
@@ -170,8 +264,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     shortDescription: "Monitoramento remoto de pacientes.",
     description:
       "Sistema de telemonitoramento com foco em prevenção de doenças crônicas através de wearables.",
-    executiveSummary:
-      "Reduzindo reinternações hospitalares através de acompanhamento contínuo e preventivo.",
+    executiveSummary: DOCUMENTS["healthtrack"].executiveSummary,
     capitalRaisedCents: 200000000,
     totalTokensIssued: 500000,
     circulatingTokens: 412000,
@@ -191,10 +284,10 @@ export const startupsData: CreateStartupDocumentDTO[] = [
         organization: "Health Innovation Lab",
       },
     ],
-    demoVideos: ["https://example.com/videos/healthtrack-demo"],
-    businessPlan: "https://example.com/plans/healthtrack.pdf",
-    coverImageUrl:
-      "https://images.unsplash.com/photo-1576091160550-2173dba999ef",
+    demoVideos: DOCUMENTS["healthtrack"].demoVideos,
+    businessPlan: DOCUMENTS["healthtrack"].businessPlan,
+    pitchDeckUrl: DOCUMENTS["healthtrack"].pitchDeckUrl,
+    coverImageUrl: DOCUMENTS["healthtrack"].coverImageUrl,
     tags: ["healthtech", "monitoramento", "prevencao"],
     createdAt: FieldValue.serverTimestamp(),
   },
@@ -205,8 +298,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     shortDescription: "Realidade virtual para escolas.",
     description:
       "Plataforma educacional imersiva com uso de realidade virtual para simulações científicas e históricas.",
-    executiveSummary:
-      "Transformando a educação básica com laboratórios virtuais de alto impacto visual e didático.",
+    executiveSummary: DOCUMENTS["eduverse"].executiveSummary,
     capitalRaisedCents: 500000000,
     totalTokensIssued: 1000000,
     circulatingTokens: 780000,
@@ -228,10 +320,10 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     externalMembers: [
       { name: "Marcos", role: "Adviser", organization: "VR Association" },
     ],
-    demoVideos: ["https://example.com/videos/eduverse-demo"],
-    businessPlan: "https://example.com/plans/eduverse.pdf",
-    coverImageUrl:
-      "https://images.unsplash.com/photo-1478479405421-ce83c92fb3ba",
+    demoVideos: DOCUMENTS["eduverse"].demoVideos,
+    businessPlan: DOCUMENTS["eduverse"].businessPlan,
+    pitchDeckUrl: DOCUMENTS["eduverse"].pitchDeckUrl,
+    coverImageUrl: DOCUMENTS["eduverse"].coverImageUrl,
     tags: ["edtech", "realidade-virtual", "inovacao"],
     createdAt: FieldValue.serverTimestamp(),
   },
@@ -242,8 +334,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     shortDescription: "IA para finanças pessoais universitárias.",
     description:
       "Assistente financeiro com IA para estudantes universitários, ajudando na gestão de bolsas e gastos mensais.",
-    executiveSummary:
-      "Democratizando o planejamento financeiro para a nova geração de universitários.",
+    executiveSummary: DOCUMENTS["finai"].executiveSummary,
     capitalRaisedCents: 80000000,
     totalTokensIssued: 200000,
     circulatingTokens: 155000,
@@ -265,9 +356,10 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     externalMembers: [
       { name: "Prof. Roberto", role: "Mentor", organization: "Finance School" },
     ],
-    demoVideos: ["https://example.com/videos/finai-demo"],
-    businessPlan: "https://example.com/plans/finai.pdf",
-    coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71",
+    demoVideos: DOCUMENTS["finai"].demoVideos,
+    businessPlan: DOCUMENTS["finai"].businessPlan,
+    pitchDeckUrl: DOCUMENTS["finai"].pitchDeckUrl,
+    coverImageUrl: DOCUMENTS["finai"].coverImageUrl,
     tags: ["fintech", "ia", "estudantes"],
     createdAt: FieldValue.serverTimestamp(),
   },
@@ -278,8 +370,7 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     shortDescription: "Otimização de rotas de entrega.",
     description:
       "Sistema inteligente de roteirização logística que otimiza o 'last mile' para pequenos e-commerces.",
-    executiveSummary:
-      "Reduzindo o tempo de entrega e o custo de frete em até 30% através de algoritmos genéticos.",
+    executiveSummary: DOCUMENTS["logissmart"].executiveSummary,
     capitalRaisedCents: 300000000,
     totalTokensIssued: 800000,
     circulatingTokens: 620000,
@@ -293,10 +384,10 @@ export const startupsData: CreateStartupDocumentDTO[] = [
       },
     ],
     externalMembers: [],
-    demoVideos: ["https://example.com/videos/logissmart-demo"],
-    businessPlan: "https://example.com/plans/logissmart.pdf",
-    coverImageUrl:
-      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d",
+    demoVideos: DOCUMENTS["logissmart"].demoVideos,
+    businessPlan: DOCUMENTS["logissmart"].businessPlan,
+    pitchDeckUrl: DOCUMENTS["logissmart"].pitchDeckUrl,
+    coverImageUrl: DOCUMENTS["logissmart"].coverImageUrl,
     tags: ["logtech", "otimizacao", "entrega"],
     createdAt: FieldValue.serverTimestamp(),
   },
