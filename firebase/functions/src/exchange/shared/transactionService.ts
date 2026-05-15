@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { HttpsError } from "firebase-functions/v2/https";
 
 import * as transactionRepository from "../repositories/transactionRepository";

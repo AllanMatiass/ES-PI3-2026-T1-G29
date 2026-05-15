@@ -1,4 +1,4 @@
-// firebase/functions/src/exchange/handlers/buyTokensFromStartup.ts
+// Autor: Pedro Romanato & Allan Giovanni Matias Paes
 
 import { onCall } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";

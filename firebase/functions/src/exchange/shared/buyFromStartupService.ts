@@ -1,4 +1,4 @@
-// firebase/functions/src/exchange/shared/buyFromStartupService.ts
+// Autor: Pedro Romanato & Allan Giovanni Matias Paes
 
 import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
