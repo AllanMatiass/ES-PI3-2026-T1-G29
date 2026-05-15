@@ -141,3 +141,5 @@ export type StartupInvestor = {
 
   updatedAt: Timestamp;
 };
+
+export type MarketType = "primary" | "secondary" | "event";

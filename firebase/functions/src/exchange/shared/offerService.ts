@@ -25,10 +25,13 @@ import {
   PaginatedOffersResponseDTO,
 } from "../types/dtos";
 import { validateTransactionData } from "../utils";
+import { TokenPricingService } from "./tokenPricingService";
+import { StartupDocument } from "../../startups/types";
 
 const transactionService = new TransactionService();
 
 export class OfferService {
+  private tokenPricingService = new TokenPricingService();
   async createOffer(
     sellerId: string,
     data: CreateOfferRequestDTO,
@@ -156,12 +159,21 @@ export class OfferService {
       const sellerRef = db.collection("users").doc(sellerId);
       const buyerRef = db.collection("users").doc(buyerId);
       const offerRef = db.collection("offers").doc(offerId);
+      const startupRef = db.collection("startups").doc(offer.startupId);
+      const investorRef = db
+        .collection("startups")
+        .doc(offer.startupId)
+        .collection("investors")
+        .doc(buyerId);
 
-      const [sellerSnap, buyerSnap, offerSnap] = await Promise.all([
-        tx.get(sellerRef),
-        tx.get(buyerRef),
-        tx.get(offerRef),
-      ]);
+      const [sellerSnap, buyerSnap, offerSnap, startupSnap, investorSnap] =
+        await Promise.all([
+          tx.get(sellerRef),
+          tx.get(buyerRef),
+          tx.get(offerRef),
+          tx.get(startupRef),
+          tx.get(investorRef),
+        ]);
 
       if (!sellerSnap.exists) {
         throw new HttpsError("not-found", "Vendedor não encontrado.");
@@ -175,7 +187,12 @@ export class OfferService {
         throw new HttpsError("not-found", "Oferta não encontrada.");
       }
 
+      if (!startupSnap.exists) {
+        throw new HttpsError("not-found", "Startup não encontrada.");
+      }
+
       const freshOffer = offerSnap.data() as Offer;
+      const freshStartup = startupSnap.data() as StartupDocument; // Para revalorização
 
       if (!freshOffer) {
         throw new HttpsError("not-found", "Oferta inválida.");
@@ -312,14 +329,18 @@ export class OfferService {
 
       buyerWallet.updatedAt = now;
 
-      await upsertStartupInvestor(tx, {
-        startupId: offer.startupId,
-        startupName: offer.startupName,
-        userId: buyerId,
-        userName: buyerUser.name,
-        qtdTokens: qtdTokens,
-        tokenPriceCents: offer.tokenPriceCents,
-      });
+      await upsertStartupInvestor(
+        tx,
+        {
+          startupId: offer.startupId,
+          startupName: offer.startupName,
+          userId: buyerId,
+          userName: buyerUser.name,
+          qtdTokens: qtdTokens,
+          tokenPriceCents: offer.tokenPriceCents,
+        },
+        investorSnap,
+      );
 
       const transactionRef = await transactionService.registerTransactionTx(
         tx,
@@ -369,6 +390,14 @@ export class OfferService {
             (freshOffer.qtdTokens - qtdTokens) * freshOffer.tokenPriceCents,
         });
       }
+
+      await this.tokenPricingService.revalueFromSecondaryTradeTx(
+        tx,
+        offer.startupId,
+        qtdTokens,
+        offer.tokenPriceCents,
+        freshStartup,
+      );
 
       return {
         transactionId: transactionRef.id,
