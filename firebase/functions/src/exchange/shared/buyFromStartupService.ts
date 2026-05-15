@@ -12,10 +12,13 @@ import {
   BuyTokensFromStartupRequestDTO,
   BuyTokensFromStartupResponseDTO,
 } from "../types/dtos";
+import { TokenPricingService } from "./tokenPricingService";
+import { StartupDocument } from "../../startups/types";
 
 const transactionService = new TransactionService();
 
 export class BuyFromStartupService {
+  private tokenPricingService = new TokenPricingService();
   async buyTokens(
     buyerId: string,
     data: BuyTokensFromStartupRequestDTO,
@@ -136,11 +139,17 @@ export class BuyFromStartupService {
     return db.runTransaction(async (tx) => {
       const buyerRef = db.collection("users").doc(buyerId);
       const startupRef = db.collection("startups").doc(startupId);
+      const investorRef = db
+        .collection("startups")
+        .doc(startupId)
+        .collection("investors")
+        .doc(buyerId);
 
       // Re-lê dentro da transação para garantir com compras simuntaneas
-      const [buyerSnap, startupSnap] = await Promise.all([
+      const [buyerSnap, startupSnap, investorSnap] = await Promise.all([
         tx.get(buyerRef),
         tx.get(startupRef),
+        tx.get(investorRef),
       ]);
 
       if (!buyerSnap.exists) {
@@ -150,7 +159,7 @@ export class BuyFromStartupService {
         throw new HttpsError("not-found", "Startup não encontrada.");
       }
 
-      const freshStartup = startupSnap.data() as typeof startup;
+      const freshStartup = startupSnap.data() as StartupDocument;
       const buyerWallet: Wallet = buyerSnap.data()?.wallet;
       buyerWallet.positions ??= [];
 
@@ -217,14 +226,18 @@ export class BuyFromStartupService {
       buyerWallet.updatedAt = now;
 
       //Atualiza registro de investidor da startup
-      await upsertStartupInvestor(tx, {
-        startupId,
-        startupName: freshStartup.name,
-        userId: buyerId,
-        userName: buyerUser.name,
-        qtdTokens,
-        tokenPriceCents: freshTokenPriceCents,
-      });
+      await upsertStartupInvestor(
+        tx,
+        {
+          startupId,
+          startupName: freshStartup.name,
+          userId: buyerId,
+          userName: buyerUser.name,
+          qtdTokens,
+          tokenPriceCents: freshTokenPriceCents,
+        },
+        investorSnap,
+      );
 
       //Atualiza dados da startup
       tx.update(startupRef, {
@@ -250,6 +263,14 @@ export class BuyFromStartupService {
 
       //Persiste carteira do comprador
       tx.update(buyerRef, { wallet: buyerWallet });
+
+      // Aplica revalorização usando o snapshot já carregado para evitar read-after-write
+      await this.tokenPricingService.revalueFromPrimaryTradeTx(
+        tx,
+        startupId,
+        qtdTokens,
+        freshStartup,
+      );
 
       return {
         transactionId: transactionRef.id,

@@ -15,12 +15,13 @@ export async function upsertStartupInvestor(
     qtdTokens: number;
     tokenPriceCents: number;
   },
+  investorSnapshot?: FirebaseFirestore.DocumentSnapshot,
 ) {
   const now = Timestamp.now();
 
   const ref = investorsRef(params.startupId).doc(params.userId);
 
-  const snap = await tx.get(ref);
+  const snap = investorSnapshot || (await tx.get(ref));
 
   const investedCents = params.qtdTokens * params.tokenPriceCents;
 
