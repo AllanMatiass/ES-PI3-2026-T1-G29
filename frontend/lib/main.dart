@@ -75,7 +75,7 @@ class MesclaInvest extends StatelessWidget {
             '/login': (context) => const LoginPage(),
             '/register': (context) => const RegisterPage(),
             '/forgotPassword': (context) => const ForgotPasswordPage(),
-            '/home': (context) => HomePage(userName: FirebaseAuth.instance.currentUser?.displayName ?? 'Desconhecido'),
+            '/home': (context) => HomePage(userName: FirebaseAuth.instance.currentUser?.displayName ?? 'Cida Paulino'),
           },
         );
       },

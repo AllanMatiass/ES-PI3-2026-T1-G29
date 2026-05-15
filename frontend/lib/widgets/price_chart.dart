@@ -74,7 +74,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     }
   }
 
-  /// Atualiza os dados do gráfico com base no filtro selecionado (6M, 1Y, YTD, Custom).
+  /// Atualiza os dados do gráfico com base no filtro selecionado (1D, Semestre, 1 ano, YTD, Custom).
   /// Realiza cálculos de datas para definir o intervalo da busca na API.
   Future<void> _updateFilter(String filter) async {
     setState(() {
@@ -92,7 +92,14 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
       final toDateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
       // Define o intervalo de tempo retroativo com base no filtro
-      if (filter == '6M') {
+      if (filter == '1D') {
+        interval = 'daily';
+        final from = now.subtract(const Duration(days: 1));
+        range = {
+          "from": "${from.year}-${from.month.toString().padLeft(2, '0')}-${from.day.toString().padLeft(2, '0')}",
+          "to": toDateStr
+        };
+      } else if (filter == 'Semestre') {
         interval = 'monthly';
         final from = DateTime(now.year, now.month - 6, now.day);
         range = {
@@ -100,7 +107,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           "to": toDateStr
         };
         limit = 6;
-      } else if (filter == '1Y') {
+      } else if (filter == '1 ano') {
         interval = 'monthly';
         final from = DateTime(now.year - 1, now.month, now.day);
         range = {
@@ -123,7 +130,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
         id: widget.startupId,
         historyInterval: interval,
         historyRange: range,
-        historyLimit: limit,
+        historyLimit: filter != 'Custom' ? limit : null,
       );
 
       if (mounted) {
@@ -196,8 +203,8 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
                   children: [
                     Text('Histórico de Preço',
                         style: TextStyle(
-                          fontWeight: FontWeight.bold, 
-                          fontSize: 16, 
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                           color: theme.colorScheme.onSurface
                         )),
                     // Exibe o preço do ponto selecionado pelo usuário
@@ -224,9 +231,11 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterButton('6M'),
+                _buildFilterButton('1D'),
                 const SizedBox(width: 8),
-                _buildFilterButton('1Y'),
+                _buildFilterButton('Semestre'),
+                const SizedBox(width: 8),
+                _buildFilterButton('1 ano'),
                 const SizedBox(width: 8),
                 _buildFilterButton('YTD'),
                 const SizedBox(width: 8),
@@ -237,7 +246,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           const SizedBox(height: 15),
           // Área do gráfico
           SizedBox(
-            height: 200, 
+            height: 190,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return GestureDetector(
@@ -470,6 +479,7 @@ class _MonthYearRangeDialogState extends State<_MonthYearRangeDialog> {
   final List<int> years = List.generate(11, (index) => 2020 + index);
 
   final List<Map<String, String>> intervals = [
+    {'label': 'Diário', 'value': 'daily'},
     {'label': 'Mensal', 'value': 'monthly'},
     {'label': 'Semestral', 'value': 'semestrely'},
     {'label': 'Anual', 'value': 'yearly'},
