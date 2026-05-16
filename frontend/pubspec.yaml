@@ -34,20 +34,56 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  # firebase
   firebase_core: ^4.7.0
   firebase_auth: ^6.4.0
   flutter_dotenv: ^6.0.0
   cloud_firestore: ^6.3.0
+
+  # Requisições
   http: ^1.2.1
+
+  # Skeleton Loading
   shimmer: ^3.0.0
+
+  # Formatador de números
   intl: ^0.19.0
+
+  # Máscaras
   mask_text_input_formatter: ^2.0.0
+  youtube_player_iframe: ^5.2.2
+  video_player: ^2.11.1
+  url_launcher: ^6.3.2
+
+  # Splash screen
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   mockito: ^5.4.4
   build_runner: ^2.4.8
+
+
+# splash
+flutter_native_splash:
+  color: "#234b33"
+  image: assets/images/splash.png
+  android: true
+  ios: true
+  android_12:
+    color: "#234b33"
+    image: assets/images/splash.png
+
+# icon
+flutter_icons:
+  image_path: "assets/images/icon.png"
+  ios: true
+  remove_alpha_ios: true
+  android: "launcher_icon"
+  adaptive_icon_background: "#234b33"
+  adaptive_icon_foreground: "assets/images/icon.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -64,6 +100,7 @@ flutter:
   assets:
     - .env
     - assets/images/logo.jpeg
+    - assets/images/logo_sembg.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

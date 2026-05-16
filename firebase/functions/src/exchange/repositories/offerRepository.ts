@@ -1,5 +1,6 @@
+// Autor: Allan Giovanni Matias Paes
 import { HttpsError } from "firebase-functions/v2/https";
-import { WalletTokenPosition } from "../../auth/types";
+import { Wallet, WalletTokenPosition } from "../../auth/types";
 import { db } from "../../firebase";
 import { Offer, OfferWithId } from "../types";
 
@@ -73,6 +74,61 @@ export async function getOfferById(id: string): Promise<OfferWithId | null> {
 
 export async function updateOffer(id: string, data: Partial<Offer>) {
   await offerCollection.doc(id).update(data);
+}
+
+export async function expireOfferInTransaction(
+  offerId: string,
+): Promise<boolean> {
+  const offerRef = offerCollection.doc(offerId);
+
+  return await db.runTransaction(async (tx) => {
+    const offerSnap = await tx.get(offerRef);
+
+    if (!offerSnap.exists) {
+      throw new HttpsError("not-found", "Oferta não encontrada.");
+    }
+
+    const offerData = offerSnap.data() as Offer;
+
+    if (offerData.status !== "OPEN") {
+      return false;
+    }
+
+    const sellerRef = db.collection("users").doc(offerData.seller.id);
+    const sellerSnap = await tx.get(sellerRef);
+
+    if (!sellerSnap.exists) {
+      throw new HttpsError("not-found", "Vendedor não existe.");
+    }
+
+    const sellerData = sellerSnap.data();
+    const wallet: Wallet = sellerData?.wallet;
+    const positions = wallet.positions;
+
+    if (!wallet || !positions) {
+      throw new HttpsError("not-found", "Carteira do vendedor não existe.");
+    }
+
+    const positionIndex = wallet.positions.findIndex(
+      (p: WalletTokenPosition) => p.startupId === offerData.startupId,
+    );
+
+    if (positionIndex !== -1) {
+      wallet.positions[positionIndex].lockedTokens = Math.max(
+        0,
+        (wallet.positions[positionIndex].lockedTokens || 0) -
+          offerData.qtdTokens,
+      );
+
+      tx.update(sellerRef, { wallet });
+    }
+
+    tx.update(offerRef, {
+      status: "EXPIRED",
+    });
+
+    return true;
+  });
 }
 
 export async function getOffersBySellerId(

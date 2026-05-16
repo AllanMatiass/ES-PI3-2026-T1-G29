@@ -4,6 +4,7 @@ import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -25,11 +26,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        leading: const BackButton(color: Colors.black),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        leading: BackButton(color: theme.colorScheme.onSurface),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -44,39 +46,39 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   width: 60,
                   height: 45,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
+                    color: const Color(0xFF00A84E).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.email_outlined,
-                    color: Color(0xFF2E7D32),
+                    color: Color(0xFF00A84E),
                     size: 32,
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Esqueceu a senha?',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Digite seu email e enviaremos um código para redefinir sua senha',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 'Email',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color.fromARGB(255, 63, 62, 62),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -86,9 +88,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   width: 300,
                   child: TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
+                    style: TextStyle(color: theme.colorScheme.onSurface),
+                    decoration: InputDecoration(
                       hintText: 'seu@email.com',
-                      border: OutlineInputBorder(),
+                      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -105,24 +109,29 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           email: _emailController.text.trim(),
                         );
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  'Email de recuperação enviado! '
-                                  'Considere verificar sua caixa de Spam.'
-                              )),
-                        );
-                        Navigator.of(context).pushNamed('/login');
+                        if (mounted) {
+                          FeedbackModal.show(
+                            context: context,
+                            title: 'Email Enviado',
+                            message: 'Email de recuperação enviado! Considere verificar sua caixa de Spam.',
+                            type: FeedbackType.success,
+                            onConfirm: () => Navigator.of(context).pushNamed('/login'),
+                          );
+                        }
                       } catch (e) {
-                        print('Error on password recovery: ' + e.toString());
-                        // log(e.toString());
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Erro ao enviar link de recuperação de senha.')),
-                        );
+                        log('Error on password recovery: $e');
+                        if (mounted) {
+                          FeedbackModal.show(
+                            context: context,
+                            title: 'Erro',
+                            message: 'Erro ao enviar link de recuperação de senha.',
+                            type: FeedbackType.error,
+                          );
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
+                      backgroundColor: const Color(0xFF00A84E),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

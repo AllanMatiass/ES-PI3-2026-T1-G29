@@ -239,12 +239,17 @@ export class InvestmentMetricService {
       let key: string;
 
       switch (interval) {
+        case "daily":
+          key = date.toISOString().split("T")[0]; // YYYY-MM-DD
+          break;
+
         case "yearly":
           key = `${date.getFullYear()}`;
           break;
 
         case "monthly":
-          key = `${date.getFullYear()}-${date.getMonth()}`;
+          // Formato YYYY-MM para ordenação correta e exibição clara
+          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
           break;
 
         case "semestrely":
@@ -253,8 +258,7 @@ export class InvestmentMetricService {
 
         case "ytd":
           if (date.getFullYear() !== now.getFullYear()) continue;
-
-          key = `${date.getFullYear()}-${date.getMonth()}`;
+          key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
           break;
 
         default:
@@ -268,7 +272,7 @@ export class InvestmentMetricService {
       groups.get(key)?.push(item);
     }
 
-    // último valor de cada grupo
+    // último valor de cada grupo (ponto de fechamento do intervalo)
     return Array.from(groups.values()).map((items) => items[items.length - 1]);
   }
 

@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { OfferWithId, TransactionParticipant } from ".";
 
 export const DASHBOARD_PERIODS = [
@@ -93,4 +94,26 @@ export type MyOfferDTO = {
 
 export type GetMyOffersResponseDTO = {
   offers: MyOfferDTO[];
+};
+
+export type ExpireOfferDTO = {
+  offerId: string;
+};
+
+export type ExpireOfferResponseDTO = {
+  offerId: string;
+  expired: boolean;
+};
+
+export type BuyTokensFromStartupRequestDTO = {
+  startupId: string;
+  qtdTokens: number;
+};
+
+export type BuyTokensFromStartupResponseDTO = {
+  transactionId: string;
+  qtdTokens: number;
+  tokenPriceCents: number;
+  totalCents: number;
+  newBalanceCents: number;
 };

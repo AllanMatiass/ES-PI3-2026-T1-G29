@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import { HttpsError } from "firebase-functions/https";
 import { PriceHistoryOptions } from "../startups/types/dtos";
 
@@ -6,7 +7,13 @@ export function validatePriceHistoryOptions(options: PriceHistoryOptions) {
     throw new HttpsError("invalid-argument", "Informe as opções (options).");
   }
 
-  const validIntervals = ["monthly", "semestrely", "yearly", "ytd"] as const;
+  const validIntervals = [
+    "daily",
+    "monthly",
+    "semestrely",
+    "yearly",
+    "ytd",
+  ] as const;
 
   if (!options.historyInterval) {
     throw new HttpsError(
@@ -18,7 +25,7 @@ export function validatePriceHistoryOptions(options: PriceHistoryOptions) {
   if (!validIntervals.includes(options.historyInterval)) {
     throw new HttpsError(
       "invalid-argument",
-      "Intervalo inválido. Use: monthly, semestrely, yearly ou ytd.",
+      "Intervalo inválido. Use: daily, monthly, semestrely, yearly ou ytd.",
     );
   }
 

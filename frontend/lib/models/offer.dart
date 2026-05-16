@@ -1,9 +1,12 @@
+// Autor: Allan Giovanni Matias Paes
 import './firebase.dart';
 
+// Enumeração que define os tipos de transação permitidos.
 enum TransactionType {
   buyFromStartup,
   userTrade;
 
+  // Converte uma string da API para o tipo TransactionType correspondente.
   static TransactionType fromString(String value) {
     switch (value) {
       case 'BUY_FROM_STARTUP':
@@ -15,6 +18,7 @@ enum TransactionType {
     }
   }
 
+  // Converte o enum para o formato string esperado pela API.
   String toJson() {
     switch (this) {
       case TransactionType.buyFromStartup:
@@ -25,12 +29,14 @@ enum TransactionType {
   }
 }
 
+// Enumeração que define os possíveis estados de uma oferta.
 enum OfferStatus {
   open,
   accepted,
   cancelled,
   expired;
 
+  // Converte uma string da API para o status de oferta correspondente.
   static OfferStatus fromString(String value) {
     switch (value.toUpperCase()) {
       case 'OPEN':
@@ -46,6 +52,7 @@ enum OfferStatus {
     }
   }
 
+  // Retorna uma representação textual amigável do status.
   String toDisplayString() {
     switch (this) {
       case OfferStatus.open:
@@ -64,6 +71,7 @@ enum OfferStatus {
   }
 }
 
+// Representa um agente (usuário ou sistema) em uma transação.
 class TransactionAgent {
   final String id;
   final String name;
@@ -78,6 +86,7 @@ class TransactionAgent {
   }
 }
 
+// Representa a entidade que está vendendo tokens.
 class TransactionSeller {
   final String? id;
   final String name;
@@ -94,6 +103,7 @@ class TransactionSeller {
   }
 }
 
+// Representa uma oferta com identificador e detalhes completos.
 class OfferWithId {
   final String id;
   final String startupId;
@@ -128,6 +138,7 @@ class OfferWithId {
     this.cancelledAt,
   });
 
+  // Converte dados do JSON para uma instância de OfferWithId.
   factory OfferWithId.fromJson(Map<String, dynamic> json) {
     return OfferWithId(
       id: json['id'] ?? '',

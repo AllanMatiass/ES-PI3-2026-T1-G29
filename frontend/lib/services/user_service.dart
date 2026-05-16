@@ -1,56 +1,30 @@
-import 'dart:convert';
+// Autor: Allan Giovanni Matias Paes
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user.dart';
+import '../models/api_response.dart';
+import 'base_service.dart';
 
+// Serviço responsável pela gestão e recuperação de dados do perfil do usuário.
 class UserService {
   static const String _getUserUrl = 'https://getuser-obpz3whteq-uc.a.run.app';
-  static http.Client _httpClient = http.Client();
 
-  // Set custom client for testing
-  static void setHttpClient(http.Client client) {
-    _httpClient = client;
-  }
-
-  static Future<Map<String, dynamic>> getUserData(String uid, String token) async {
-    try {
-      final response = await _httpClient.post(
-        Uri.parse(_getUserUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          "data": {
-            "uid": uid,
-          },
-        }),
-      );
-
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (responseData['result'] != null &&
-            responseData['result']['success'] == true) {
-          return {
-            "success": true,
-            "data": UserProfile.fromJson(responseData),
-          };
-        } else {
-          return {
-            "success": false,
-            "error": responseData['result']?['error']?['message'] ?? 'Erro desconhecido',
-            "code": responseData['result']?['error']?['code'],
-          };
-        }
-      } else {
-        return {
-          "success": false,
-          "error": responseData['result']?['error']?['message'] ??
-              'Erro na requisição: ${response.statusCode}',
-        };
-      }
-    } catch (e) {
-      return {"success": false, "error": "Falha na conexão: $e"};
-    }
+  // Busca os dados completos do perfil e carteira do usuário. 
+  // Se o UID não for fornecido, utiliza o do usuário atualmente autenticado.
+  static Future<ApiResponse<UserProfile>> getUserData({
+    String? uid,
+    http.Client? client,
+    FirebaseAuth? auth,
+  }) async {
+    final firebaseAuth = auth ?? FirebaseAuth.instance;
+    final currentUser = firebaseAuth.currentUser;
+    
+    return BaseService.post<UserProfile>(
+      _getUserUrl,
+      data: {"uid": uid ?? currentUser?.uid},
+      fromJson: (data) => UserProfile.fromJson(data as Map<String, dynamic>),
+      client: client,
+      auth: firebaseAuth,
+    );
   }
 }
