@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/pages/register_page.dart';
 import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -38,19 +39,19 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = false);
 
     if (mounted) {
-      if (result['success']) {
+      if (result.success) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) =>
-                HomePage(userName: result['name'] ?? 'Usuário'),
+                HomePage(userName: result.data?['name'] ?? 'Usuário'),
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Credenciais Inválidas'),
-            backgroundColor: Colors.red,
-          ),
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro no login',
+          message: 'Credenciais Inválidas',
+          type: FeedbackType.error,
         );
       }
     }
@@ -58,8 +59,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 40.0),
@@ -70,49 +72,50 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 const SizedBox(height: 20),
                 Image.asset(
-                  'assets/images/logo.jpeg',
+                  'assets/images/logo_sembg.png',
                   height: 120,
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.business,
                     size: 100,
-                    color: Colors.green,
+                    color: Color(0xFF00A84E),
                   ),
                 ),
                 const SizedBox(height: 40),
-                const Text(
+                Text(
                   'Invista em startups promissoras',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Color(0xFF59627A)),
+                  style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 48),
-                const Text(
+                Text(
                   'Email',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(color: theme.colorScheme.onSurface),
                   decoration: InputDecoration(
                     hintText: 'seu@email.com',
-                    hintStyle: const TextStyle(color: Color(0xFF9AA3AE)),
+                    hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
                     filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
+                    fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 16,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   validator: (value) => value == null || value.isEmpty
@@ -123,12 +126,12 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Senha',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1E293B),
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     TextButton(
@@ -148,29 +151,30 @@ class _LoginPageState extends State<LoginPage> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  style: TextStyle(color: theme.colorScheme.onSurface),
                   decoration: InputDecoration(
                     hintText: '********',
-                    hintStyle: const TextStyle(color: Color(0xFF9AA3AE)),
+                    hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
                     filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
+                    fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 16,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: BorderSide.none,
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: const Color(0xFF9AA3AE),
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
@@ -212,10 +216,10 @@ class _LoginPageState extends State<LoginPage> {
                     );
                   },
                   child: RichText(
-                    text: const TextSpan(
+                    text: TextSpan(
                       text: 'Não tem uma conta? ',
-                      style: TextStyle(color: Color(0xFF59627A), fontSize: 14),
-                      children: [
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
+                      children: const [
                         TextSpan(
                           text: 'Criar uma conta',
                           style: TextStyle(
@@ -228,10 +232,10 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                const Text(
+                Text(
                   'Ao continuar, você concorda com nossos Termos e Política de Privacidade',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: Color(0xFF9AA3AE)),
+                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6)),
                 ),
               ],
             ),

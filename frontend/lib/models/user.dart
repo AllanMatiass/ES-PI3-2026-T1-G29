@@ -1,5 +1,7 @@
+// Autor: Allan Giovanni Matias Paes
 import './firebase.dart';
 
+// Representa o perfil detalhado do usuário no sistema.
 class UserProfile {
   final String uid;
   final String name;
@@ -19,8 +21,9 @@ class UserProfile {
     required this.createdAt,
   });
 
+  // Converte dados do JSON para uma instância de UserProfile.
   factory UserProfile.fromJson(Map<String, dynamic> json) {
-    final data = json['result'] != null ? json['result']['data'] : json;
+    final data = json;
     
     return UserProfile(
       uid: data['uid'] ?? '',
@@ -34,6 +37,7 @@ class UserProfile {
   }
 }
 
+// Representa a carteira virtual do usuário com saldo e posições.
 class Wallet {
   final double balanceInCents;
   final double totalInvestedCents;
@@ -59,6 +63,7 @@ class Wallet {
   }
 }
 
+// Representa a posse de tokens de uma startup específica na carteira do usuário.
 class WalletTokenPosition {
   final String startupId;
   final String startupName;
@@ -91,6 +96,7 @@ class WalletTokenPosition {
   }
 }
 
+// Extensão da posição de tokens com informações adicionais de mercado.
 class WalletTokenPositionDTO extends WalletTokenPosition {
   final double currentTokenPriceCents;
   final double currentValueCents;

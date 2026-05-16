@@ -1,14 +1,17 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:frontend/services/offer_service.dart';
-import 'package:frontend/widgets/create_offer_dialog.dart';
 import 'package:frontend/pages/my_offers_page.dart';
 import 'package:frontend/pages/buy_offer_page.dart';
+import 'package:frontend/pages/create_offer_page.dart';
+import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
 
+// Visão que exibe todas as ofertas abertas de tokens no mercado secundário.
 class OffersView extends StatefulWidget {
   const OffersView({super.key});
 
@@ -46,6 +49,7 @@ class _OffersViewState extends State<OffersView> {
     super.dispose();
   }
 
+  // Monitora o scroll para carregar mais itens quando o usuário chegar ao final da lista.
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -53,6 +57,7 @@ class _OffersViewState extends State<OffersView> {
     }
   }
 
+  // Busca mais ofertas no servidor, gerenciando o estado de carregamento e paginação.
   Future<void> _loadMoreOffers({bool refresh = false}) async {
     if (_isLoading || (!_hasMore && !refresh)) return;
 
@@ -65,38 +70,40 @@ class _OffersViewState extends State<OffersView> {
       }
     });
 
-    try {
-      final result = await OfferService.getOffers(
-        limit: 15,
-        startAfter: _lastOfferId,
-      );
+    final result = await OfferService.getOffers(
+      limit: 15,
+      startAfter: _lastOfferId,
+    );
 
-      final List<OfferWithId> newOffers = result['offers'];
-      final String? lastId = result['lastOfferId'];
+    if (mounted) {
+      if (result.success) {
+        final List<OfferWithId> newOffers = result.data!['offers'];
+        final String? lastId = result.data!['lastOfferId'];
 
-      setState(() {
-        _offers.addAll(newOffers);
-        _lastOfferId = lastId;
-        _isLoading = false;
-        if (newOffers.length < 15 || lastId == null) {
-          _hasMore = false;
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar ofertas: $e')),
+        setState(() {
+          _offers.addAll(newOffers);
+          _lastOfferId = lastId;
+          _isLoading = false;
+          if (newOffers.length < 15 || lastId == null) {
+            _hasMore = false;
+          }
+        });
+      } else {
+        setState(() => _isLoading = false);
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro ao carregar',
+          message: result.message ?? 'Erro ao carregar ofertas',
+          type: FeedbackType.error,
         );
       }
     }
   }
 
+  // Filtra a lista de ofertas carregadas localmente com base na busca e preço máximo.
   List<OfferWithId> get _filteredOffers {
     return _offers.where((offer) {
-      // Don't show offers from the current user
+      // Não exibe ofertas criadas pelo próprio usuário logado.
       if (_currentUserId != null && offer.seller.id == _currentUserId) {
         return false;
       }
@@ -105,6 +112,7 @@ class _OffersViewState extends State<OffersView> {
           .toLowerCase()
           .contains(_searchStartup.toLowerCase());
       
+      // Converte o preço de centavos para reais para comparar com o filtro de preço máximo.
       final matchesPrice = _maxPrice == null || 
           (offer.tokenPriceCents / 100) <= _maxPrice!;
           
@@ -112,22 +120,24 @@ class _OffersViewState extends State<OffersView> {
     }).toList();
   }
 
+  // Auxiliar para formatar valores em centavos para a moeda Real (R$).
   String _formatCurrency(int cents) {
     return _currencyFormat.format(cents / 100);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Ofertas Abertas',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.list_alt, color: Color(0xFF1E293B)),
+            icon: Icon(Icons.list_alt, color: theme.colorScheme.onSurface),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const MyOffersView()),
@@ -136,7 +146,7 @@ class _OffersViewState extends State<OffersView> {
             tooltip: 'Minhas Ofertas',
           ),
         ],
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
       ),
@@ -174,9 +184,8 @@ class _OffersViewState extends State<OffersView> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final result = await showDialog<bool>(
-            context: context,
-            builder: (context) => const CreateOfferDialog(),
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(builder: (context) => const CreateOfferPage()),
           );
           if (result == true) {
             _loadMoreOffers(refresh: true);
@@ -188,7 +197,9 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Constrói os campos de filtro de busca por startup e por preço máximo.
   Widget _buildFilters() {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
@@ -201,11 +212,13 @@ class _OffersViewState extends State<OffersView> {
                   _searchStartup = value;
                 });
               },
+              style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: 'Startup...',
+                hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF00A84E)),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -220,20 +233,22 @@ class _OffersViewState extends State<OffersView> {
             child: TextField(
               controller: _priceController,
               keyboardType: TextInputType.number,
+              style: TextStyle(color: theme.colorScheme.onSurface),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d{0,2}')),
               ],
               onChanged: (value) {
                 setState(() {
-                  // Replace comma with dot for parsing
+                  // Normaliza vírgula para ponto antes de converter para double.
                   String normalizedValue = value.replaceAll(',', '.');
                   _maxPrice = double.tryParse(normalizedValue);
                 });
               },
               decoration: InputDecoration(
                 hintText: 'Máx R\$',
+                hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -247,14 +262,16 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Constrói o card individual de cada oferta com detalhes de quantidade, preço e ação de compra.
   Widget _buildOfferCard(OfferWithId offer) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -275,18 +292,18 @@ class _OffersViewState extends State<OffersView> {
                   children: [
                     Text(
                       offer.startupName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: Color(0xFF1E293B),
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Vendedor: ${offer.seller.name}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF64748B),
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -310,16 +327,16 @@ class _OffersViewState extends State<OffersView> {
               ),
             ],
           ),
-          const Divider(height: 24),
+          Divider(height: 24, color: theme.dividerColor.withOpacity(0.1)),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Total da Oferta',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                   ),
                   Text(
                     _formatCurrency(offer.totalCents),
@@ -333,13 +350,51 @@ class _OffersViewState extends State<OffersView> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  final result = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute(
-                      builder: (context) => BuyOfferPage(offer: offer),
-                    ),
+                  // Exibe indicador de carregamento enquanto verifica a expiração da oferta.
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E))),
                   );
-                  if (result == true) {
-                    _loadMoreOffers(refresh: true);
+
+                  final resultCheck = await OfferService.isOfferExpired(offerId: offer.id);
+
+                  if (context.mounted) {
+                    Navigator.of(context).pop(); // Fecha o indicador de carregamento.
+                  }
+
+                  if (resultCheck.success) {
+                    if (resultCheck.data == true) {
+                      if (context.mounted) {
+                        FeedbackModal.show(
+                          context: context,
+                          title: 'Oferta Expirada',
+                          message: 'Essa oferta acabou de expirar! Que tal conferir outras oportunidades no catálogo?',
+                          type: FeedbackType.info,
+                          onConfirm: () => _loadMoreOffers(refresh: true),
+                        );
+                      }
+                    } else {
+                      if (context.mounted) {
+                        final result = await Navigator.of(context).push<bool>(
+                          MaterialPageRoute(
+                            builder: (context) => BuyOfferPage(offer: offer),
+                          ),
+                        );
+                        if (result == true) {
+                          _loadMoreOffers(refresh: true);
+                        }
+                      }
+                    }
+                  } else {
+                    if (context.mounted) {
+                      FeedbackModal.show(
+                        context: context,
+                        title: 'Erro ao Verificar',
+                        message: resultCheck.message ?? 'Não foi possível verificar o status da oferta',
+                        type: FeedbackType.error,
+                      );
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -359,15 +414,17 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Helper para construir itens de informação com ícone e texto.
   Widget _buildInfoItem(IconData icon, String value, {String? label}) {
+    final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF64748B)),
+        Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 4),
         Text(
           value,
-          style: const TextStyle(
-            color: Color(0xFF1E293B),
+          style: TextStyle(
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -375,13 +432,14 @@ class _OffersViewState extends State<OffersView> {
           const SizedBox(width: 2),
           Text(
             label,
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
           ),
         ],
       ],
     );
   }
 
+  // Badge colorido que indica o status atual da oferta.
   Widget _buildStatusBadge(OfferStatus status) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -400,6 +458,7 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  // Retorna a cor correspondente a cada status de oferta.
   Color _getStatusColor(OfferStatus status) {
     switch (status) {
       case OfferStatus.open:
@@ -414,13 +473,14 @@ class _OffersViewState extends State<OffersView> {
   }
 
   Widget _buildSkeletonLoading() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView.builder(
       itemCount: 5,
       padding: const EdgeInsets.all(16.0),
       itemBuilder: (context, index) {
         return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
+          baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+          highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
           child: Container(
             height: 150,
             margin: const EdgeInsets.only(bottom: 16),
@@ -435,21 +495,27 @@ class _OffersViewState extends State<OffersView> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.local_offer_outlined, size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text(
-              'Nenhuma oferta encontrada',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+    final theme = Theme.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.local_offer_outlined, size: 64, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
+                const SizedBox(height: 16),
+                Text(
+                  'Nenhuma oferta encontrada',
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }
     );
   }
 }

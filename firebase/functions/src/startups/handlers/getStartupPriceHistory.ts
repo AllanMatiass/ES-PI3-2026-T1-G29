@@ -8,6 +8,7 @@ import {
 } from "../types/dtos";
 import { InvestmentMetricService } from "../shared/investmentMetricService";
 import { DEFAULT_RANGE } from "../shared/constants";
+import { logger } from "firebase-functions";
 import { requireAuthenticatedUser } from "../../shared/auth";
 
 const investmentMetricService = new InvestmentMetricService();
@@ -20,6 +21,7 @@ export const getStartupPriceHistory = onCall(
     requireAuthenticatedUser(request);
     const startupId = normalizeString(request.data?.id);
     const { range, interval, limit } = request.data ?? {};
+    logger.info(`${range} - ${interval} - ${limit}`);
 
     if (!startupId) {
       throw new HttpsError("invalid-argument", "Informe o id da startup.");

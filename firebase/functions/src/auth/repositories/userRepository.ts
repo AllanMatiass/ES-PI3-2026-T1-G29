@@ -122,9 +122,6 @@ function createPosition(
 
   const investedCents = qtdTokens * tokenPriceCents;
   const currentValueCents = qtdTokens * currentTokenPriceCents;
-  // const profitCents = currentValueCents - investedCents;
-  // const profitPercentage =
-  //   investedCents <= 0 ? 0 : (profitCents / investedCents) * 100;
 
   return {
     startupId: params.startupId,
@@ -138,8 +135,6 @@ function createPosition(
 
     currentTokenPriceCents,
     currentValueCents,
-    // profitCents,
-    // profitPercentage,
 
     updatedAt: Timestamp.now(),
   };
@@ -171,9 +166,6 @@ function updatePosition(
   const averagePriceCents = totalTokens > 0 ? investedCents / totalTokens : 0;
 
   const currentValueCents = totalTokens * currentTokenPriceCents;
-  // const profitCents = currentValueCents - investedCents;
-  // const profitPercentage =
-  //   investedCents <= 0 ? 0 : (profitCents / investedCents) * 100;
 
   return {
     ...position,
@@ -184,9 +176,6 @@ function updatePosition(
     averagePriceCents: Math.round(averagePriceCents),
     currentTokenPriceCents,
     currentValueCents: Math.round(currentValueCents),
-    // profitCents: Math.round(profitCents),
-    // profitPercentage: Number(profitPercentage.toFixed(2)),
-
     updatedAt: Timestamp.now(),
   };
 }
