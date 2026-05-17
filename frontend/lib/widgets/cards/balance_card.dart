@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/user.dart';
-import 'package:frontend/widgets/animated_currency.dart';
+import 'package:frontend/widgets/animations/animated_currency.dart';
+import 'package:frontend/constants/colors.dart';
 
 class BalanceCard extends StatelessWidget {
   final UserProfile? userData;
@@ -21,14 +22,14 @@ class BalanceCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF00A84E), Color(0xFF00873E)],
+          colors: [AppColors.primary, AppColors.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00A84E).withOpacity(0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -59,7 +60,7 @@ class BalanceCard extends StatelessWidget {
             valueCents: userData?.wallet.balanceInCents ?? 0,
             isVisible: isVisible,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.white,
               fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
@@ -68,22 +69,22 @@ class BalanceCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: AppColors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.trending_up, color: Colors.white, size: 16),
+                const Icon(Icons.trending_up, color: AppColors.white, size: 16),
                 const SizedBox(width: 8),
                 const Text(
                   'Total Investido: ',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+                  style: TextStyle(color: AppColors.white, fontSize: 12),
                 ),
                 AnimatedCurrency(
                   valueCents: userData?.wallet.totalInvestedCents ?? 0,
                   isVisible: isVisible,
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: AppColors.white, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],
             ),

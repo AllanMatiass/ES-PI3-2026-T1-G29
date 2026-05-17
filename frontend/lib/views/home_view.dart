@@ -1,22 +1,21 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/main.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/models/startup.dart';
-import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/startup_service.dart';
-import 'package:frontend/pages/my_offers_page.dart';
+import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/services/user_state.dart';
+import 'package:frontend/widgets/empty_state_widget.dart';
+import 'package:frontend/widgets/error_state_widget.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:frontend/models/api_response.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:intl/intl.dart';
+import 'package:frontend/widgets/shimmer_placeholder.dart';
 
-import 'package:frontend/widgets/home_header.dart';
-import 'package:frontend/widgets/balance_card.dart';
+import 'package:frontend/widgets/headers/home_header.dart';
+import 'package:frontend/widgets/cards/balance_card.dart';
 import 'package:frontend/widgets/quick_action_button.dart';
-import 'package:frontend/widgets/investment_card.dart';
+import 'package:frontend/widgets/cards/investment_card.dart';
 
 // Visão principal da tela inicial, responsável por exibir saldo, ações rápidas e lista de investimentos.
 class HomeView extends StatefulWidget {
@@ -128,7 +127,7 @@ class _HomeViewState extends State<HomeView> {
 
                         // Saldo
                         isLoading 
-                            ? _buildBalanceShimmer() 
+                            ? const ShimmerPlaceholder(height: 180, borderRadius: 24)
                             : BalanceCard(
                                 userData: userData,
                                 isVisible: _isBalanceVisible,
@@ -177,13 +176,24 @@ class _HomeViewState extends State<HomeView> {
                         const SizedBox(height: 24),
 
                         isLoading
-                            ? _buildInvestmentsShimmer()
+                            ? Column(
+                                children: List.generate(3, (index) => const ShimmerPlaceholder(
+                                  height: 80, 
+                                  borderRadius: 20,
+                                  margin: EdgeInsets.only(bottom: 16),
+                                )),
+                              )
                             : (_error != null
-                                ? _buildErrorState()
+                                ? ErrorStateWidget(errorMessage: _error, onRetry: _loadInitialData)
                                 : (userData?.wallet.positions.isEmpty ?? true
-                                    ? _buildEmptyState()
+                                    ? EmptyStateWidget(
+                                        icon: Icons.account_balance_wallet_outlined,
+                                        title: 'Nenhum investimento ainda',
+                                        message: 'Comece a investir em startups agora mesmo!',
+                                        buttonLabel: 'Explorar Oportunidades',
+                                        onButtonPressed: widget.onNavigateToCatalog,
+                                      )
                                     : _buildInvestmentsList(userData!))),
-
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -209,124 +219,4 @@ class _HomeViewState extends State<HomeView> {
       }).toList(),
     );
   }
-
-  Widget _buildBalanceShimmer() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Shimmer.fromColors(
-      baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-      highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
-      child: Container(
-        width: double.infinity,
-        height: 180,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-      ),
-    );
-  }
-
-  // Exibe um estado vazio amigável quando o usuário não possui investimentos.
-  Widget _buildEmptyState() {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.account_balance_wallet_outlined, size: 48, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
-          const SizedBox(height: 16),
-          Text(
-            'Nenhum investimento ainda',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Comece a investir em startups agora mesmo!',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: widget.onNavigateToCatalog,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00A84E),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('Explorar Oportunidades'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Exibe uma mensagem de erro com opção de tentar novamente.
-  Widget _buildErrorState() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFEE2E2).withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.error_outline, size: 40, color: Color(0xFFEF4444)),
-          const SizedBox(height: 12),
-          const Text(
-            'Ops! Algo deu errado',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFFEF4444),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _error ?? 'Não foi possível carregar seus dados.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: _loadInitialData,
-            child: const Text('Tentar novamente'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInvestmentsShimmer() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      children: List.generate(3, (index) => Shimmer.fromColors(
-        baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-        highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          width: double.infinity,
-          height: 80,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-      )),
-    );
-  }
 }
-

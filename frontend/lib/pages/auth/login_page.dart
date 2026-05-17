@@ -1,7 +1,8 @@
 // Autor: Pedro Romanato & Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:frontend/services/auth.dart';
-import 'package:frontend/pages/register_page.dart';
+import 'package:frontend/pages/auth/register_page.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 
@@ -77,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.business,
                     size: 100,
-                    color: Color(0xFF00A84E),
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -141,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: const Text(
                         'Esqueceu?',
                         style: TextStyle(
-                          color: Color(0xFF00A84E),
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -188,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00A84E),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 56),
                     shape: RoundedRectangleBorder(
@@ -223,7 +224,7 @@ class _LoginPageState extends State<LoginPage> {
                         TextSpan(
                           text: 'Criar uma conta',
                           style: TextStyle(
-                            color: Color(0xFF00A84E),
+                            color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

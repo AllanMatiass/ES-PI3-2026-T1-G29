@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:frontend/widgets/socio_row.dart';
 import 'package:intl/intl.dart';
-import '../models/startup.dart';
-import '../services/startup_service.dart';
-import '../widgets/price_chart.dart';
-import '../widgets/startup_fixed_header.dart';
-import '../widgets/card_sobre_startup.dart';
-import '../widgets/demo_video_player.dart';
-import '../widgets/documents_download_card.dart';
-import './faq_page.dart';
-import 'package:frontend/pages/buy_from_startup_page.dart';
+import '../../../models/startup.dart';
+import '../../../services/startup_service.dart';
+import '../../../widgets/price_chart.dart';
+import '../../../widgets/headers/startup_fixed_header.dart';
+import '../../../widgets/cards/card_sobre_startup.dart';
+import '../../../widgets/demo_video_player.dart';
+import '../../../widgets/cards/documents_download_card.dart';
+import 'faq_page.dart';
+import 'package:frontend/pages/invest/startup/buy_from_startup_page.dart';
 
 class StartupDetailsPage extends StatefulWidget {
   final String startupId;

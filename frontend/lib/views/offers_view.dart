@@ -3,16 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:frontend/services/offer_service.dart';
-import 'package:frontend/pages/my_offers_page.dart';
-import 'package:frontend/pages/buy_offer_page.dart';
-import 'package:frontend/pages/create_offer_page.dart';
+import 'package:frontend/pages/market/my_offers_page.dart';
+import 'package:frontend/pages/market/buy_offer_page.dart';
+import 'package:frontend/pages/market/create_offer_page.dart';
+import 'package:frontend/widgets/empty_state_widget.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
-import 'package:intl/intl.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:flutter/services.dart';
-
+import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/market_filters.dart';
-import 'package:frontend/widgets/market_offer_card.dart';
+import 'package:frontend/widgets/cards/market_offer_card.dart';
+import 'package:frontend/constants/colors.dart';
 
 // Visão que exibe todas as ofertas abertas de tokens no mercado secundário.
 class OffersView extends StatefulWidget {
@@ -123,7 +122,7 @@ class _OffersViewState extends State<OffersView> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E))),
+      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
     );
 
     final resultCheck = await OfferService.isOfferExpired(offerId: offer.id);
@@ -209,9 +208,21 @@ class _OffersViewState extends State<OffersView> {
             child: RefreshIndicator(
               onRefresh: () => _loadMoreOffers(refresh: true),
               child: _offers.isEmpty && _isLoading
-                  ? _buildSkeletonLoading()
+                  ? ListView.builder(
+                      itemCount: 5,
+                      padding: const EdgeInsets.all(16.0),
+                      itemBuilder: (context, index) => const ShimmerPlaceholder(
+                        height: 150,
+                        borderRadius: 16,
+                        margin: EdgeInsets.only(bottom: 16),
+                      ),
+                    )
                   : _filteredOffers.isEmpty
-                      ? _buildEmptyState()
+                      ? const EmptyStateWidget(
+                          icon: Icons.local_offer_outlined,
+                          title: 'Nenhuma oferta encontrada',
+                          message: 'Que tal mudar seus filtros de busca?',
+                        )
                       : ListView.builder(
                           controller: _scrollController,
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -246,57 +257,9 @@ class _OffersViewState extends State<OffersView> {
             _loadMoreOffers(refresh: true);
           }
         },
-        backgroundColor: const Color(0xFF00A84E),
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: AppColors.white),
       ),
     );
   }
-
-  Widget _buildSkeletonLoading() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListView.builder(
-      itemCount: 5,
-      padding: const EdgeInsets.all(16.0),
-      itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-          highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
-          child: Container(
-            height: 150,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildEmptyState() {
-    final theme = Theme.of(context);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: SizedBox(
-            height: constraints.maxHeight,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.local_offer_outlined, size: 64, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
-                const SizedBox(height: 16),
-                Text(
-                  'Nenhuma oferta encontrada',
-                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-    );
-  }
 }
-
