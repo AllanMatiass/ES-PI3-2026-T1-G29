@@ -132,7 +132,7 @@ class _OffersViewState extends State<OffersView> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Ofertas Abertas',
+          'Mercado',
           style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
         ),
         actions: [
