@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/constants/colors.dart';
 
 class MarketFilters extends StatelessWidget {
   final String searchStartup;
@@ -30,7 +31,7 @@ class MarketFilters extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Startup...',
                 hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF00A84E)),
+                prefixIcon: const Icon(Icons.search, color: AppColors.primary),
                 filled: true,
                 fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                 border: OutlineInputBorder(

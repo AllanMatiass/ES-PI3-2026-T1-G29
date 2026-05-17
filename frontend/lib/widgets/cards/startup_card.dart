@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/startup.dart';
-import '../pages/startup_details.dart';
-import '../pages/buy_from_startup_page.dart';
+import '../../models/startup.dart';
+import '../../pages/invest/startup/startup_details.dart';
+import '../../pages/invest/startup/buy_from_startup_page.dart';
 
 class StartupCard extends StatelessWidget {
   final StartupListItem startup;
@@ -101,10 +101,7 @@ class StartupCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'ID: ${startup.id}',
-                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6), fontSize: 10),
-                      ),
+
                     ],
                   ),
                 ),

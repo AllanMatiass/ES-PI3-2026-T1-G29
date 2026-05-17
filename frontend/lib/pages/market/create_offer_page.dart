@@ -4,12 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:intl/intl.dart';
-import '../models/user.dart';
-import '../models/startup.dart';
-import '../services/user_service.dart';
-import '../services/offer_service.dart';
-import '../services/startup_service.dart';
-import '../widgets/price_chart.dart';
+import '../../models/user.dart';
+import '../../models/startup.dart';
+import '../../services/user_service.dart';
+import '../../services/offer_service.dart';
+import '../../services/startup_service.dart';
+import '../../widgets/price_chart.dart';
 
 class CurrencyInputFormatter extends TextInputFormatter {
   @override

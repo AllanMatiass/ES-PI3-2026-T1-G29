@@ -1,11 +1,12 @@
 // Autor: Vinícius Castro & Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/validators.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import '../widgets/custom_text_field.dart';
+import '../../widgets/custom_text_field.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -224,7 +225,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           height: 52,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF00A84E),
+                              backgroundColor: AppColors.primary,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -263,7 +264,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               child: const Text(
                                 'Fazer login',
                                 style: TextStyle(
-                                  color: Color(0xFF00A84E),
+                                  color: AppColors.primary,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                 ),

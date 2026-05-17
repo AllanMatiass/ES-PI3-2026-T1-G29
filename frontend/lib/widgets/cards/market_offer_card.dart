@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/constants/colors.dart';
 
 class MarketOfferCard extends StatelessWidget {
   final OfferWithId offer;
@@ -23,13 +24,13 @@ class MarketOfferCard extends StatelessWidget {
   Color _getStatusColor(OfferStatus status) {
     switch (status) {
       case OfferStatus.open:
-        return Colors.green;
+        return AppColors.primary;
       case OfferStatus.accepted:
-        return Colors.blue;
+        return AppColors.info;
       case OfferStatus.cancelled:
-        return Colors.red;
+        return AppColors.danger;
       case OfferStatus.expired:
-        return Colors.orange;
+        return AppColors.warning;
     }
   }
 
@@ -45,7 +46,7 @@ class MarketOfferCard extends StatelessWidget {
         border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: AppColors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -116,7 +117,7 @@ class MarketOfferCard extends StatelessWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: Color(0xFF00A84E),
+                      color: AppColors.primary,
                     ),
                   ),
                 ],
@@ -124,8 +125,8 @@ class MarketOfferCard extends StatelessWidget {
               ElevatedButton(
                 onPressed: onBuyPressed,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00A84E),
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

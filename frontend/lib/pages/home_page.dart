@@ -1,7 +1,8 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/catalog_page.dart';
+import 'package:frontend/constants/colors.dart';
+import 'package:frontend/pages/invest/catalog_page.dart';
 import 'package:frontend/views/home_view.dart';
 import 'package:frontend/views/soon_view.dart';
 import 'package:frontend/views/offers_view.dart';
@@ -84,7 +85,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF00A84E),
+        selectedItemColor: AppColors.primary,
         unselectedItemColor: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,

@@ -4,6 +4,7 @@ import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 
 
@@ -46,12 +47,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   width: 60,
                   height: 45,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00A84E).withOpacity(0.1),
+                    color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
                     Icons.email_outlined,
-                    color: Color(0xFF00A84E),
+                    color: AppColors.primary,
                     size: 32,
                   ),
                 ),
@@ -131,7 +132,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00A84E),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
