@@ -2,9 +2,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/catalog_page.dart';
-import 'package:frontend/widgets/home_view.dart';
-import 'package:frontend/widgets/soon_view.dart';
-import 'package:frontend/widgets/offers_view.dart';
+import 'package:frontend/views/home_view.dart';
+import 'package:frontend/views/soon_view.dart';
+import 'package:frontend/views/offers_view.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
