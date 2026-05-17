@@ -12,7 +12,7 @@ import 'package:frontend/widgets/price_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../services/user_service.dart';
+import '../../services/user_service.dart';
 
 /// Formatador para impedir a entrada de valores superiores ao máximo permitido.
 class MaxValueInputFormatter extends TextInputFormatter {

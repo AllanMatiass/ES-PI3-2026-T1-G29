@@ -43,10 +43,12 @@ class SocioRow extends StatelessWidget {
           ),
         ),
         Text(porcentagem,
-            style: const TextStyle(
-                color: Color(0xFF00A84E),
-                fontWeight: FontWeight.bold,
-                fontSize: 16)),
+          style: const TextStyle(
+            color: Color(0xFF00A84E),
+            fontWeight: FontWeight.bold,
+            fontSize: 16
+          )
+        ),
       ],
     );
   }

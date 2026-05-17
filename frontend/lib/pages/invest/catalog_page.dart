@@ -1,10 +1,11 @@
 // Autor: Allan Giovanni Matias Paes e Pedro Vinicius Romanato
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:shimmer/shimmer.dart';
-import '../widgets/startup_card.dart';
+import '../../widgets/cards/startup_card.dart';
 
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
@@ -64,7 +65,7 @@ class _CatalogPageState extends State<CatalogPage> {
               decoration: InputDecoration(
                 hintText: 'Buscar startups...',
                 hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF00A84E)),
+                prefixIcon: const Icon(Icons.search, color: AppColors.primary),
                 filled: true,
                 fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                 border: OutlineInputBorder(
@@ -180,14 +181,14 @@ class _CatalogPageState extends State<CatalogPage> {
           _selectedStage = selected ? stage : null;
         });
       },
-      selectedColor: const Color(0xFF00A84E).withOpacity(0.2),
+      selectedColor: AppColors.primary.withOpacity(0.2),
       labelStyle: TextStyle(
-        color: isSelected ? const Color(0xFF00A84E) : theme.colorScheme.onSurfaceVariant,
+        color: isSelected ? AppColors.primary : theme.colorScheme.onSurfaceVariant,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
       side: BorderSide(
-        color: isSelected ? const Color(0xFF00A84E) : Colors.transparent,
+        color: isSelected ? AppColors.primary : Colors.transparent,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
