@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
         userName: widget.userName,
         onNavigateToCatalog: () => _onItemTapped(1),
       ),
-      CatalogPage(),
+      const CatalogPage(),
       const OffersView(),
       const SoonView(title: 'Conta'),
       const SoonView(title: 'Perfil'),
@@ -69,9 +69,9 @@ class _HomePageState extends State<HomePage> {
             label: 'Investir',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.local_offer_outlined),
-            activeIcon: Icon(Icons.local_offer),
-            label: 'Ofertas',
+            icon: Icon(Icons.candlestick_chart),
+            activeIcon: Icon(Icons.candlestick_chart),
+            label: 'Mercado',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.credit_card),
