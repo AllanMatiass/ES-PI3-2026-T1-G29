@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/models/startup.dart';
-import 'package:frontend/widgets/animated_currency.dart';
-import 'package:frontend/widgets/animated_counter.dart';
+import 'package:frontend/widgets/animations/animated_currency.dart';
+import 'package:frontend/widgets/animations/animated_counter.dart';
+import 'package:frontend/constants/colors.dart';
 
 class InvestmentCard extends StatelessWidget {
   final WalletTokenPosition position;
@@ -36,7 +37,7 @@ class InvestmentCard extends StatelessWidget {
         border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: AppColors.black.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -84,7 +85,7 @@ class InvestmentCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (profitCents >= 0 || !isBalanceVisible ? const Color(0xFF00A84E) : const Color(0xFFEF4444)).withOpacity(0.1),
+                  color: (profitCents >= 0 || !isBalanceVisible ? AppColors.primary : AppColors.danger).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -92,7 +93,7 @@ class InvestmentCard extends StatelessWidget {
                       ? '${profitCents >= 0 ? '+' : ''}${profitPercentage.toStringAsFixed(0)}%'
                       : '••%',
                   style: TextStyle(
-                    color: profitCents >= 0 || !isBalanceVisible ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
+                    color: profitCents >= 0 || !isBalanceVisible ? AppColors.primary : AppColors.danger,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -118,7 +119,7 @@ class InvestmentCard extends StatelessWidget {
                 context,
                 'Lucro',
                 profitCents,
-                valueColor: profitCents >= 0 || !isBalanceVisible ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
+                valueColor: profitCents >= 0 || !isBalanceVisible ? AppColors.primary : AppColors.danger,
                 showSign: true,
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/colors.dart';
 
 class QuickActionButton extends StatelessWidget {
   final IconData icon;
@@ -16,7 +17,7 @@ class QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
@@ -30,7 +31,7 @@ class QuickActionButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: const Color(0xFF00A84E), size: 32),
+              Icon(icon, color: AppColors.primary, size: 32),
               const SizedBox(height: 8),
               Text(
                 label,

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/services/auth.dart';
-import 'package:frontend/pages/my_offers_page.dart';
+import 'package:frontend/pages/market/my_offers_page.dart';
+import 'package:frontend/constants/colors.dart';
 
 class HomeHeader extends StatelessWidget {
   final String userName;
@@ -105,11 +106,11 @@ class HomeHeader extends StatelessWidget {
               ],
               child: CircleAvatar(
                 radius: 24,
-                backgroundColor: const Color(0xFF00A84E),
+                backgroundColor: AppColors.primary,
                 child: Text(
                   _getInitials(displayName),
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

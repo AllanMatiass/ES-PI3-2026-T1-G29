@@ -1,8 +1,8 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
-import '../models/startup.dart';
-import '../services/startup_service.dart';
+import '../../../models/startup.dart';
+import '../../../services/startup_service.dart';
 
 class FAQPage extends StatefulWidget {
   final List<Question> questions;
