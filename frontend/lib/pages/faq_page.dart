@@ -57,7 +57,8 @@ class _FAQPageState extends State<FAQPage> {
     }
   }
 
-  Future<void> _submitQuestion() async {
+  Future<void> _submitQuestion([void Function(void Function())? setModalState]) async {
+    _isLoading = true;
     final text = _questionController.text.trim();
     if (text.isEmpty) {
       FeedbackModal.show(
@@ -69,7 +70,12 @@ class _FAQPageState extends State<FAQPage> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    if (setModalState != null) {
+      setModalState(() => _isLoading = true);
+    } else {
+      setState(() => _isLoading = true);
+    }
+
     final visibility = _isPrivate ? 'privada' : 'publica';
 
     final result = await StartupService.createQuestion(
@@ -79,7 +85,12 @@ class _FAQPageState extends State<FAQPage> {
     );
 
     if (mounted) {
-      setState(() => _isLoading = false);
+      if (setModalState != null) {
+        setModalState(() => _isLoading = false);
+      } else {
+        setState(() => _isLoading = false);
+      }
+
       if (result.success) {
         setState(() {
           _questions.insert(0, result.data!);
@@ -93,14 +104,15 @@ class _FAQPageState extends State<FAQPage> {
           message: 'Sua pergunta foi enviada com sucesso.',
           type: FeedbackType.success,
         );
-      } else {
-        FeedbackModal.show(
-          context: context,
-          title: 'Erro ao enviar',
-          message: result.message ?? 'Não foi possível enviar sua pergunta',
-          type: FeedbackType.error,
-        );
+        return;
       }
+      FeedbackModal.show(
+        context: context,
+        title: 'Erro ao enviar',
+        message: result.message ?? 'Não foi possível enviar sua pergunta',
+        type: FeedbackType.error,
+      );
+      _isLoading = false;
     }
   }
 
@@ -167,7 +179,7 @@ class _FAQPageState extends State<FAQPage> {
                     ),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _submitQuestion,
+                    onPressed: _isLoading ? null : () => _submitQuestion(setModalState),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00A84E),
                       foregroundColor: Colors.white,

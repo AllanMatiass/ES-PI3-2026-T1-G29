@@ -5,6 +5,7 @@ import 'package:frontend/services/validators.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/feedback_modal.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import '../widgets/custom_text_field.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -88,61 +89,6 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  InputDecoration _buildInputDecoration(String hintText) {
-    final theme = Theme.of(context);
-    return InputDecoration(
-      hintText: hintText,
-      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
-      filled: true,
-      fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFF00A84E), width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Colors.red),
-      ),
-    );
-  }
-
-  Widget _buildFormLabel(String label, {bool required = false}) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: RichText(
-        text: TextSpan(
-          text: label,
-          style: TextStyle(
-            fontSize: 14,
-            color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w500,
-            fontFamily: 'Inter',
-          ),
-          children: [
-            if (required)
-              const TextSpan(
-                text: ' *',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -206,71 +152,50 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildFormLabel('Nome completo', required: true),
-                        TextFormField(
+                        CustomTextField(
+                          label: 'Nome completo',
+                          isRequired: true,
+                          hintText: 'João Silva',
                           controller: _nameController,
-                          style: TextStyle(color: theme.colorScheme.onSurface),
-                          decoration: _buildInputDecoration('João Silva'),
-                          textInputAction: TextInputAction.next,
                           validator: (value) => value == null || value.isEmpty
                               ? 'Nome é obrigatório'
                               : null,
                         ),
                         const SizedBox(height: 18),
-                        _buildFormLabel('CPF', required: true),
-                        TextFormField(
-                          inputFormatters: [cpfMask],
+                        CustomTextField(
+                          label: 'CPF',
+                          isRequired: true,
+                          hintText: '000.000.000-00',
                           controller: _cpfController,
-                          style: TextStyle(color: theme.colorScheme.onSurface),
-                          decoration: _buildInputDecoration('000.000.000-00'),
                           keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
+                          inputFormatters: [cpfMask],
                           validator: Validators.validateCPF,
                         ),
                         const SizedBox(height: 18),
-                        _buildFormLabel('Telefone', required: true),
-                        TextFormField(
-                          inputFormatters: [phoneMask],
+                        CustomTextField(
+                          label: 'Telefone',
+                          isRequired: true,
+                          hintText: '(00) 00000-0000',
                           controller: _phoneController,
-                          style: TextStyle(color: theme.colorScheme.onSurface),
-                          decoration: _buildInputDecoration('(00) 00000-0000'),
                           keyboardType: TextInputType.phone,
-                          textInputAction: TextInputAction.next,
+                          inputFormatters: [phoneMask],
                           validator: Validators.validatePhone,
                         ),
                         const SizedBox(height: 18),
-                        _buildFormLabel('Email', required: true),
-                        TextFormField(
+                        CustomTextField(
+                          label: 'Email',
+                          isRequired: true,
+                          hintText: 'seu@email.com',
                           controller: _emailController,
-                          style: TextStyle(color: theme.colorScheme.onSurface),
-                          decoration: _buildInputDecoration('seu@email.com'),
                           keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
                           validator: Validators.validateEmail,
                         ),
                         const SizedBox(height: 18),
-                        _buildFormLabel('Senha', required: true),
-                        TextFormField(
+                        CustomTextField(
+                          label: 'Senha',
+                          isRequired: true,
+                          hintText: 'Mínimo 8 caracteres',
                           controller: _passwordController,
-                          style: TextStyle(color: theme.colorScheme.onSurface),
-                          decoration:
-                              _buildInputDecoration(
-                                'Mínimo 8 caracteres',
-                              ).copyWith(
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                ),
-                              ),
                           obscureText: _obscurePassword,
                           textInputAction: TextInputAction.done,
                           validator: (value) {
@@ -279,6 +204,19 @@ class _RegisterPageState extends State<RegisterPage> {
                             }
                             return null;
                           },
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
                         const SizedBox(height: 32),
                         SizedBox(
