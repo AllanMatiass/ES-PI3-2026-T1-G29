@@ -5,7 +5,7 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
-import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
 
 
 class ForgotPasswordPage extends StatefulWidget {

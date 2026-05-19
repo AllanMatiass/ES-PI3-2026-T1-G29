@@ -1,6 +1,6 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
 import '../../../models/startup.dart';
 import '../../../services/startup_service.dart';
 

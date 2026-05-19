@@ -42,7 +42,6 @@ export const createStartupQuestion = onCall(
         throw new HttpsError("not-found", "Startup nao encontrada.");
       }
 
-
       const isInvestor = await userIsInvestor(startupId, user.uid);
       if (visibility === "privada" && !isInvestor) {
         throw new HttpsError(

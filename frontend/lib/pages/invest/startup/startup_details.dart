@@ -1,7 +1,7 @@
 //Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
 
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/socio_row.dart';
 import 'package:intl/intl.dart';
 import '../../../models/startup.dart';
