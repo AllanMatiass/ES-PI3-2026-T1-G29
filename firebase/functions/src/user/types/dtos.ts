@@ -21,5 +21,5 @@ export type WalletDTO = Omit<Wallet, "positions"> & {
 };
 
 export type DepositRequestDTO = {
-    amountInCents: number;
-}
+  amountInCents: number;
+};

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
 
 class DocumentsDownloadCard extends StatelessWidget {
   final String? pitchDeckUrl;

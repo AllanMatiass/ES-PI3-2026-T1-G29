@@ -1,7 +1,7 @@
 // Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/services/offer_service.dart';
-import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../widgets/cards/my_offer_card.dart';
 

@@ -8,7 +8,7 @@ import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/services/user_state.dart';
 import 'package:frontend/widgets/empty_state_widget.dart';
 import 'package:frontend/widgets/error_state_widget.dart';
-import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 

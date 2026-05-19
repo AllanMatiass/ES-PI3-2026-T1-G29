@@ -24,8 +24,6 @@ export type Wallet = {
   updatedAt: Timestamp;
 };
 
-
-
 export type UserProfile = {
   name: string;
   email: string;
@@ -36,8 +34,6 @@ export type UserProfile = {
 
   createdAt: Timestamp;
 };
-
-
 
 export type UpdateWalletParams = {
   userId: string;
@@ -50,8 +46,6 @@ export type UpdateWalletParams = {
   tokenPriceCents: number;
   currentTokenPriceCents: number;
 };
-
-
 
 export type UserEntity = UserProfile & {
   createdAt: Timestamp;

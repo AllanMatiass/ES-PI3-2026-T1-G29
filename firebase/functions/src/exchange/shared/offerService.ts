@@ -277,7 +277,8 @@ export class OfferService {
         (Number(sellerWallet.balanceInCents) || 0) + purchaseTotalCents;
 
       sellerWallet.totalInvestedCents = sellerWallet.positions.reduce(
-        (acc: number, p: WalletTokenPositionDTO) => acc + (Number(p.investedCents) || 0),
+        (acc: number, p: WalletTokenPositionDTO) =>
+          acc + (Number(p.investedCents) || 0),
         0,
       );
 
@@ -326,7 +327,8 @@ export class OfferService {
         (Number(buyerWallet.balanceInCents) || 0) - purchaseTotalCents;
 
       buyerWallet.totalInvestedCents = buyerWallet.positions.reduce(
-        (acc: number, p: WalletTokenPositionDTO) => acc + (Number(p.investedCents) || 0),
+        (acc: number, p: WalletTokenPositionDTO) =>
+          acc + (Number(p.investedCents) || 0),
         0,
       );
 
