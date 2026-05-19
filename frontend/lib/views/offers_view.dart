@@ -7,7 +7,7 @@ import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/pages/market/buy_offer_page.dart';
 import 'package:frontend/pages/market/create_offer_page.dart';
 import 'package:frontend/widgets/empty_state_widget.dart';
-import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/market_filters.dart';
 import 'package:frontend/widgets/cards/market_offer_card.dart';

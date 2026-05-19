@@ -12,7 +12,7 @@ import {
   createUserProfile,
   getUserByCpf,
   getUserByPhone,
-} from "../repositories/userRepository";
+} from "../../user/repositories/userRepository";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { Timestamp } from "firebase-admin/firestore";
 import { SignupRequestDTO, SignupResponseDTO } from "../types/dtos";

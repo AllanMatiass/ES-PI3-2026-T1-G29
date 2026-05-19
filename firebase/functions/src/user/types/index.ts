@@ -1,10 +1,5 @@
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
-
-//
-// =========================
-// PERSISTIDO NO FIRESTORE
-// =========================
-//
+import { Timestamp } from "firebase-admin/firestore";
+import { WalletDTO, WalletTokenPositionDTO } from "./dtos";
 
 export type WalletTokenPosition = {
   startupId: string;
@@ -29,22 +24,6 @@ export type Wallet = {
   updatedAt: Timestamp;
 };
 
-export type WalletTokenPositionDTO = WalletTokenPosition & {
-  currentTokenPriceCents: number;
-
-  currentValueCents: number;
-};
-
-export type WalletDTO = Omit<Wallet, "positions"> & {
-  positions: WalletTokenPositionDTO[];
-};
-
-//
-// =========================
-// USER
-// =========================
-//
-
 export type UserProfile = {
   name: string;
   email: string;
@@ -54,10 +33,6 @@ export type UserProfile = {
   wallet: WalletDTO;
 
   createdAt: Timestamp;
-};
-
-export type UserProfileDTO = Omit<UserProfile, "wallet"> & {
-  wallet: WalletDTO;
 };
 
 export type UpdateWalletParams = {
@@ -70,11 +45,6 @@ export type UpdateWalletParams = {
 
   tokenPriceCents: number;
   currentTokenPriceCents: number;
-};
-
-export type UserCreateDTO = UserProfile & {
-  uid: string;
-  createdAt: FieldValue;
 };
 
 export type UserEntity = UserProfile & {

@@ -3,20 +3,21 @@
 import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
-import { getUserById } from "../../auth/repositories/userRepository";
 import { getStartupById } from "../../startups/repositories/startupRepository";
 import { upsertStartupInvestor } from "../../startups/shared/upsertInvestor";
 import { TransactionService } from "./transactionService";
-import { Wallet, WalletTokenPositionDTO } from "../../auth/types";
+import { Wallet } from "../../user/types";
+import { WalletTokenPositionDTO } from "../../user/types/dtos";
 import {
   BuyTokensFromStartupRequestDTO,
   BuyTokensFromStartupResponseDTO,
 } from "../types/dtos";
 import { TokenPricingService } from "./tokenPricingService";
 import { StartupDocument } from "../../startups/types";
+import { UserService } from "../../user/shared/userService";
 
 const transactionService = new TransactionService();
-
+const userService = new UserService();
 export class BuyFromStartupService {
   private tokenPricingService = new TokenPricingService();
   async buyTokens(
@@ -67,7 +68,7 @@ export class BuyFromStartupService {
 
     const [startup, buyerUser] = await Promise.all([
       getStartupById(startupId),
-      getUserById(buyerId),
+      userService.get(buyerId),
     ]);
 
     //validacao de startup

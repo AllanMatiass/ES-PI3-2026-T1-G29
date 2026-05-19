@@ -6,6 +6,7 @@ import 'package:frontend/pages/invest/catalog_page.dart';
 import 'package:frontend/views/home_view.dart';
 import 'package:frontend/views/soon_view.dart';
 import 'package:frontend/views/offers_view.dart';
+import 'package:frontend/views/wallet_view.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
@@ -31,7 +32,7 @@ class _HomePageState extends State<HomePage> {
       ),
       const CatalogPage(),
       const OffersView(),
-      const SoonView(title: 'Conta'),
+      const WalletView(),
       const SoonView(title: 'Perfil'),
     ];
   }
@@ -76,7 +77,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.credit_card),
-            label: 'Conta',
+            label: 'Carteira',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
