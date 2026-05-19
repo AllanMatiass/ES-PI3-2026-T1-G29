@@ -1,6 +1,6 @@
 // Autor: Allan Giovanni Matias Paes
 import { HttpsError } from "firebase-functions/v2/https";
-import { Wallet, WalletTokenPosition } from "../../auth/types";
+import { Wallet, WalletTokenPosition } from "../../user/types";
 import { db } from "../../firebase";
 import { Offer, OfferWithId } from "../types";
 

@@ -5,7 +5,11 @@ import * as transactionRepository from "../repositories/transactionRepository";
 
 import { getStartupById } from "../../startups/repositories/startupRepository";
 
-import { RegisterTransactionRequestDTO } from "../types/dtos";
+import {
+  GetUserTransactionsRequestDTO,
+  PaginatedTransactionsResponseDTO,
+  RegisterTransactionRequestDTO,
+} from "../types/dtos";
 import { validateTransactionData } from "../utils";
 import { db } from "../../shared/firebase";
 import {
@@ -140,6 +144,22 @@ export class TransactionService {
     }
 
     return transactionRepository.getTransactionsByStartupId(startupId, limit);
+  }
+
+  async getUserTransactions(
+    userId: string,
+    data: GetUserTransactionsRequestDTO,
+  ): Promise<PaginatedTransactionsResponseDTO> {
+    const { limit, lastTransactionId } = data;
+
+    const normalizedLimit =
+      limit && Number.isInteger(limit) && limit > 0 && limit <= 50 ? limit : 20;
+
+    return transactionRepository.listTransactionsByUserId(
+      userId,
+      normalizedLimit,
+      lastTransactionId,
+    );
   }
 
   //

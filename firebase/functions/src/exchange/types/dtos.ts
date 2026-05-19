@@ -1,5 +1,5 @@
 // Autor: Allan Giovanni Matias Paes
-import { OfferWithId, TransactionParticipant } from ".";
+import { OfferWithId, TransactionParticipant, TransactionWithId } from ".";
 
 export const DASHBOARD_PERIODS = [
   "daily",
@@ -116,4 +116,14 @@ export type BuyTokensFromStartupResponseDTO = {
   tokenPriceCents: number;
   totalCents: number;
   newBalanceCents: number;
+};
+
+export type GetUserTransactionsRequestDTO = {
+  limit?: number;
+  lastTransactionId?: string;
+};
+
+export type PaginatedTransactionsResponseDTO = {
+  transactions: TransactionWithId[];
+  lastTransactionId: string | null;
 };

@@ -1,7 +1,9 @@
 // Autor: Allan Giovanni Matias Paes
 import { HttpsError } from "firebase-functions/v2/https";
-import { getUserById } from "../auth/repositories/userRepository";
 import { getStartupById } from "../startups/repositories/startupRepository";
+import { UserService } from "../user/shared/userService";
+
+const userService = new UserService();
 
 type ValidateTransactionParams = {
   buyerId?: string;
@@ -37,6 +39,7 @@ export async function validateTransactionData({
     throw new HttpsError("invalid-argument", "Preço do token inválido.");
   }
 
+  const getUserById = userService.get;
   const [buyerUser, startup, sellerUser] = await Promise.all([
     buyerId ? getUserById(buyerId) : Promise.resolve(undefined),
     getStartupById(startupId),

@@ -4,7 +4,7 @@ import 'package:frontend/constants/colors.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/pages/auth/register_page.dart';
 import 'package:frontend/pages/home_page.dart';
-import 'package:frontend/widgets/feedback_modal.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
