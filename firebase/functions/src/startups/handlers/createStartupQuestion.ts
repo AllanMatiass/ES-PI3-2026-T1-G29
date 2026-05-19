@@ -42,14 +42,13 @@ export const createStartupQuestion = onCall(
         throw new HttpsError("not-found", "Startup nao encontrada.");
       }
 
-      if (visibility === "privada") {
-        const isInvestor = await userIsInvestor(startupId, user.uid);
-        if (!isInvestor) {
-          throw new HttpsError(
-            "permission-denied",
-            "Somente investidores desta startup podem enviar perguntas privadas.",
-          );
-        }
+
+      const isInvestor = await userIsInvestor(startupId, user.uid);
+      if (visibility === "privada" && !isInvestor) {
+        throw new HttpsError(
+          "permission-denied",
+          "Somente investidores desta startup podem enviar perguntas privadas.",
+        );
       }
 
       const question: StartupQuestionCreateDTO = {

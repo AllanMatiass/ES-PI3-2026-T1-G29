@@ -6,3 +6,4 @@ setGlobalOptions({ maxInstances: 10 });
 export * from "./startups";
 export * from "./auth";
 export * from "./exchange";
+export * from "./user";

@@ -4,11 +4,10 @@ import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
 import {
   UpdateWalletParams,
-  UserCreateDTO,
   UserProfile,
   Wallet,
-  WalletTokenPositionDTO,
 } from "../types";
+import { UserCreateDTO, WalletTokenPositionDTO } from "../types/dtos";
 
 const usersCollection = db.collection("users");
 
