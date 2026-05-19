@@ -1,10 +1,14 @@
+// Autor: Allan Giovanni Matias Paes e Pedro Romanato
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../services/offer_service.dart';
+import '../modals/feedback_modal.dart';
 
 class MyOfferCard extends StatelessWidget {
   final Map<String, dynamic> offer;
+  final VoidCallback? onCancelled;
 
-  MyOfferCard({super.key, required this.offer});
+  MyOfferCard({super.key, required this.offer, this.onCancelled});
 
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'pt_BR',
@@ -15,6 +19,102 @@ class MyOfferCard extends StatelessWidget {
     return _currencyFormat.format(cents / 100);
   }
 
+  Future<void> _handleCancelOffer(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Cancelar oferta'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Deseja cancelar sua oferta de venda de '
+              '${offer['remainingQtdTokens'] ?? 0} tokens de '
+              '${offer['startupName'] ?? 'startup'}?',
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Os tokens bloqueados serão devolvidos à sua carteira.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Voltar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Sim, cancelar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final result = await OfferService.cancelOffer(offerId: offer['id']);
+
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
+
+    if (result.success && result.data == true) {
+      FeedbackModal.show(
+        context: context,
+        title: 'Oferta cancelada',
+        message: 'Sua oferta foi cancelada e os tokens foram devolvidos.',
+        type: FeedbackType.success,
+      );
+      onCancelled?.call();
+    } else {
+      FeedbackModal.show(
+        context: context,
+        title: 'Erro ao cancelar',
+        message: result.message ?? 'Não foi possível cancelar a oferta.',
+        type: FeedbackType.error,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -22,6 +122,7 @@ class MyOfferCard extends StatelessWidget {
     final remaining = offer['remainingQtdTokens'] ?? 0;
     final initial = offer['initialQtdTokens'] ?? 0;
     final sold = offer['soldQtdTokens'] ?? 0;
+    final isOpen = status.toString().toUpperCase() == 'OPEN';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -44,14 +145,18 @@ class MyOfferCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                offer['startupName'] ?? 'Startup',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: theme.colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  offer['startupName'] ?? 'Startup',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               _buildStatusBadge(status),
             ],
           ),
@@ -59,8 +164,18 @@ class MyOfferCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildInfoItem(context, Icons.token_outlined, '$remaining / $initial', label: 'tokens rest.'),
-              _buildInfoItem(context, Icons.monetization_on_outlined, _formatCurrency(offer['tokenPriceCents'] ?? 0), label: 'cada'),
+              _buildInfoItem(
+                context,
+                Icons.token_outlined,
+                '$remaining / $initial',
+                label: 'tokens rest.',
+              ),
+              _buildInfoItem(
+                context,
+                Icons.monetization_on_outlined,
+                _formatCurrency(offer['tokenPriceCents'] ?? 0),
+                label: 'cada',
+              ),
             ],
           ),
           Divider(height: 24, color: theme.dividerColor.withOpacity(0.1)),
@@ -72,7 +187,10 @@ class MyOfferCard extends StatelessWidget {
                 children: [
                   Text(
                     'Total Ganho',
-                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                   Text(
                     _formatCurrency(offer['totalEarnedCents'] ?? 0),
@@ -89,7 +207,10 @@ class MyOfferCard extends StatelessWidget {
                 children: [
                   Text(
                     'Vendidos',
-                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                   Text(
                     '$sold tokens',
@@ -102,12 +223,37 @@ class MyOfferCard extends StatelessWidget {
               ),
             ],
           ),
+
+          if (isOpen) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _handleCancelOffer(context),
+                icon: const Icon(Icons.cancel_outlined, size: 18),
+                label: const Text('Cancelar oferta'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildInfoItem(BuildContext context, IconData icon, String value, {String? label}) {
+  Widget _buildInfoItem(
+    BuildContext context,
+    IconData icon,
+    String value, {
+    String? label,
+  }) {
     final theme = Theme.of(context);
     return Row(
       children: [
@@ -126,7 +272,10 @@ class MyOfferCard extends StatelessWidget {
             if (label != null)
               Text(
                 label,
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 10),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 10,
+                ),
               ),
           ],
         ),
