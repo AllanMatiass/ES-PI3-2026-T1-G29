@@ -29,9 +29,8 @@ export type UserProfile = {
   email: string;
   phone: string;
   cpf: string;
-
+  profileImageUrl?: string | null;
   wallet: WalletDTO;
-
   createdAt: Timestamp;
 };
 
