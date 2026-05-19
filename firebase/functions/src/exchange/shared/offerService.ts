@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes e Pedro Vinicius Romanato
 import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
@@ -8,6 +8,7 @@ import {
   getOffersBySellerId,
   listOffers,
   createOfferInTransaction,
+  cancelOfferInTransaction,
   expireOfferInTransaction,
 } from "../repositories/offerRepository";
 import { upsertStartupInvestor } from "../../startups/shared/upsertInvestor";
@@ -18,6 +19,8 @@ import {
   CreateOfferRequestDTO,
   AcceptOfferRequestDTO,
   AcceptOfferResponseDTO,
+  CancelOfferRequestDTO,
+  CancelOfferResponseDTO,
   ExpireOfferResponseDTO,
   GetMyOffersResponseDTO,
   MyOfferDTO,
@@ -107,6 +110,45 @@ export class OfferService {
 
     return offer;
   }
+
+  async cancelOffer(
+    sellerId: string,
+    data: CancelOfferRequestDTO,
+  ): Promise<CancelOfferResponseDTO> {
+    const offerId = normalizeString(data?.id);
+
+    if (!offerId) {
+      throw new HttpsError(
+        "invalid-argument",
+        "offerId deve estar presente no corpo da requisição.",
+      );
+    }
+
+    const offer = await getOfferById(offerId);
+
+    if (!offer) {
+      throw new HttpsError("not-found", "Oferta não encontrada.");
+    }
+
+    if (offer.seller.id !== sellerId) {
+      throw new HttpsError(
+        "permission-denied",
+        "Apenas o vendedor pode cancelar a própria oferta.",
+      );
+    }
+
+    if (offer.status !== "OPEN") {
+      throw new HttpsError(
+        "failed-precondition",
+        `Oferta não pode ser cancelada: status atual é ${offer.status}.`,
+      );
+    }
+
+    const cancelled = await cancelOfferInTransaction(offerId, sellerId);
+
+    return { offerId, cancelled };
+  }
+
 
   async acceptOffer(
     buyerId: string,

@@ -1,7 +1,9 @@
 // Autor: Pedro Romanato & Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/services/auth.dart';
+import 'package:frontend/services/mfa_service.dart';
 import 'package:frontend/pages/auth/register_page.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
@@ -32,30 +34,176 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _isLoading = true);
 
-    final result = await AuthService.login(
-      _emailController.text,
-      _passwordController.text,
-    );
+    try {
+      final result = await AuthService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
 
-    setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
 
-    if (mounted) {
+      if (!mounted) return;
+
       if (result.success) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) =>
-                HomePage(userName: result.data?['name'] ?? 'Usuário'),
-          ),
-        );
+        _navigateToHome(result.data?['name'] ?? 'Usuário');
       } else {
         FeedbackModal.show(
           context: context,
           title: 'Erro no login',
-          message: 'Credenciais Inválidas',
+          message: 'Credenciais inválidas',
           type: FeedbackType.error,
         );
       }
+    } on FirebaseAuthMultiFactorException catch (e) {
+      setState(() => _isLoading = false);
+      if (!mounted) return;
+      await _showMfaChallengeModal(e.resolver);
     }
+  }
+
+  Future<void> _showMfaChallengeModal(MultiFactorResolver resolver) async {
+    final codeController = TextEditingController();
+    bool isVerifying = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            Future<void> verify() async {
+              final code = codeController.text.trim();
+              if (code.length != 6) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('Digite o código de 6 dígitos.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
+
+              setModalState(() => isVerifying = true);
+
+              try {
+                final credential = await MfaService.resolveSignIn(
+                  resolver: resolver,
+                  verificationCode: code,
+                );
+
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+
+                final user = credential.user;
+                final name =
+                    user?.displayName ?? user?.email ?? 'Usuário';
+
+                if (mounted) _navigateToHome(name);
+              } on FirebaseAuthException catch (e) {
+                setModalState(() => isVerifying = false);
+                if (!ctx.mounted) return;
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      e.code == 'invalid-verification-code'
+                          ? 'Código incorreto. Tente novamente.'
+                          : 'Erro: ${e.message}',
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.security, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Text('Verificação em 2 etapas'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Abra seu aplicativo autenticador e insira o código de 6 dígitos.',
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: codeController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    autofocus: true,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 8,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '000000',
+                      hintStyle: TextStyle(
+                        color: Colors.grey.withOpacity(0.4),
+                        letterSpacing: 8,
+                      ),
+                      counterText: '',
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onSubmitted: (_) => verify(),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isVerifying
+                      ? null
+                      : () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: isVerifying ? null : verify,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: isVerifying
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Verificar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _navigateToHome(String name) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => HomePage(userName: name),
+      ),
+    );
   }
 
   @override
@@ -85,7 +233,10 @@ class _LoginPageState extends State<LoginPage> {
                 Text(
                   'Invista em startups promissoras',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 48),
                 Text(
@@ -103,9 +254,13 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(color: theme.colorScheme.onSurface),
                   decoration: InputDecoration(
                     hintText: 'seu@email.com',
-                    hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                    hintStyle: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant
+                          .withOpacity(0.5),
+                    ),
                     filled: true,
-                    fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    fillColor:
+                        theme.colorScheme.surfaceVariant.withOpacity(0.3),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 16,
@@ -155,9 +310,13 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(color: theme.colorScheme.onSurface),
                   decoration: InputDecoration(
                     hintText: '********',
-                    hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                    hintStyle: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant
+                          .withOpacity(0.5),
+                    ),
                     filled: true,
-                    fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    fillColor:
+                        theme.colorScheme.surfaceVariant.withOpacity(0.3),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 16,
@@ -177,8 +336,8 @@ class _LoginPageState extends State<LoginPage> {
                             : Icons.visibility_outlined,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
+                      onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   validator: (value) => value == null || value.isEmpty
@@ -219,7 +378,10 @@ class _LoginPageState extends State<LoginPage> {
                   child: RichText(
                     text: TextSpan(
                       text: 'Não tem uma conta? ',
-                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                      ),
                       children: const [
                         TextSpan(
                           text: 'Criar uma conta',
@@ -236,7 +398,10 @@ class _LoginPageState extends State<LoginPage> {
                 Text(
                   'Ao continuar, você concorda com nossos Termos e Política de Privacidade',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                  ),
                 ),
               ],
             ),
