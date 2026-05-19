@@ -10,9 +10,8 @@ import {
   createOfferInTransaction,
   expireOfferInTransaction,
 } from "../repositories/offerRepository";
-import { getUserById } from "../../auth/repositories/userRepository";
 import { upsertStartupInvestor } from "../../startups/shared/upsertInvestor";
-import { Wallet, WalletTokenPositionDTO } from "../../auth/types";
+import { Wallet } from "../../user/types";
 import { TransactionService } from "./transactionService";
 import { Offer, OfferWithId } from "../types";
 import {
@@ -28,8 +27,11 @@ import {
 import { validateTransactionData } from "../utils";
 import { TokenPricingService } from "./tokenPricingService";
 import { StartupDocument } from "../../startups/types";
+import { UserService } from "../../user/shared/userService";
+import { WalletTokenPositionDTO } from "../../user/types/dtos";
 
 const transactionService = new TransactionService();
+const userService = new UserService();
 
 export class OfferService {
   private tokenPricingService = new TokenPricingService();
@@ -66,7 +68,7 @@ export class OfferService {
     const now = Timestamp.now();
 
     const sellerPosition = sellerUser?.wallet?.positions?.find(
-      (p) => p.startupId === startupId,
+      (p: WalletTokenPositionDTO) => p.startupId === startupId,
     );
     const averageAcquisitionPriceCents = sellerPosition?.averagePriceCents || 0;
 
@@ -122,7 +124,7 @@ export class OfferService {
 
     const [offer, buyerUser] = await Promise.all([
       getOfferById(offerId),
-      getUserById(buyerId),
+      userService.get(buyerId),
     ]);
 
     if (!offer) {
@@ -275,7 +277,7 @@ export class OfferService {
         (Number(sellerWallet.balanceInCents) || 0) + purchaseTotalCents;
 
       sellerWallet.totalInvestedCents = sellerWallet.positions.reduce(
-        (acc, p) => acc + (Number(p.investedCents) || 0),
+        (acc: number, p: WalletTokenPositionDTO) => acc + (Number(p.investedCents) || 0),
         0,
       );
 
@@ -324,7 +326,7 @@ export class OfferService {
         (Number(buyerWallet.balanceInCents) || 0) - purchaseTotalCents;
 
       buyerWallet.totalInvestedCents = buyerWallet.positions.reduce(
-        (acc, p) => acc + (Number(p.investedCents) || 0),
+        (acc: number, p: WalletTokenPositionDTO) => acc + (Number(p.investedCents) || 0),
         0,
       );
 
