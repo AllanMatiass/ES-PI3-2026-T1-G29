@@ -33,6 +33,7 @@
     "firebase-functions-test": "^3.4.1",
     "prettier": "^3.8.2",
     "ts-jest": "^29.4.9",
+    "tsx": "^4.22.3",
     "typescript": "^5.7.3"
   },
   "private": true

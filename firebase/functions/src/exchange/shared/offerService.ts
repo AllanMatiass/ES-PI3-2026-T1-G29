@@ -149,7 +149,6 @@ export class OfferService {
     return { offerId, cancelled };
   }
 
-
   async acceptOffer(
     buyerId: string,
     data: AcceptOfferRequestDTO,
