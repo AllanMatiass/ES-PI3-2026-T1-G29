@@ -124,7 +124,13 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   Icon(Icons.security, color: AppColors.primary),
                   SizedBox(width: 8),
-                  Text('Verificação em 2 etapas'),
+                  Expanded(
+                    child: Text(
+                      'Verificação em 2 etapas',
+                      style: TextStyle(fontSize: 18),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
               content: Column(

@@ -32,6 +32,8 @@ class AuthService {
         "name": user.displayName ?? '',
         "token": token!,
       });
+    } on FirebaseAuthMultiFactorException {
+      rethrow;
     } on FirebaseAuthException catch (e) {
       return ApiResponse.error(e.message ?? "Erro no login", errorCode: e.code);
     } catch (e) {

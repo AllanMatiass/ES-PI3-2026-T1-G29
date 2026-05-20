@@ -8,8 +8,45 @@ import 'package:frontend/pages/profile/mfa_setup_page.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/user_state.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  bool _isSendingVerification = false;
+
+  Future<void> _sendVerificationEmail() async {
+    setState(() => _isSendingVerification = true);
+    try {
+      await FirebaseAuth.instance.currentUser?.sendEmailVerification();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email de verificação enviado! Verifique sua caixa de entrada.'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 4),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.code == 'too-many-requests'
+                ? 'Aguarde alguns minutos antes de solicitar outro email.'
+                : (e.message ?? 'Não foi possível enviar o email.'),
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSendingVerification = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +61,7 @@ class ProfilePage extends StatelessWidget {
         final phone = userData?.phone ?? '';
         final cpf = userData?.cpf ?? '';
         final initials = _getInitials(name);
+        final emailVerified = firebaseUser?.emailVerified ?? true;
 
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
@@ -79,7 +117,78 @@ class ProfilePage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+
+                  // Banner de email não verificado
+                  if (!emailVerified) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.orange.withOpacity(0.4)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.mark_email_unread_outlined, color: Colors.orange, size: 20),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Email não verificado',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Confirme seu email para poder ativar o 2FA e proteger sua conta.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _isSendingVerification ? null : _sendVerificationEmail,
+                              icon: _isSendingVerification
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.orange,
+                                      ),
+                                    )
+                                  : const Icon(Icons.send_outlined, size: 16),
+                              label: Text(
+                                _isSendingVerification ? 'Enviando...' : 'Reenviar email de verificação',
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.orange,
+                                side: const BorderSide(color: Colors.orange),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
 
                   // Dados pessoais
                   if (cpf.isNotEmpty || phone.isNotEmpty) ...[
@@ -185,7 +294,6 @@ class ProfilePage extends StatelessWidget {
       },
     );
   }
-
 
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
