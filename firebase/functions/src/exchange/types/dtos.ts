@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes e Pedro Vinicius Romanato
 import { OfferWithId, TransactionParticipant, TransactionWithId } from ".";
 
 export const DASHBOARD_PERIODS = [
@@ -47,6 +47,15 @@ export type CreateOfferRequestDTO = {
 export type AcceptOfferRequestDTO = {
   offerId: string;
   qtdTokens: number;
+};
+
+export type CancelOfferRequestDTO = {
+  id: string;
+};
+
+export type CancelOfferResponseDTO = {
+  offerId: string;
+  cancelled: boolean;
 };
 
 export type GetOffersRequestDTO = {

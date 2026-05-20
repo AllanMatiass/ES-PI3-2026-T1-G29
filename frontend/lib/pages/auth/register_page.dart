@@ -1,5 +1,6 @@
 // Autor: Vinícius Castro & Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/validators.dart';
@@ -60,10 +61,20 @@ class _RegisterPageState extends State<RegisterPage> {
 
     if (mounted) {
       if (result.success) {
+        try {
+          final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
+          await credential.user?.sendEmailVerification();
+        } catch (_) {
+        }
+
         FeedbackModal.show(
           context: context,
           title: 'Conta criada!',
-          message: 'Sua conta foi criada com sucesso. Bem-vindo!',
+          message:
+              'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text} — confirme antes de ativar o 2FA.',
           type: FeedbackType.success,
         );
 
