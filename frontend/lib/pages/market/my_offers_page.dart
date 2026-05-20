@@ -1,4 +1,4 @@
-// Allan Giovanni Matias Paes
+// Allan Giovanni Matias Paes e Pedro Romanato
 import 'package:flutter/material.dart';
 import 'package:frontend/services/offer_service.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
@@ -25,13 +25,17 @@ class _MyOffersViewState extends State<MyOffersView> {
 
   List<Map<String, dynamic>> get _filteredOffers {
     if (_selectedStatus == 'ALL') return _myOffers;
-    return _myOffers.where((offer) => (offer['status'] ?? 'OPEN').toString().toUpperCase() == _selectedStatus).toList();
+    return _myOffers
+        .where((offer) =>
+            (offer['status'] ?? 'OPEN').toString().toUpperCase() ==
+            _selectedStatus)
+        .toList();
   }
 
   Future<void> _loadMyOffers() async {
     setState(() => _isLoading = true);
     final result = await OfferService.getMyOffers();
-    
+
     if (mounted) {
       if (result.success) {
         setState(() {
@@ -58,7 +62,10 @@ class _MyOffersViewState extends State<MyOffersView> {
       appBar: AppBar(
         title: Text(
           'Minhas Ofertas',
-          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
@@ -80,7 +87,10 @@ class _MyOffersViewState extends State<MyOffersView> {
                           itemCount: _filteredOffers.length,
                           itemBuilder: (context, index) {
                             final offer = _filteredOffers[index];
-                            return MyOfferCard(offer: offer);
+                            return MyOfferCard(
+                              offer: offer,
+                              onCancelled: _loadMyOffers,
+                            );
                           },
                         ),
             ),
@@ -119,14 +129,19 @@ class _MyOffersViewState extends State<MyOffersView> {
               selectedColor: const Color(0xFF00A84E).withOpacity(0.2),
               checkmarkColor: const Color(0xFF00A84E),
               labelStyle: TextStyle(
-                color: isSelected ? const Color(0xFF00A84E) : theme.colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected
+                    ? const Color(0xFF00A84E)
+                    : theme.colorScheme.onSurface,
+                fontWeight:
+                    isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               backgroundColor: theme.colorScheme.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: isSelected ? const Color(0xFF00A84E) : theme.dividerColor.withOpacity(0.1),
+                  color: isSelected
+                      ? const Color(0xFF00A84E)
+                      : theme.dividerColor.withOpacity(0.1),
                 ),
               ),
             ),
@@ -171,7 +186,9 @@ class _MyOffersViewState extends State<MyOffersView> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                hasAnyOffers ? Icons.search_off : Icons.local_offer_outlined,
+                hasAnyOffers
+                    ? Icons.search_off
+                    : Icons.local_offer_outlined,
                 size: 64,
                 color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
               ),
@@ -180,7 +197,10 @@ class _MyOffersViewState extends State<MyOffersView> {
                 hasAnyOffers
                     ? 'Nenhuma oferta encontrada para este status'
                     : 'Você ainda não criou nenhuma oferta',
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 16,
+                ),
               ),
             ],
           ),
