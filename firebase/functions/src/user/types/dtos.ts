@@ -23,3 +23,13 @@ export type WalletDTO = Omit<Wallet, "positions"> & {
 export type DepositRequestDTO = {
   amountInCents: number;
 };
+
+export type GetUserInvestmentsRequestDTO = {
+  limit?: number;
+  lastStartupId?: string;
+};
+
+export type PaginatedInvestmentsResponseDTO = {
+  investments: WalletTokenPositionDTO[];
+  lastStartupId: string | null;
+};
