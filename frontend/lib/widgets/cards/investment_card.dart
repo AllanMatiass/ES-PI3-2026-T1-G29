@@ -21,8 +21,14 @@ class InvestmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    final currentPriceCents = startup?.currentTokenPriceCents.toDouble() ?? 0.0;
-    final currentValueCents = position.qtdTokens * currentPriceCents;
+    final currentPriceCents = position is WalletTokenPositionDTO
+        ? (position as WalletTokenPositionDTO).currentTokenPriceCents
+        : (startup?.currentTokenPriceCents.toDouble() ?? 0.0);
+        
+    final currentValueCents = position is WalletTokenPositionDTO
+        ? (position as WalletTokenPositionDTO).currentValueCents
+        : (position.qtdTokens * currentPriceCents);
+
     final profitCents = currentValueCents - position.investedCents;
     final profitPercentage = position.investedCents <= 0
         ? 0.0

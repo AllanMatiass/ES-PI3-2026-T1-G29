@@ -130,3 +130,23 @@ class WalletTokenPositionDTO extends WalletTokenPosition {
     );
   }
 }
+
+// Resposta paginada da API de investimentos.
+class PaginatedInvestmentsResponseDTO {
+  final List<WalletTokenPositionDTO> investments;
+  final String? lastStartupId;
+
+  PaginatedInvestmentsResponseDTO({
+    required this.investments,
+    this.lastStartupId,
+  });
+
+  factory PaginatedInvestmentsResponseDTO.fromJson(Map<String, dynamic> json) {
+    return PaginatedInvestmentsResponseDTO(
+      investments: (json['investments'] as List? ?? [])
+          .map((e) => WalletTokenPositionDTO.fromJson(e))
+          .toList(),
+      lastStartupId: json['lastStartupId'],
+    );
+  }
+}
