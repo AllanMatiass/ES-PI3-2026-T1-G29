@@ -4,6 +4,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
 import { UpdateWalletParams, UserProfile, Wallet } from "../types";
 import { UserCreateDTO, WalletTokenPositionDTO } from "../types/dtos";
+import { HttpsError } from "firebase-functions/https";
 
 const usersCollection = db.collection("users");
 
@@ -227,4 +228,41 @@ export async function updateWallet({
   });
 
   await updateUser(userId, { wallet });
+}
+
+export async function listInvestments(
+  userId: string,
+  limit = 20,
+  lastStartupId?: string,
+): Promise<{
+  investments: WalletTokenPositionDTO[];
+  lastStartupId: string | null;
+}> {
+  const user = await getUserById(userId);
+
+  if (!user) {
+    throw new HttpsError("not-found", "Usuário não encontrado.");
+  }
+
+  const positions = user.wallet.positions || [];
+
+  let startIndex = 0;
+  if (lastStartupId) {
+    const index = positions.findIndex((p) => p.startupId === lastStartupId);
+    if (index !== -1) {
+      startIndex = index + 1;
+    }
+  }
+
+  const investments = positions.slice(startIndex, startIndex + limit);
+
+  const lastId =
+    investments.length > 0 && investments.length === limit
+      ? investments[investments.length - 1].startupId
+      : null;
+
+  return {
+    investments,
+    lastStartupId: lastId,
+  };
 }

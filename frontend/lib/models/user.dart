@@ -9,6 +9,7 @@ class UserProfile {
   final String phone;
   final String cpf;
   final Wallet wallet;
+  final String? profileImageUrl;
   final FirestoreTimestamp createdAt;
 
   UserProfile({
@@ -18,6 +19,7 @@ class UserProfile {
     required this.phone,
     required this.cpf,
     required this.wallet,
+    required this.profileImageUrl,
     required this.createdAt,
   });
 
@@ -31,6 +33,7 @@ class UserProfile {
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
       cpf: data['cpf'] ?? '',
+      profileImageUrl: data['profileImageUrl'],
       wallet: Wallet.fromJson(data['wallet'] ?? {}),
       createdAt: FirestoreTimestamp.fromJson(data['createdAt']),
     );
@@ -100,8 +103,6 @@ class WalletTokenPosition {
 class WalletTokenPositionDTO extends WalletTokenPosition {
   final double currentTokenPriceCents;
   final double currentValueCents;
-  // final double profitCents;
-  // final double profitPercentage;
 
   WalletTokenPositionDTO({
     required super.startupId,
@@ -113,8 +114,6 @@ class WalletTokenPositionDTO extends WalletTokenPosition {
     required super.updatedAt,
     required this.currentTokenPriceCents,
     required this.currentValueCents,
-    // required this.profitCents,
-    // required this.profitPercentage,
   });
 
   factory WalletTokenPositionDTO.fromJson(Map<String, dynamic> json) {
@@ -128,8 +127,6 @@ class WalletTokenPositionDTO extends WalletTokenPosition {
       updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
       currentTokenPriceCents: (json['currentTokenPriceCents'] as num?)?.toDouble() ?? 0.0,
       currentValueCents: (json['currentValueCents'] as num?)?.toDouble() ?? 0.0,
-      // profitCents: (json['profitCents'] as num?)?.toDouble() ?? 0.0,
-      // profitPercentage: (json['profitPercentage'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
