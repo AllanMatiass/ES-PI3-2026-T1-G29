@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/pages/invest/catalog_page.dart';
 import 'package:frontend/views/home_view.dart';
-import 'package:frontend/views/soon_view.dart';
+import 'package:frontend/pages/profile/profile_page.dart';
 import 'package:frontend/views/offers_view.dart';
 import 'package:frontend/views/wallet_view.dart';
 
@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
       const CatalogPage(),
       const OffersView(),
       const WalletView(),
-      const SoonView(title: 'Perfil'),
+      const ProfilePage(),
     ];
   }
 
