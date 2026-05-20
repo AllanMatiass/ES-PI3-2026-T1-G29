@@ -7,3 +7,4 @@ export * from "./startups";
 export * from "./auth";
 export * from "./exchange";
 export * from "./user";
+export * from "./scripts/enableMfa";

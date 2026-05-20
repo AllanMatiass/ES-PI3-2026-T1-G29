@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes e Pedro Vinicius Romanato
 import { HttpsError } from "firebase-functions/v2/https";
 import { Wallet, WalletTokenPosition } from "../../user/types";
 import { db } from "../../firebase";
@@ -74,6 +74,72 @@ export async function getOfferById(id: string): Promise<OfferWithId | null> {
 
 export async function updateOffer(id: string, data: Partial<Offer>) {
   await offerCollection.doc(id).update(data);
+}
+
+export async function cancelOfferInTransaction(
+  offerId: string,
+  sellerId: string,
+): Promise<boolean> {
+  const offerRef = offerCollection.doc(offerId);
+
+  return await db.runTransaction(async (tx) => {
+    const offerSnap = await tx.get(offerRef);
+
+    if (!offerSnap.exists) {
+      throw new HttpsError("not-found", "Oferta não encontrada.");
+    }
+
+    const offerData = offerSnap.data() as Offer;
+
+    if (offerData.seller.id !== sellerId) {
+      throw new HttpsError(
+        "permission-denied",
+        "Apenas o vendedor pode cancelar a própria oferta.",
+      );
+    }
+
+    if (offerData.status !== "OPEN") {
+      throw new HttpsError(
+        "failed-precondition",
+        `Oferta não pode ser cancelada pois está com status: ${offerData.status}.`,
+      );
+    }
+
+    const sellerRef = db.collection("users").doc(sellerId);
+    const sellerSnap = await tx.get(sellerRef);
+
+    if (!sellerSnap.exists) {
+      throw new HttpsError("not-found", "Vendedor não existe.");
+    }
+
+    const sellerData = sellerSnap.data();
+    const wallet: Wallet = sellerData?.wallet;
+
+    if (!wallet?.positions) {
+      throw new HttpsError("not-found", "Carteira do vendedor não existe.");
+    }
+
+    const positionIndex = wallet.positions.findIndex(
+      (p: WalletTokenPosition) => p.startupId === offerData.startupId,
+    );
+
+    if (positionIndex !== -1) {
+      wallet.positions[positionIndex].lockedTokens = Math.max(
+        0,
+        (wallet.positions[positionIndex].lockedTokens || 0) -
+          offerData.qtdTokens,
+      );
+
+      tx.update(sellerRef, { wallet });
+    }
+
+    tx.update(offerRef, {
+      status: "CANCELLED",
+      cancelledAt: new Date(),
+    });
+
+    return true;
+  });
 }
 
 export async function expireOfferInTransaction(
