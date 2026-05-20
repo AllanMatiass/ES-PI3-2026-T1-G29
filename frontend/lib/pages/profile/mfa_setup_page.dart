@@ -404,6 +404,7 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
                   );
                 },
                 child: Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
@@ -413,15 +414,16 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        data.secretKey,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 2,
+                      Expanded(
+                        child: Text(
+                          data.secretKey,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          softWrap: true,
                         ),
                       ),
                       const SizedBox(width: 8),
