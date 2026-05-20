@@ -4,6 +4,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
 import { UpdateWalletParams, UserProfile, Wallet } from "../types";
 import { UserCreateDTO, WalletTokenPositionDTO } from "../types/dtos";
+import { HttpsError } from "firebase-functions/https";
 
 const usersCollection = db.collection("users");
 
@@ -22,7 +23,7 @@ export async function updateUser(
   const snapshot = await userRef.get();
 
   if (!snapshot.exists) {
-    throw new Error("Usuário não encontrado.");
+    throw new HttpsError("not-found", "Usuário não encontrado.");
   }
 
   await userRef.update(data);
@@ -201,7 +202,7 @@ export async function updateWallet({
   const user = await getUserById(userId);
 
   if (!user) {
-    throw new Error("Usuário não encontrado.");
+    throw new HttpsError("not-found", "Usuário não encontrado.");
   }
 
   const positions: WalletTokenPositionDTO[] = [

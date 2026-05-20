@@ -46,8 +46,26 @@ abstract class BaseService {
         return ApiResponse.error('Resposta vazia do servidor');
       }
 
-      final body = jsonDecode(response.body);
-      final result = body['result'];
+      // Tenta decodificar o JSON com segurança para evitar FormatException (ex: erro HTML 401/403)
+      dynamic body;
+      try {
+        body = jsonDecode(response.body);
+      } catch (e) {
+        if (response.statusCode == 401) {
+          return ApiResponse.error(
+            'Não autorizado (401). Verifique se a Cloud Function permite acesso não autenticado ou se o token é válido.',
+            errorCode: 'unauthorized',
+          );
+        }
+        if (response.statusCode >= 400) {
+          return ApiResponse.error(
+            'Erro no servidor (${response.statusCode}). O servidor não retornou um JSON válido.',
+          );
+        }
+        return ApiResponse.error('Falha ao processar resposta do servidor (JSON inválido)');
+      }
+
+      final result = body is Map ? body['result'] : null;
 
       // Verifica o status code e o campo success retornado pela Cloud Function.
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -59,8 +77,11 @@ abstract class BaseService {
           );
         }
 
+        // Tenta extrair os dados do padrão 'result' ou do corpo diretamente
         final responseData = result is Map ? (result['data'] ?? result) : result;
-        return ApiResponse.success(fromJson(responseData));
+        final finalData = responseData ?? (body is Map ? (body['data'] ?? body) : body);
+        
+        return ApiResponse.success(fromJson(finalData));
       } else {
         final error = result is Map ? result['error'] : null;
         return ApiResponse.error(

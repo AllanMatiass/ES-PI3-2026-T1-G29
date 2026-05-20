@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 import '../animations/animated_currency.dart';
+import '../modals/feedback_modal.dart';
 
 class WalletBalanceCard extends StatelessWidget {
   final double balanceCents;
@@ -96,7 +97,50 @@ class WalletBalanceCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  context,
+                  label: 'Depositar',
+                  icon: Icons.add_circle_outline,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  context,
+                  label: 'Sacar',
+                  icon: Icons.remove_circle_outline,
+                ),
+              ),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(BuildContext context, {required String label, required IconData icon}) {
+    return ElevatedButton.icon(
+      onPressed: () {
+        FeedbackModal.show(
+          context: context,
+          title: 'Em breve',
+          message: 'A funcionalidade de $label está em desenvolvimento e será liberada em breve.',
+          type: FeedbackType.info,
+        );
+      },
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white.withOpacity(0.15),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
       ),
     );
   }

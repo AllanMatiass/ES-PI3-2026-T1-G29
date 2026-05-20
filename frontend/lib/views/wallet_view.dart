@@ -15,6 +15,7 @@ import '../widgets/empty_state_widget.dart';
 import '../widgets/error_state_widget.dart';
 import '../models/api_response.dart';
 import '../pages/wallet/transaction_history_page.dart';
+import '../pages/wallet/all_assets_page.dart';
 
 class WalletView extends StatefulWidget {
   const WalletView({super.key});
@@ -140,16 +141,29 @@ class _WalletViewState extends State<WalletView> {
                 const SizedBox(height: 32),
 
                 // Investimentos (Ativos)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Meus Ativos',
-                    style: TextStyle(
-                      fontSize: 18, 
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Meus Ativos',
+                      style: TextStyle(
+                        fontSize: 18, 
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
-                  ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AllAssetsPage(isVisible: _isVisible),
+                          ),
+                        );
+                      },
+                      child: const Text('Ver todos'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 _buildInvestmentsSection(),
@@ -212,7 +226,7 @@ class _WalletViewState extends State<WalletView> {
           );
         }
 
-        final positions = userData.wallet.positions;
+        final positions = userData.wallet.positions.take(2).toList();
         
         return Column(
           children: positions.map((p) => InvestmentCard(
