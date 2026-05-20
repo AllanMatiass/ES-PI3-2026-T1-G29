@@ -26,7 +26,12 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
   @override
   void initState() {
     super.initState();
-    _isTotpEnrolled = MfaService.isTotpEnrolled();
+    _loadEnrollmentStatus();
+  }
+
+  Future<void> _loadEnrollmentStatus() async {
+    final enrolled = await MfaService.isTotpEnrolled();
+    if (mounted) setState(() => _isTotpEnrolled = enrolled);
   }
 
   @override
