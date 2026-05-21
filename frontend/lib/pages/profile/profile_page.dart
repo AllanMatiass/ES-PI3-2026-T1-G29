@@ -8,6 +8,8 @@ import 'package:frontend/pages/profile/mfa_setup_page.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/user_state.dart';
 
+import '../../widgets/headers/home_header.dart';
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -51,6 +53,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return ValueListenableBuilder<UserProfile?>(
       valueListenable: UserState.userNotifier,
@@ -73,15 +76,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  Center(
-                    child: Text(
-                      'Perfil',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
+                  AppHeader(
+                    title: 'Perfil',
+                    userData: userData,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 28),
                   Center(
@@ -91,7 +89,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           radius: 44,
                           backgroundColor: AppColors.primary.withOpacity(0.15),
                           backgroundImage: profileImageUrl != null
-                              ? NetworkImage(profileImageUrl!)
+                              ? NetworkImage(profileImageUrl)
                               : null,
                           child: profileImageUrl == null
                               ? Text(

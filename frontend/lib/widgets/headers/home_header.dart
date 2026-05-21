@@ -5,16 +5,25 @@ import 'package:frontend/services/auth.dart';
 import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/constants/colors.dart';
 
-class HomeHeader extends StatelessWidget {
-  final String userName;
+import 'package:flutter/material.dart';
+import 'package:frontend/main.dart';
+import 'package:frontend/models/user.dart';
+import 'package:frontend/services/auth.dart';
+import 'package:frontend/pages/market/my_offers_page.dart';
+import 'package:frontend/constants/colors.dart';
+
+class AppHeader extends StatelessWidget {
+  final String title;
   final UserProfile? userData;
   final bool isDark;
+  final List<Widget>? actions;
 
-  const HomeHeader({
+  const AppHeader({
     super.key,
-    required this.userName,
+    required this.title,
     this.userData,
     required this.isDark,
+    this.actions,
   });
 
   String _getInitials(String name) {
@@ -26,36 +35,30 @@ class HomeHeader extends StatelessWidget {
         initials += names[names.length - 1][0];
       }
     }
+    if (initials.isEmpty) return "U";
     return initials.toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final displayName = userData?.name ?? userName;
+    final profileImageUrl = userData?.profileImageUrl;
+    final displayName = userData?.name ?? "Usuário";
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Olá,',
-              style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
-            ),
-            Text(
-              displayName,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         Row(
           children: [
+            if (actions != null) ...actions!,
             IconButton(
               icon: Icon(
                 isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
@@ -106,14 +109,17 @@ class HomeHeader extends StatelessWidget {
               ],
               child: CircleAvatar(
                 radius: 24,
-                backgroundColor: AppColors.primary,
-                child: Text(
-                  _getInitials(displayName),
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                backgroundColor: AppColors.primary.withOpacity(0.1),
+                backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl) : null,
+                child: profileImageUrl == null
+                    ? Text(
+                        _getInitials(displayName),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
               ),
             ),
           ],
