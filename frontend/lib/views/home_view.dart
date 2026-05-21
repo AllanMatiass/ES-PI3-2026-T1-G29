@@ -4,11 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/startup_service.dart';
-import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/services/user_state.dart';
 import 'package:frontend/widgets/empty_state_widget.dart';
 import 'package:frontend/widgets/error_state_widget.dart';
-import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 
@@ -56,7 +54,9 @@ class _HomeViewState extends State<HomeView> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/login', (route) => false);
       }
       return;
     }
@@ -74,9 +74,12 @@ class _HomeViewState extends State<HomeView> {
         setState(() {
           if (startupsResult.success) {
             // Ordenamos as startups pela maior variação de preço e pegamos as 3 primeiras
-            final sortedStartups = List<StartupListItem>.from(startupsResult.data!)
-              ..sort((a, b) => (b.priceVariation ?? 0).compareTo(a.priceVariation ?? 0));
-            
+            final sortedStartups =
+                List<StartupListItem>.from(startupsResult.data!)..sort(
+                  (a, b) =>
+                      (b.priceVariation ?? 0).compareTo(a.priceVariation ?? 0),
+                );
+
             _featuredStartups = sortedStartups.take(3).toList();
           } else {
             _error = startupsResult.message;
@@ -105,8 +108,9 @@ class _HomeViewState extends State<HomeView> {
         return ValueListenableBuilder<bool>(
           valueListenable: UserState.isLoadingNotifier,
           builder: (context, isUserLoading, child) {
-            final isLoading = _isLoadingStartups || (userData == null && isUserLoading);
-            
+            final isLoading =
+                _isLoadingStartups || (userData == null && isUserLoading);
+
             return Scaffold(
               backgroundColor: theme.scaffoldBackgroundColor,
               body: SafeArea(
@@ -117,7 +121,10 @@ class _HomeViewState extends State<HomeView> {
                   ]),
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 16.0,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -130,12 +137,17 @@ class _HomeViewState extends State<HomeView> {
                         const SizedBox(height: 32),
 
                         // Saldo
-                        isLoading 
-                            ? const ShimmerPlaceholder(height: 180, borderRadius: 24)
+                        isLoading
+                            ? const ShimmerPlaceholder(
+                                height: 180,
+                                borderRadius: 24,
+                              )
                             : BalanceCard(
                                 userData: userData,
                                 isVisible: _isBalanceVisible,
-                                onToggleVisibility: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
+                                onToggleVisibility: () => setState(
+                                  () => _isBalanceVisible = !_isBalanceVisible,
+                                ),
                               ),
                         const SizedBox(height: 32),
 
@@ -166,21 +178,29 @@ class _HomeViewState extends State<HomeView> {
 
                         isLoading
                             ? Column(
-                                children: List.generate(3, (index) => const ShimmerPlaceholder(
-                                  height: 180, 
-                                  borderRadius: 20,
-                                  margin: EdgeInsets.only(bottom: 16),
-                                )),
+                                children: List.generate(
+                                  3,
+                                  (index) => const ShimmerPlaceholder(
+                                    height: 180,
+                                    borderRadius: 20,
+                                    margin: EdgeInsets.only(bottom: 16),
+                                  ),
+                                ),
                               )
                             : (_error != null
-                                ? ErrorStateWidget(errorMessage: _error, onRetry: _loadInitialData)
-                                : (_featuredStartups.isEmpty
-                                    ? EmptyStateWidget(
-                                        icon: Icons.business_center_outlined,
-                                        title: 'Nenhuma oportunidade agora',
-                                        message: 'Fique atento às próximas rodadas de investimento!',
-                                      )
-                                    : _buildFeaturedStartups())),
+                                  ? ErrorStateWidget(
+                                      errorMessage: _error,
+                                      onRetry: _loadInitialData,
+                                    )
+                                  : (_featuredStartups.isEmpty
+                                        ? EmptyStateWidget(
+                                            icon:
+                                                Icons.business_center_outlined,
+                                            title: 'Nenhuma oportunidade agora',
+                                            message:
+                                                'Fique atento às próximas rodadas de investimento!',
+                                          )
+                                        : _buildFeaturedStartups())),
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -198,9 +218,7 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildFeaturedStartups() {
     return Column(
       children: _featuredStartups.map((startup) {
-        return StartupCard(
-          startup: startup,
-        );
+        return StartupCard(startup: startup);
       }).toList(),
     );
   }

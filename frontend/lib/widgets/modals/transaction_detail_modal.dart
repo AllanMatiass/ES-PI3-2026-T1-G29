@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/transaction.dart';
@@ -15,7 +15,11 @@ class TransactionDetailModal extends StatelessWidget {
     required this.isVisible,
   });
 
-  static void show(BuildContext context, Transaction transaction, bool isVisible) {
+  static void show(
+    BuildContext context,
+    Transaction transaction,
+    bool isVisible,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -32,8 +36,6 @@ class TransactionDetailModal extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isBuy = transaction.transactionType.contains('BUY');
-    final date = DateTime.fromMillisecondsSinceEpoch(transaction.createdAt.seconds * 1000);
-    final formattedDate = DateFormat('dd MMMM yyyy, HH:mm', 'pt_BR').format(date);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -57,7 +59,9 @@ class TransactionDetailModal extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.1),
+              color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(
+                0.1,
+              ),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -127,25 +131,56 @@ class TransactionDetailModal extends StatelessWidget {
         children: [
           _buildRow('Startup', transaction.startupName, theme),
           const Divider(height: 24),
-          _buildRow('Quantidade', isVisible ? '${transaction.qtdTokens} tokens' : '•••• tokens', theme),
+          _buildRow(
+            'Quantidade',
+            isVisible ? '${transaction.qtdTokens} tokens' : '•••• tokens',
+            theme,
+          ),
           const Divider(height: 24),
-          _buildRow('Preço unitário', isVisible ? _formatUnit(transaction.tokenPriceCents) : '••••', theme),
+          _buildRow(
+            'Preço unitário',
+            isVisible ? _formatUnit(transaction.tokenPriceCents) : '••••',
+            theme,
+          ),
           const Divider(height: 24),
-          _buildRow('Data', _capitalize(DateFormat('dd MMM yyyy, HH:mm', 'pt_BR').format(DateTime.fromMillisecondsSinceEpoch(transaction.createdAt.seconds * 1000))), theme),
+          _buildRow(
+            'Data',
+            _capitalize(
+              DateFormat('dd MMM yyyy, HH:mm', 'pt_BR').format(
+                DateTime.fromMillisecondsSinceEpoch(
+                  transaction.createdAt.seconds * 1000,
+                ),
+              ),
+            ),
+            theme,
+          ),
           const Divider(height: 24),
-          _buildRow('ID da Transação', transaction.id.substring(0, 8).toUpperCase(), theme, isMonospace: true),
+          _buildRow(
+            'ID da Transação',
+            transaction.id.substring(0, 8).toUpperCase(),
+            theme,
+            isMonospace: true,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRow(String label, String value, ThemeData theme, {bool isMonospace = false}) {
+  Widget _buildRow(
+    String label,
+    String value,
+    ThemeData theme, {
+    bool isMonospace = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
+          style: TextStyle(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 14,
+          ),
         ),
         Text(
           value,
@@ -161,7 +196,10 @@ class TransactionDetailModal extends StatelessWidget {
   }
 
   String _formatUnit(double cents) {
-    return NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(cents / 100);
+    return NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    ).format(cents / 100);
   }
 
   String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
