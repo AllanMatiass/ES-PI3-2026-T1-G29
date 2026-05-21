@@ -60,6 +60,7 @@ class _ProfilePageState extends State<ProfilePage> {
         final email = userData?.email ?? firebaseUser?.email ?? '';
         final phone = userData?.phone ?? '';
         final cpf = userData?.cpf ?? '';
+        final profileImageUrl = userData?.profileImageUrl;
         final initials = _getInitials(name);
         final emailVerified = firebaseUser?.emailVerified ?? true;
 
@@ -72,30 +73,36 @@ class _ProfilePageState extends State<ProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  Text(
-                    'Perfil',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
+                  Center(
+                    child: Text(
+                      'Perfil',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 28),
-
                   Center(
                     child: Column(
                       children: [
                         CircleAvatar(
                           radius: 44,
                           backgroundColor: AppColors.primary.withOpacity(0.15),
-                          child: Text(
+                          backgroundImage: profileImageUrl != null
+                              ? NetworkImage(profileImageUrl!)
+                              : null,
+                          child: profileImageUrl == null
+                              ? Text(
                             initials,
                             style: const TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,
                             ),
-                          ),
+                          )
+                              : null,
                         ),
                         const SizedBox(height: 12),
                         Text(
