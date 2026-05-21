@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 import '../animations/animated_currency.dart';
-import '../modals/feedback_modal.dart';
 import 'package:frontend/pages/deposit_page.dart';
 
 class WalletBalanceCard extends StatelessWidget {
@@ -126,9 +125,12 @@ class WalletBalanceCard extends StatelessWidget {
   }) {
     return ElevatedButton.icon(
       onPressed: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const DepositPage()));
-        },
-      
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const DepositPage()),
+        );
+      },
+
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: ElevatedButton.styleFrom(
