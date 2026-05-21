@@ -5,13 +5,6 @@ import 'package:frontend/services/auth.dart';
 import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/constants/colors.dart';
 
-import 'package:flutter/material.dart';
-import 'package:frontend/main.dart';
-import 'package:frontend/models/user.dart';
-import 'package:frontend/services/auth.dart';
-import 'package:frontend/pages/market/my_offers_page.dart';
-import 'package:frontend/constants/colors.dart';
-
 class AppHeader extends StatelessWidget {
   final String title;
   final UserProfile? userData;
@@ -71,17 +64,22 @@ class AppHeader extends StatelessWidget {
             const SizedBox(width: 8),
             PopupMenuButton<String>(
               offset: const Offset(0, 56),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               onSelected: (value) async {
                 if (value == 'offers') {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const MyOffersView()),
+                    MaterialPageRoute(
+                      builder: (context) => const MyOffersView(),
+                    ),
                   );
                 } else if (value == 'logout') {
                   await AuthService.signOut();
                   if (context.mounted) {
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil('/login', (route) => false);
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/login', (route) => false);
                   }
                 }
               },
@@ -90,7 +88,11 @@ class AppHeader extends StatelessWidget {
                   value: 'offers',
                   child: Row(
                     children: [
-                      Icon(Icons.local_offer_outlined, color: theme.colorScheme.onSurface, size: 20),
+                      Icon(
+                        Icons.local_offer_outlined,
+                        color: theme.colorScheme.onSurface,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       const Text('Minhas Ofertas'),
                     ],
@@ -100,7 +102,11 @@ class AppHeader extends StatelessWidget {
                   value: 'logout',
                   child: Row(
                     children: [
-                      Icon(Icons.logout, color: theme.colorScheme.onSurface, size: 20),
+                      Icon(
+                        Icons.logout,
+                        color: theme.colorScheme.onSurface,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       const Text('Sair'),
                     ],
@@ -110,7 +116,9 @@ class AppHeader extends StatelessWidget {
               child: CircleAvatar(
                 radius: 24,
                 backgroundColor: AppColors.primary.withOpacity(0.1),
-                backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl) : null,
+                backgroundImage: profileImageUrl != null
+                    ? NetworkImage(profileImageUrl)
+                    : null,
                 child: profileImageUrl == null
                     ? Text(
                         _getInitials(displayName),

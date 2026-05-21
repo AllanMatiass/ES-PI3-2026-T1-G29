@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import { ValuationService } from "../../user/shared/valuationService";
 import * as userRepo from "../../user/repositories/userRepository";
 import * as startupRepo from "../../startups/repositories/startupRepository";

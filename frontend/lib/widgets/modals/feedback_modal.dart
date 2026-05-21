@@ -58,7 +58,6 @@ class FeedbackModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     IconData icon;
     Color color;
@@ -125,11 +124,16 @@ class FeedbackModal extends StatelessWidget {
                 backgroundColor: color,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 0,
               ),
               child: Text(
-                buttonText ?? (type == FeedbackType.error ? 'Tentar novamente' : 'Entendido'),
+                buttonText ??
+                    (type == FeedbackType.error
+                        ? 'Tentar novamente'
+                        : 'Entendido'),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
