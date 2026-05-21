@@ -7,6 +7,8 @@ import 'package:frontend/views/home_view.dart';
 import 'package:frontend/pages/profile/profile_page.dart';
 import 'package:frontend/views/offers_view.dart';
 import 'package:frontend/views/wallet_view.dart';
+import 'package:frontend/pages/deposit_page.dart';
+
 
 class HomePage extends StatefulWidget {
   final String userName;
@@ -34,6 +36,7 @@ class _HomePageState extends State<HomePage> {
       const OffersView(),
       const WalletView(),
       const ProfilePage(),
+      const DepositPage(),
     ];
   }
 
@@ -83,6 +86,11 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Perfil',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Deposito',
           ),
         ],
         currentIndex: _selectedIndex,

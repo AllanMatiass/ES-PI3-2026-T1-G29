@@ -1,7 +1,6 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:intl/intl.dart';
 import '../../models/user.dart';
