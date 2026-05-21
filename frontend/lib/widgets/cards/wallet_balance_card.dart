@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 import '../animations/animated_currency.dart';
 import '../modals/feedback_modal.dart';
+import 'package:frontend/pages/deposit_page.dart';
 
 class WalletBalanceCard extends StatelessWidget {
   final double balanceCents;
@@ -125,13 +126,9 @@ class WalletBalanceCard extends StatelessWidget {
   Widget _buildActionButton(BuildContext context, {required String label, required IconData icon}) {
     return ElevatedButton.icon(
       onPressed: () {
-        FeedbackModal.show(
-          context: context,
-          title: 'Em breve',
-          message: 'A funcionalidade de $label está em desenvolvimento e será liberada em breve.',
-          type: FeedbackType.info,
-        );
-      },
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const DepositPage()));
+        },
+      
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: ElevatedButton.styleFrom(

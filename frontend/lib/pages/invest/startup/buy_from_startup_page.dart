@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/services/startup_service.dart';
-import 'package:frontend/services/user_service.dart';
 import 'package:frontend/services/user_state.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/price_chart.dart';
