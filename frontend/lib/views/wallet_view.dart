@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../models/startup.dart';
@@ -9,7 +9,7 @@ import '../services/transaction_service.dart';
 import '../widgets/cards/wallet_balance_card.dart';
 import '../widgets/tiles/transaction_list_tile.dart';
 import '../widgets/cards/investment_card.dart';
-import '../widgets/coming_soon_chart.dart';
+import '../widgets/portfolio_chart.dart';
 import '../widgets/shimmer_placeholder.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/error_state_widget.dart';
@@ -41,7 +41,7 @@ class _WalletViewState extends State<WalletView> {
 
   Future<void> _loadData() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -54,7 +54,8 @@ class _WalletViewState extends State<WalletView> {
         StartupService.listStartups(),
       ]);
 
-      final transactionResult = results[1] as ApiResponse<TransactionListResponse>;
+      final transactionResult =
+          results[1] as ApiResponse<TransactionListResponse>;
       final startupsResult = results[2] as ApiResponse<List<StartupListItem>>;
 
       if (mounted) {
@@ -94,10 +95,14 @@ class _WalletViewState extends State<WalletView> {
               return ValueListenableBuilder<bool>(
                 valueListenable: UserState.isLoadingNotifier,
                 builder: (context, isUserLoading, _) {
-                  final isInitialLoading = _isLoading || (userData == null && isUserLoading);
-                  
+                  final isInitialLoading =
+                      _isLoading || (userData == null && isUserLoading);
+
                   return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,12 +116,18 @@ class _WalletViewState extends State<WalletView> {
 
                         // Saldo
                         isInitialLoading
-                            ? const ShimmerPlaceholder(height: 180, borderRadius: 24)
+                            ? const ShimmerPlaceholder(
+                                height: 180,
+                                borderRadius: 24,
+                              )
                             : WalletBalanceCard(
-                                balanceCents: userData?.wallet.balanceInCents ?? 0,
-                                totalInvestedCents: userData?.wallet.totalInvestedCents ?? 0,
+                                balanceCents:
+                                    userData?.wallet.balanceInCents ?? 0,
+                                totalInvestedCents:
+                                    userData?.wallet.totalInvestedCents ?? 0,
                                 isVisible: _isVisible,
-                                onToggleVisibility: () => setState(() => _isVisible = !_isVisible),
+                                onToggleVisibility: () =>
+                                    setState(() => _isVisible = !_isVisible),
                               ),
                         const SizedBox(height: 32),
 
@@ -124,13 +135,13 @@ class _WalletViewState extends State<WalletView> {
                         Text(
                           'Valorização do Patrimônio',
                           style: TextStyle(
-                            fontSize: 18, 
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 16),
-                        const ComingSoonChart(),
+                        const PortfolioChart(),
                         const SizedBox(height: 32),
 
                         // Investimentos (Ativos)
@@ -140,7 +151,7 @@ class _WalletViewState extends State<WalletView> {
                             Text(
                               'Meus Ativos',
                               style: TextStyle(
-                                fontSize: 18, 
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: theme.colorScheme.onSurface,
                               ),
@@ -150,7 +161,8 @@ class _WalletViewState extends State<WalletView> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => AllAssetsPage(isVisible: _isVisible),
+                                    builder: (context) =>
+                                        AllAssetsPage(isVisible: _isVisible),
                                   ),
                                 );
                               },
@@ -169,7 +181,7 @@ class _WalletViewState extends State<WalletView> {
                             Text(
                               'Últimas Transações',
                               style: TextStyle(
-                                fontSize: 18, 
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: theme.colorScheme.onSurface,
                               ),
@@ -179,7 +191,10 @@ class _WalletViewState extends State<WalletView> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => TransactionHistoryPage(isVisible: _isVisible),
+                                    builder: (context) =>
+                                        TransactionHistoryPage(
+                                          isVisible: _isVisible,
+                                        ),
                                   ),
                                 );
                               },
@@ -204,11 +219,14 @@ class _WalletViewState extends State<WalletView> {
   Widget _buildInvestmentsSection(UserProfile? userData, bool isLoading) {
     if (isLoading || userData == null) {
       return Column(
-        children: List.generate(2, (_) => const ShimmerPlaceholder(
-          height: 160, 
-          borderRadius: 20,
-          margin: EdgeInsets.only(bottom: 12)
-        )),
+        children: List.generate(
+          2,
+          (_) => const ShimmerPlaceholder(
+            height: 160,
+            borderRadius: 20,
+            margin: EdgeInsets.only(bottom: 12),
+          ),
+        ),
       );
     }
 
@@ -221,24 +239,31 @@ class _WalletViewState extends State<WalletView> {
     }
 
     final positions = userData.wallet.positions.take(2).toList();
-    
+
     return Column(
-      children: positions.map((p) => InvestmentCard(
-        position: p,
-        startup: _startupsMap[p.startupId],
-        isBalanceVisible: _isVisible,
-      )).toList(),
+      children: positions
+          .map(
+            (p) => InvestmentCard(
+              position: p,
+              startup: _startupsMap[p.startupId],
+              isBalanceVisible: _isVisible,
+            ),
+          )
+          .toList(),
     );
   }
 
   Widget _buildTransactionsSection() {
     if (_isLoading) {
       return Column(
-        children: List.generate(3, (_) => const ShimmerPlaceholder(
-          height: 70, 
-          borderRadius: 12,
-          margin: EdgeInsets.only(bottom: 12)
-        )),
+        children: List.generate(
+          3,
+          (_) => const ShimmerPlaceholder(
+            height: 70,
+            borderRadius: 12,
+            margin: EdgeInsets.only(bottom: 12),
+          ),
+        ),
       );
     }
 
@@ -255,10 +280,11 @@ class _WalletViewState extends State<WalletView> {
     }
 
     return Column(
-      children: _transactions.map((t) => TransactionListTile(
-        transaction: t,
-        isVisible: _isVisible,
-      )).toList(),
+      children: _transactions
+          .map(
+            (t) => TransactionListTile(transaction: t, isVisible: _isVisible),
+          )
+          .toList(),
     );
   }
 }

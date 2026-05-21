@@ -19,9 +19,10 @@ class TransactionListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final isBuy = transaction.transactionType.contains('BUY');
-    final date = DateTime.fromMillisecondsSinceEpoch(transaction.createdAt.seconds * 1000);
+    final date = DateTime.fromMillisecondsSinceEpoch(
+      transaction.createdAt.seconds * 1000,
+    );
     final formattedDate = DateFormat('dd MMM, HH:mm', 'pt_BR').format(date);
 
     return InkWell(
@@ -30,61 +31,63 @@ class TransactionListTile extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         leading: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: (isBuy ? AppColors.success : AppColors.danger).withOpacity(
+              0.1,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            isBuy ? Icons.arrow_downward : Icons.arrow_upward,
+            color: isBuy ? AppColors.success : AppColors.danger,
+          ),
         ),
-        child: Icon(
-          isBuy ? Icons.arrow_downward : Icons.arrow_upward,
-          color: isBuy ? AppColors.success : AppColors.danger,
+        title: Text(
+          transaction.startupName,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
-      ),
-      title: Text(
-        transaction.startupName,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-          color: theme.colorScheme.onSurface,
+        subtitle: Text(
+          '$formattedDate • ${isVisible ? transaction.qtdTokens : '••••'} tokens',
+          style: TextStyle(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
-      ),
-      subtitle: Text(
-        '$formattedDate • ${isVisible ? transaction.qtdTokens : '••••'} tokens',
-        style: TextStyle(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontSize: 12,
-        ),
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: AnimatedCurrency(
-              valueCents: transaction.totalCents,
-              isVisible: isVisible,
-              prefix: isBuy ? '- R\$' : '+ R\$',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: isBuy ? AppColors.danger : AppColors.success,
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: AnimatedCurrency(
+                valueCents: transaction.totalCents,
+                isVisible: isVisible,
+                prefix: isBuy ? '- R\$' : '+ R\$',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: isBuy ? AppColors.danger : AppColors.success,
+                ),
               ),
             ),
-          ),
-          Text(
-            _getTransactionTypeName(transaction.transactionType),
-            style: TextStyle(
-              fontSize: 10, 
-              color: theme.colorScheme.onSurfaceVariant,
+            Text(
+              _getTransactionTypeName(transaction.transactionType),
+              style: TextStyle(
+                fontSize: 10,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   String _getTransactionTypeName(String type) {
     switch (type) {

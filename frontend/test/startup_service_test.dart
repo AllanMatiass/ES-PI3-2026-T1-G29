@@ -6,7 +6,6 @@ import 'package:mockito/mockito.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
-import 'package:frontend/models/api_response.dart';
 
 @GenerateMocks([http.Client, FirebaseAuth, User])
 import 'startup_service_test.mocks.dart';
@@ -36,35 +35,33 @@ void main() {
                 "timestamp": "2025-12-01",
                 "price": 4.53,
                 "variation": null,
-                "variationPercent": null
+                "variationPercent": null,
               },
               {
                 "timestamp": "2026-01-01",
                 "price": 4.92,
                 "variation": 0.39,
-                "variationPercent": 8.6
-              }
+                "variationPercent": 8.6,
+              },
             ],
             "summary": {
               "currentPrice": 4.92,
               "highestPrice": 4.92,
               "lowestPrice": 4.53,
-              "averagePrice": 4.725
+              "averagePrice": 4.725,
             },
-            "meta": {
-              "count": 2,
-              "currency": "BRL",
-              "interval": "monthly"
-            }
-          }
-        }
+            "meta": {"count": 2, "currency": "BRL", "interval": "monthly"},
+          },
+        },
       };
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      when(
+        mockClient.post(
+          any,
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
 
       final result = await StartupService.getStartupPriceHistory(
         id: 'ecotech',
@@ -83,14 +80,30 @@ void main() {
     });
 
     test('returns error ApiResponse on failure', () async {
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode({"result": {"success": false, "error": {"message": "Error"}}}), 400));
+      when(
+        mockClient.post(
+          any,
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer(
+        (_) async => http.Response(
+          jsonEncode({
+            "result": {
+              "success": false,
+              "error": {"message": "Error"},
+            },
+          }),
+          400,
+        ),
+      );
 
-      final result = await StartupService.getStartupPriceHistory(id: 'ecotech', client: mockClient, auth: mockAuth);
-      
+      final result = await StartupService.getStartupPriceHistory(
+        id: 'ecotech',
+        client: mockClient,
+        auth: mockAuth,
+      );
+
       expect(result.success, false);
       expect(result.message, isNotNull);
     });
@@ -112,18 +125,20 @@ void main() {
                 "currentTokenPriceCents": 150,
                 "variation": {"percentage": 5.0, "trend": "up"},
                 "coverImageUrl": "https://example.com/logo.png",
-                "tags": ["energy", "green"]
-              }
-            }
-          }
-        }
+                "tags": ["energy", "green"],
+              },
+            },
+          },
+        },
       };
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      when(
+        mockClient.post(
+          any,
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
 
       final result = await StartupService.listStartups(
         client: mockClient,
@@ -141,15 +156,17 @@ void main() {
       final mockResponse = {
         "result": {
           "success": true,
-          "data": {"data": {}}
-        }
+          "data": {"data": {}},
+        },
       };
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      when(
+        mockClient.post(
+          any,
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
 
       final result = await StartupService.listStartups(
         client: mockClient,
@@ -186,12 +203,12 @@ void main() {
                 "tags": ["energy"],
                 "demoVideos": [],
                 "founders": [],
-                "externalMembers": []
+                "externalMembers": [],
               },
               "expectedReturn": {"expected": 15.0},
               "risk": {"label": "Médio"},
               "horizon": "5 anos",
-              "valuation": 1000000
+              "valuation": 1000000,
             },
             "priceHistory": {
               "history": [],
@@ -199,9 +216,9 @@ void main() {
                 "currentPrice": 1.0,
                 "highestPrice": 1.0,
                 "lowestPrice": 1.0,
-                "averagePrice": 1.0
+                "averagePrice": 1.0,
               },
-              "meta": {"count": 0, "currency": "BRL", "interval": "monthly"}
+              "meta": {"count": 0, "currency": "BRL", "interval": "monthly"},
             },
             "questions": [
               {
@@ -214,26 +231,28 @@ void main() {
                 "answers": [
                   {
                     "answer": "It works well.",
-                    "answeredAt": {"_seconds": 1625100000, "_nanoseconds": 0}
-                  }
+                    "answeredAt": {"_seconds": 1625100000, "_nanoseconds": 0},
+                  },
                 ],
-                "createdAt": {"_seconds": 1625098000, "_nanoseconds": 0}
-              }
+                "createdAt": {"_seconds": 1625098000, "_nanoseconds": 0},
+              },
             ],
             "access": {
               "isInvestor": true,
               "canTradeTokens": true,
-              "canSendPrivateQuestions": true
-            }
-          }
-        }
+              "canSendPrivateQuestions": true,
+            },
+          },
+        },
       };
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      when(
+        mockClient.post(
+          any,
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
 
       final result = await StartupService.getStartupDetails(
         "startup1",
@@ -262,16 +281,18 @@ void main() {
             "visibility": "publica",
             "text": "New question?",
             "answers": [],
-            "createdAt": {"_seconds": 1625101000, "_nanoseconds": 0}
-          }
-        }
+            "createdAt": {"_seconds": 1625101000, "_nanoseconds": 0},
+          },
+        },
       };
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      when(
+        mockClient.post(
+          any,
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
 
       final result = await StartupService.createQuestion(
         startupId: "startup1",
@@ -291,15 +312,17 @@ void main() {
       final mockResponse = {
         "result": {
           "success": false,
-          "error": {"message": "Unauthorized"}
-        }
+          "error": {"message": "Unauthorized"},
+        },
       };
 
-      when(mockClient.post(
-        any,
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 400));
+      when(
+        mockClient.post(
+          any,
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 400));
 
       final result = await StartupService.createQuestion(
         startupId: "startup1",

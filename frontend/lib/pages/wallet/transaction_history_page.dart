@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import '../../models/transaction.dart';
 import '../../services/transaction_service.dart';
@@ -10,10 +10,7 @@ import '../../widgets/error_state_widget.dart';
 class TransactionHistoryPage extends StatefulWidget {
   final bool isVisible;
 
-  const TransactionHistoryPage({
-    super.key,
-    required this.isVisible,
-  });
+  const TransactionHistoryPage({super.key, required this.isVisible});
 
   @override
   State<TransactionHistoryPage> createState() => _TransactionHistoryPageState();
@@ -41,7 +38,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
         !_isLoading &&
         _hasMore) {
       _loadMore();
@@ -100,33 +98,33 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
       body: _transactions.isEmpty && _isLoading
           ? _buildLoadingState()
           : _error != null && _transactions.isEmpty
-              ? ErrorStateWidget(errorMessage: _error, onRetry: _loadMore)
-              : _transactions.isEmpty
-                  ? const EmptyStateWidget(
-                      icon: Icons.history,
-                      title: 'Nenhuma transação',
-                      message: 'Suas transações aparecerão aqui.',
-                    )
-                  : ListView.separated(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(24),
-                      itemCount: _transactions.length + (_hasMore ? 1 : 0),
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        if (index == _transactions.length) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        }
-                        return TransactionListTile(
-                          transaction: _transactions[index],
-                          isVisible: widget.isVisible,
-                        );
-                      },
+          ? ErrorStateWidget(errorMessage: _error, onRetry: _loadMore)
+          : _transactions.isEmpty
+          ? const EmptyStateWidget(
+              icon: Icons.history,
+              title: 'Nenhuma transação',
+              message: 'Suas transações aparecerão aqui.',
+            )
+          : ListView.separated(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(24),
+              itemCount: _transactions.length + (_hasMore ? 1 : 0),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                if (index == _transactions.length) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
                     ),
+                  );
+                }
+                return TransactionListTile(
+                  transaction: _transactions[index],
+                  isVisible: widget.isVisible,
+                );
+              },
+            ),
     );
   }
 
@@ -135,7 +133,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
       padding: const EdgeInsets.all(24),
       itemCount: 8,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (_, __) => const ShimmerPlaceholder(height: 70, borderRadius: 12),
+      itemBuilder: (_, __) =>
+          const ShimmerPlaceholder(height: 70, borderRadius: 12),
     );
   }
 }
