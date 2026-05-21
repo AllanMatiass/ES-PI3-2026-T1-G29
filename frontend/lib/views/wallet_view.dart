@@ -9,7 +9,7 @@ import '../services/transaction_service.dart';
 import '../widgets/cards/wallet_balance_card.dart';
 import '../widgets/tiles/transaction_list_tile.dart';
 import '../widgets/cards/investment_card.dart';
-import '../widgets/coming_soon_chart.dart';
+import '../widgets/portfolio_chart.dart';
 import '../widgets/shimmer_placeholder.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/error_state_widget.dart';
@@ -130,7 +130,7 @@ class _WalletViewState extends State<WalletView> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        const ComingSoonChart(),
+                        const PortfolioChart(),
                         const SizedBox(height: 32),
 
                         // Investimentos (Ativos)
