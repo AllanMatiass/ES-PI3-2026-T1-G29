@@ -13,6 +13,10 @@ import 'package:frontend/widgets/market_filters.dart';
 import 'package:frontend/widgets/cards/market_offer_card.dart';
 import 'package:frontend/constants/colors.dart';
 
+import '../widgets/headers/home_header.dart';
+import '../services/user_state.dart';
+import '../models/user.dart';
+
 // Visão que exibe todas as ofertas abertas de tokens no mercado secundário.
 class OffersView extends StatefulWidget {
   const OffersView({super.key});
@@ -169,96 +173,185 @@ class _OffersViewState extends State<OffersView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Mercado',
-          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.list_alt, color: theme.colorScheme.onSurface),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const MyOffersView()),
-              );
-            },
-            tooltip: 'Minhas Ofertas',
-          ),
-        ],
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          MarketFilters(
-            searchStartup: _searchStartup,
-            priceController: _priceController,
-            onSearchChanged: (value) => setState(() => _searchStartup = value),
-            onMaxPriceChanged: (value) {
-              setState(() {
-                String normalizedValue = value.replaceAll(',', '.');
-                _maxPrice = double.tryParse(normalizedValue);
-              });
-            },
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () => _loadMoreOffers(refresh: true),
-              child: _offers.isEmpty && _isLoading
-                  ? ListView.builder(
-                      itemCount: 5,
-                      padding: const EdgeInsets.all(16.0),
-                      itemBuilder: (context, index) => const ShimmerPlaceholder(
-                        height: 150,
-                        borderRadius: 16,
-                        margin: EdgeInsets.only(bottom: 16),
-                      ),
-                    )
-                  : _filteredOffers.isEmpty
-                      ? const EmptyStateWidget(
-                          icon: Icons.local_offer_outlined,
-                          title: 'Nenhuma oferta encontrada',
-                          message: 'Que tal mudar seus filtros de busca?',
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: _filteredOffers.length + (_hasMore ? 1 : 0),
-                          padding: const EdgeInsets.all(16.0),
-                          itemBuilder: (context, index) {
-                            if (index == _filteredOffers.length) {
-                              return const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: CircularProgressIndicator(),
-                                ),
+    final isDark = theme.brightness == Brightness.dark;
+
+    return ValueListenableBuilder<UserProfile?>(
+      valueListenable: UserState.userNotifier,
+      builder: (context, userData, _) {
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Custom Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                  child: AppHeader(
+                    title: 'Mercado',
+                    userData: userData,
+                    isDark: isDark,
+                  ),
+                ),
+                
+                MarketFilters(
+                  searchStartup: _searchStartup,
+                  priceController: _priceController,
+                  onSearchChanged: (value) => setState(() => _searchStartup = value),
+                  onMaxPriceChanged: (value) {
+                    setState(() {
+                      String normalizedValue = value.replaceAll(',', '.');
+                      _maxPrice = double.tryParse(normalizedValue);
+                    });
+                  },
+                ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () => _loadMoreOffers(refresh: true),
+                    child: _offers.isEmpty && _isLoading
+                        ? ListView.builder(
+                            itemCount: 5,
+                            padding: const EdgeInsets.all(16.0),
+                            itemBuilder: (context, index) => const ShimmerPlaceholder(
+                              height: 150,
+                              borderRadius: 16,
+                              margin: EdgeInsets.only(bottom: 16),
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: _filteredOffers.length + (_hasMore ? 1 : 0) + 1, // +1 para o Card de atalho
+                            padding: const EdgeInsets.all(16.0),
+                            itemBuilder: (context, index) {
+                              if (index == 0) {
+                                return _buildMyOffersShortcut();
+                              }
+                              
+                              final actualIndex = index - 1;
+
+                              if (actualIndex == _filteredOffers.length) {
+                                if (_filteredOffers.isEmpty && !_isLoading) {
+                                  return const EmptyStateWidget(
+                                    icon: Icons.local_offer_outlined,
+                                    title: 'Nenhuma oferta encontrada',
+                                    message: 'Que tal mudar seus filtros de busca?',
+                                  );
+                                }
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              }
+                              
+                              final offer = _filteredOffers[actualIndex];
+                              return MarketOfferCard(
+                                offer: offer,
+                                onBuyPressed: () => _handleBuyOffer(offer),
                               );
-                            }
-                            final offer = _filteredOffers[index];
-                            return MarketOfferCard(
-                              offer: offer,
-                              onBuyPressed: () => _handleBuyOffer(offer),
-                            );
-                          },
-                        ),
+                            },
+                          ),
+                  ),
+                ),
+              ],
             ),
           ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              final result = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(builder: (context) => const CreateOfferPage()),
+              );
+              if (result == true) {
+                _loadMoreOffers(refresh: true);
+              }
+            },
+            backgroundColor: AppColors.primary,
+            child: const Icon(Icons.add, color: AppColors.white),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMyOffersShortcut() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(0.8),
+            AppColors.primary,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(builder: (context) => const CreateOfferPage()),
-          );
-          if (result == true) {
-            _loadMoreOffers(refresh: true);
-          }
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: AppColors.white),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const MyOffersView()),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.local_offer_outlined,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Gerenciar Minhas Ofertas',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Veja e edite seus tokens à venda',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

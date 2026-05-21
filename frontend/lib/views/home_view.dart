@@ -15,9 +15,9 @@ import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/headers/home_header.dart';
 import 'package:frontend/widgets/cards/balance_card.dart';
 import 'package:frontend/widgets/quick_action_button.dart';
-import 'package:frontend/widgets/cards/investment_card.dart';
+import 'package:frontend/widgets/cards/startup_card.dart';
 
-// Visão principal da tela inicial, responsável por exibir saldo, ações rápidas e lista de investimentos.
+// Visão principal da tela inicial, responsável por exibir saldo, ações rápidas e lista de startups em destaque.
 class HomeView extends StatefulWidget {
   final String userName;
   final VoidCallback onNavigateToCatalog;
@@ -33,7 +33,7 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  Map<String, StartupListItem> _startupsMap = {};
+  List<StartupListItem> _featuredStartups = [];
   bool _isLoadingStartups = true;
   String? _error;
   bool _isBalanceVisible = true;
@@ -44,7 +44,7 @@ class _HomeViewState extends State<HomeView> {
     _loadInitialData();
   }
 
-  // Carrega os dados do usuário e a lista de startups em paralelo para otimizar o tempo de carregamento.
+  // Carrega os dados do usuário e a lista de startups em destaque.
   Future<void> _loadInitialData() async {
     if (mounted) {
       setState(() {
@@ -73,7 +73,11 @@ class _HomeViewState extends State<HomeView> {
       if (mounted) {
         setState(() {
           if (startupsResult.success) {
-            _startupsMap = {for (var s in startupsResult.data!) s.id: s};
+            // Ordenamos as startups pela maior variação de preço e pegamos as 3 primeiras
+            final sortedStartups = List<StartupListItem>.from(startupsResult.data!)
+              ..sort((a, b) => (b.priceVariation ?? 0).compareTo(a.priceVariation ?? 0));
+            
+            _featuredStartups = sortedStartups.take(3).toList();
           } else {
             _error = startupsResult.message;
           }
@@ -118,8 +122,8 @@ class _HomeViewState extends State<HomeView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Header
-                        HomeHeader(
-                          userName: widget.userName,
+                        AppHeader(
+                          title: 'Início',
                           userData: userData,
                           isDark: isDark,
                         ),
@@ -145,28 +149,13 @@ class _HomeViewState extends State<HomeView> {
                                 onTap: widget.onNavigateToCatalog,
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: QuickActionButton(
-                                icon: Icons.swap_horiz,
-                                label: 'Transferir',
-                                onTap: () {
-                                  FeedbackModal.show(
-                                    context: context,
-                                    title: 'Em breve',
-                                    message: 'Funcionalidade em desenvolvimento',
-                                    type: FeedbackType.info,
-                                  );
-                                },
-                              ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 32),
 
-                        // Investimentos
+                        // Startups em Destaque
                         Text(
-                          'Meus Investimentos',
+                          'Oportunidades em Destaque',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -178,22 +167,20 @@ class _HomeViewState extends State<HomeView> {
                         isLoading
                             ? Column(
                                 children: List.generate(3, (index) => const ShimmerPlaceholder(
-                                  height: 80, 
+                                  height: 180, 
                                   borderRadius: 20,
                                   margin: EdgeInsets.only(bottom: 16),
                                 )),
                               )
                             : (_error != null
                                 ? ErrorStateWidget(errorMessage: _error, onRetry: _loadInitialData)
-                                : (userData?.wallet.positions.isEmpty ?? true
+                                : (_featuredStartups.isEmpty
                                     ? EmptyStateWidget(
-                                        icon: Icons.account_balance_wallet_outlined,
-                                        title: 'Nenhum investimento ainda',
-                                        message: 'Comece a investir em startups agora mesmo!',
-                                        buttonLabel: 'Explorar Oportunidades',
-                                        onButtonPressed: widget.onNavigateToCatalog,
+                                        icon: Icons.business_center_outlined,
+                                        title: 'Nenhuma oportunidade agora',
+                                        message: 'Fique atento às próximas rodadas de investimento!',
                                       )
-                                    : _buildInvestmentsList(userData!))),
+                                    : _buildFeaturedStartups())),
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -207,14 +194,12 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // Gera a lista de cards de investimento, calculando lucros e variações de mercado para cada startup.
-  Widget _buildInvestmentsList(UserProfile userData) {
+  // Gera a lista de cards de startups em destaque.
+  Widget _buildFeaturedStartups() {
     return Column(
-      children: userData.wallet.positions.map((position) {
-        return InvestmentCard(
-          position: position,
-          startup: _startupsMap[position.startupId],
-          isBalanceVisible: _isBalanceVisible,
+      children: _featuredStartups.map((startup) {
+        return StartupCard(
+          startup: startup,
         );
       }).toList(),
     );
