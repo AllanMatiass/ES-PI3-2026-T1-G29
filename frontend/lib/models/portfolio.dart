@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 
 typedef PortfolioRange = String; // "1D" | "1W" | "1M" | "1Y" | "YTD"
 
@@ -7,10 +7,7 @@ class PortfolioHistoryPoint {
   final String timestamp;
   final double valueCents;
 
-  PortfolioHistoryPoint({
-    required this.timestamp,
-    required this.valueCents,
-  });
+  PortfolioHistoryPoint({required this.timestamp, required this.valueCents});
 
   factory PortfolioHistoryPoint.fromJson(Map<String, dynamic> json) {
     return PortfolioHistoryPoint(

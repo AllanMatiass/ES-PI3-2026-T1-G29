@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/portfolio.dart';
@@ -21,7 +21,6 @@ class _PortfolioChartState extends State<PortfolioChart> {
   int? _selectedIndex;
   double _totalValueCents = 0;
   double _variationPercent = 0;
-  String _currency = 'BRL';
 
   @override
   void initState() {
@@ -36,7 +35,9 @@ class _PortfolioChartState extends State<PortfolioChart> {
     });
 
     try {
-      final result = await WalletService.getPortfolioValuation(range: _selectedRange);
+      final result = await WalletService.getPortfolioValuation(
+        range: _selectedRange,
+      );
 
       if (mounted) {
         if (result.success && result.data != null) {
@@ -44,7 +45,6 @@ class _PortfolioChartState extends State<PortfolioChart> {
             _history = result.data!.history;
             _totalValueCents = result.data!.totalValueCents;
             _variationPercent = result.data!.variationPercent;
-            _currency = result.data!.currency;
             _isLoading = false;
           });
         } else {
@@ -80,10 +80,13 @@ class _PortfolioChartState extends State<PortfolioChart> {
 
   void _handleTap(Offset localPosition, Size size) {
     if (_history.length < 2) return;
-    
+
     final double stepX = size.width / (_history.length - 1);
-    final int index = (localPosition.dx / stepX).round().clamp(0, _history.length - 1);
-    
+    final int index = (localPosition.dx / stepX).round().clamp(
+      0,
+      _history.length - 1,
+    );
+
     setState(() {
       _selectedIndex = index;
     });
@@ -99,9 +102,7 @@ class _PortfolioChartState extends State<PortfolioChart> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.grey[200]!,
-        ),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,8 +120,11 @@ class _PortfolioChartState extends State<PortfolioChart> {
   }
 
   Widget _buildHeader(ThemeData theme) {
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-    
+    final currencyFormat = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -157,7 +161,9 @@ class _PortfolioChartState extends State<PortfolioChart> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: (_variationPercent >= 0 ? AppColors.primary : Colors.red).withOpacity(0.1),
+                  color:
+                      (_variationPercent >= 0 ? AppColors.primary : Colors.red)
+                          .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -165,7 +171,9 @@ class _PortfolioChartState extends State<PortfolioChart> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: _variationPercent >= 0 ? AppColors.primary : Colors.red,
+                    color: _variationPercent >= 0
+                        ? AppColors.primary
+                        : Colors.red,
                   ),
                 ),
               ),
@@ -210,26 +218,30 @@ class _PortfolioChartState extends State<PortfolioChart> {
       height: 180,
       width: double.infinity,
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : _history.isEmpty
-              ? const Center(child: Text('Sem dados no período'))
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    return GestureDetector(
-                      onPanUpdate: (details) => _handleTap(details.localPosition, constraints.biggest),
-                      onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest),
-                      child: CustomPaint(
-                        size: Size.infinite,
-                        painter: _PortfolioLinePainter(
-                          history: _history,
-                          lineColor: AppColors.primary,
-                          selectedIndex: _selectedIndex,
-                          isDark: isDark,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          ? const Center(child: Text('Sem dados no período'))
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                return GestureDetector(
+                  onPanUpdate: (details) =>
+                      _handleTap(details.localPosition, constraints.biggest),
+                  onTapDown: (details) =>
+                      _handleTap(details.localPosition, constraints.biggest),
+                  child: CustomPaint(
+                    size: Size.infinite,
+                    painter: _PortfolioLinePainter(
+                      history: _history,
+                      lineColor: AppColors.primary,
+                      selectedIndex: _selectedIndex,
+                      isDark: isDark,
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 
@@ -241,16 +253,26 @@ class _PortfolioChartState extends State<PortfolioChart> {
       children: [
         Text(
           _formatDate(_history.first.timestamp),
-          style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant),
+          style: TextStyle(
+            fontSize: 10,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
         if (_selectedIndex != null)
           Text(
             _formatDate(_history[_selectedIndex!].timestamp),
-            style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 10,
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         Text(
           _formatDate(_history.last.timestamp),
-          style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant),
+          style: TextStyle(
+            fontSize: 10,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -289,12 +311,12 @@ class _PortfolioLinePainter extends CustomPainter {
     final values = history.map((e) => e.valueCents).toList();
     final double minVal = values.reduce((a, b) => a < b ? a : b);
     final double maxVal = values.reduce((a, b) => a > b ? a : b);
-    
+
     final double range = maxVal - minVal == 0 ? 100 : (maxVal - minVal) * 1.3;
     final double offsetMin = minVal - (range * 0.15);
 
     final double stepX = size.width / (history.length - 1);
-    
+
     final Paint linePaint = Paint()
       ..color = lineColor
       ..strokeWidth = 3
@@ -303,11 +325,13 @@ class _PortfolioLinePainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     final Path path = Path();
-    
+
     for (int i = 0; i < history.length; i++) {
       final double x = i * stepX;
-      final double y = size.height - ((history[i].valueCents - offsetMin) / range * size.height);
-      
+      final double y =
+          size.height -
+          ((history[i].valueCents - offsetMin) / range * size.height);
+
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -333,7 +357,11 @@ class _PortfolioLinePainter extends CustomPainter {
 
     if (selectedIndex != null && selectedIndex! < history.length) {
       final double x = selectedIndex! * stepX;
-      final double y = size.height - ((history[selectedIndex!].valueCents - offsetMin) / range * size.height);
+      final double y =
+          size.height -
+          ((history[selectedIndex!].valueCents - offsetMin) /
+              range *
+              size.height);
 
       final Paint selectionPaint = Paint()
         ..color = isDark ? Colors.white38 : Colors.black26
@@ -341,13 +369,19 @@ class _PortfolioLinePainter extends CustomPainter {
         ..style = PaintingStyle.stroke;
 
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), selectionPaint);
-      canvas.drawCircle(Offset(x, y), 6, Paint()..color = isDark ? Colors.black : Colors.white);
+      canvas.drawCircle(
+        Offset(x, y),
+        6,
+        Paint()..color = isDark ? Colors.black : Colors.white,
+      );
       canvas.drawCircle(Offset(x, y), 4, Paint()..color = lineColor);
     }
   }
 
   @override
   bool shouldRepaint(covariant _PortfolioLinePainter oldDelegate) {
-    return oldDelegate.history != history || oldDelegate.selectedIndex != selectedIndex || oldDelegate.isDark != isDark;
+    return oldDelegate.history != history ||
+        oldDelegate.selectedIndex != selectedIndex ||
+        oldDelegate.isDark != isDark;
   }
 }
