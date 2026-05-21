@@ -17,6 +17,8 @@ import '../models/api_response.dart';
 import '../pages/wallet/transaction_history_page.dart';
 import '../pages/wallet/all_assets_page.dart';
 
+import '../widgets/headers/home_header.dart';
+
 class WalletView extends StatefulWidget {
   const WalletView({super.key});
 
@@ -79,163 +81,153 @@ class _WalletViewState extends State<WalletView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadData,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Carteira',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 24),
+          child: ValueListenableBuilder<UserProfile?>(
+            valueListenable: UserState.userNotifier,
+            builder: (context, userData, _) {
+              return ValueListenableBuilder<bool>(
+                valueListenable: UserState.isLoadingNotifier,
+                builder: (context, isUserLoading, _) {
+                  final isInitialLoading = _isLoading || (userData == null && isUserLoading);
+                  
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppHeader(
+                          title: 'Carteira',
+                          userData: userData,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 32),
 
-                // Saldo
-                ValueListenableBuilder<UserProfile?>(
-                  valueListenable: UserState.userNotifier,
-                  builder: (context, userData, _) {
-                    return ValueListenableBuilder<bool>(
-                      valueListenable: UserState.isLoadingNotifier,
-                      builder: (context, isUserLoading, _) {
-                        if (userData == null && isUserLoading) {
-                          return const ShimmerPlaceholder(height: 180, borderRadius: 24);
-                        }
-                        return WalletBalanceCard(
-                          balanceCents: userData?.wallet.balanceInCents ?? 0,
-                          totalInvestedCents: userData?.wallet.totalInvestedCents ?? 0,
-                          isVisible: _isVisible,
-                          onToggleVisibility: () => setState(() => _isVisible = !_isVisible),
-                        );
-                      },
-                    );
-                  },
-                ),
-                const SizedBox(height: 32),
+                        // Saldo
+                        isInitialLoading
+                            ? const ShimmerPlaceholder(height: 180, borderRadius: 24)
+                            : WalletBalanceCard(
+                                balanceCents: userData?.wallet.balanceInCents ?? 0,
+                                totalInvestedCents: userData?.wallet.totalInvestedCents ?? 0,
+                                isVisible: _isVisible,
+                                onToggleVisibility: () => setState(() => _isVisible = !_isVisible),
+                              ),
+                        const SizedBox(height: 32),
 
-                // Gráfico
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Valorização do Patrimônio',
-                    style: TextStyle(
-                      fontSize: 18, 
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const ComingSoonChart(),
-                const SizedBox(height: 32),
-
-                // Investimentos (Ativos)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Meus Ativos',
-                      style: TextStyle(
-                        fontSize: 18, 
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AllAssetsPage(isVisible: _isVisible),
+                        // Gráfico
+                        Text(
+                          'Valorização do Patrimônio',
+                          style: TextStyle(
+                            fontSize: 18, 
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
                           ),
-                        );
-                      },
-                      child: const Text('Ver todos'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildInvestmentsSection(),
-                const SizedBox(height: 32),
+                        ),
+                        const SizedBox(height: 16),
+                        const ComingSoonChart(),
+                        const SizedBox(height: 32),
 
-                // Transações
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Últimas Transações',
-                      style: TextStyle(
-                        fontSize: 18, 
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
+                        // Investimentos (Ativos)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Meus Ativos',
+                              style: TextStyle(
+                                fontSize: 18, 
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AllAssetsPage(isVisible: _isVisible),
+                                  ),
+                                );
+                              },
+                              child: const Text('Ver todos'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildInvestmentsSection(userData, isInitialLoading),
+                        const SizedBox(height: 32),
+
+                        // Transações
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Últimas Transações',
+                              style: TextStyle(
+                                fontSize: 18, 
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TransactionHistoryPage(isVisible: _isVisible),
+                                  ),
+                                );
+                              },
+                              child: const Text('Ver todas'),
+                            ),
+                          ],
+                        ),
+                        _buildTransactionsSection(),
+                        const SizedBox(height: 24),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TransactionHistoryPage(isVisible: _isVisible),
-                          ),
-                        );
-                      },
-                      child: const Text('Ver todas'),
-                    ),
-                  ],
-                ),
-                _buildTransactionsSection(),
-                const SizedBox(height: 24),
-              ],
-            ),
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInvestmentsSection() {
-    return ValueListenableBuilder<UserProfile?>(
-      valueListenable: UserState.userNotifier,
-      builder: (context, userData, _) {
-        if (_isLoading || userData == null) {
-          return Column(
-            children: List.generate(2, (_) => const ShimmerPlaceholder(
-              height: 160, 
-              borderRadius: 20,
-              margin: EdgeInsets.only(bottom: 12)
-            )),
-          );
-        }
+  Widget _buildInvestmentsSection(UserProfile? userData, bool isLoading) {
+    if (isLoading || userData == null) {
+      return Column(
+        children: List.generate(2, (_) => const ShimmerPlaceholder(
+          height: 160, 
+          borderRadius: 20,
+          margin: EdgeInsets.only(bottom: 12)
+        )),
+      );
+    }
 
-        if (userData.wallet.positions.isEmpty) {
-          return const EmptyStateWidget(
-            icon: Icons.pie_chart_outline,
-            title: 'Sem ativos',
-            message: 'Você ainda não possui tokens de startups.',
-          );
-        }
+    if (userData.wallet.positions.isEmpty) {
+      return const EmptyStateWidget(
+        icon: Icons.pie_chart_outline,
+        title: 'Sem ativos',
+        message: 'Você ainda não possui tokens de startups.',
+      );
+    }
 
-        final positions = userData.wallet.positions.take(2).toList();
-        
-        return Column(
-          children: positions.map((p) => InvestmentCard(
-            position: p,
-            startup: _startupsMap[p.startupId],
-            isBalanceVisible: _isVisible,
-          )).toList(),
-        );
-      },
+    final positions = userData.wallet.positions.take(2).toList();
+    
+    return Column(
+      children: positions.map((p) => InvestmentCard(
+        position: p,
+        startup: _startupsMap[p.startupId],
+        isBalanceVisible: _isVisible,
+      )).toList(),
     );
   }
 
