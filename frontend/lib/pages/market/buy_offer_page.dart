@@ -19,7 +19,9 @@ class MaxValueInputFormatter extends TextInputFormatter {
 
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.isEmpty) return newValue;
 
     final int? value = int.tryParse(newValue.text);
@@ -83,7 +85,9 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
 
   /// Busca detalhes atualizados da startup para análise financeira.
   Future<void> _loadStartupDetails() async {
-    final result = await StartupService.getStartupDetails(widget.offer.startupId);
+    final result = await StartupService.getStartupDetails(
+      widget.offer.startupId,
+    );
     if (mounted) {
       if (result.success) {
         setState(() {
@@ -93,7 +97,9 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
         FeedbackModal.show(
           context: context,
           title: 'Erro ao carregar',
-          message: result.message ?? 'Não foi possível carregar os detalhes da startup',
+          message:
+              result.message ??
+              'Não foi possível carregar os detalhes da startup',
           type: FeedbackType.error,
         );
         Navigator.of(context).pop();
@@ -103,7 +109,8 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
 
   /// Processa a intenção de compra, validando saldo e chamando o serviço de aceite de oferta.
   Future<void> _handlePurchase() async {
-    final userBalanceCents = UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
+    final userBalanceCents =
+        UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
     // Cálculo do custo total da transação em centavos
     final totalCents = _selectedTokens * widget.offer.tokenPriceCents;
 
@@ -122,7 +129,8 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
       FeedbackModal.show(
         context: context,
         title: 'Saldo Insuficiente',
-        message: 'Você não possui saldo suficiente para esta compra. Seu saldo atual é ${_formatCurrency(userBalanceCents)}.',
+        message:
+            'Você não possui saldo suficiente para esta compra. Seu saldo atual é ${_formatCurrency(userBalanceCents)}.',
         type: FeedbackType.error,
         buttonText: 'Entendido',
       );
@@ -144,7 +152,8 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
         FeedbackModal.show(
           context: context,
           title: 'Compra Realizada!',
-          message: 'Você adquiriu $_selectedTokens tokens da ${widget.offer.startupName}.',
+          message:
+              'Você adquiriu $_selectedTokens tokens da ${widget.offer.startupName}.',
           type: FeedbackType.success,
           onConfirm: () => Navigator.of(context).pop(true),
           buttonText: 'Ir para Ofertas',
@@ -158,7 +167,8 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
         message: result.message ?? 'Não foi possível completar sua compra',
         type: FeedbackType.error,
       );
-      }  }
+    }
+  }
 
   /// Formata valores monetários de centavos para Real (BRL).
   String _formatCurrency(num cents) {
@@ -178,7 +188,10 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
           appBar: AppBar(
             title: Text(
               'Confirmar Compra',
-              style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             backgroundColor: theme.scaffoldBackgroundColor,
             elevation: 0,
@@ -205,7 +218,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                   ),
                 ),
         );
-      }
+      },
     );
   }
 
@@ -243,7 +256,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
               ),
             ],
           ),
-            ),
+        ),
       ],
     );
   }
@@ -253,10 +266,12 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     final theme = Theme.of(context);
     final marketPrice = _startupData?.currentTokenPriceCents ?? 0;
     final offerPrice = widget.offer.tokenPriceCents;
-    
+
     // Cálculo do percentual de desconto/oportunidade em relação ao preço de mercado
     // Fórmula: ((Mercado - Oferta) / Mercado) * 100
-    final discount = marketPrice > 0 ? ((marketPrice - offerPrice) / marketPrice * 100) : 0.0;
+    final discount = marketPrice > 0
+        ? ((marketPrice - offerPrice) / marketPrice * 100)
+        : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -270,7 +285,11 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
         children: [
           Text(
             'Análise Financeira',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 16),
           _buildAnalysisRow(
@@ -283,18 +302,27 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
             'Preço nesta Oferta',
             _formatCurrency(offerPrice),
             Icons.local_offer_outlined,
-            valueColor: offerPrice <= marketPrice ? const Color(0xFF00A84E) : const Color(0xFFEF4444),
+            valueColor: offerPrice <= marketPrice
+                ? const Color(0xFF00A84E)
+                : const Color(0xFFEF4444),
           ),
           Divider(height: 32, color: theme.dividerColor.withOpacity(0.1)),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Oportunidade', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
               Text(
-                discount > 0 ? '${discount.toStringAsFixed(1)}% abaixo do mercado' : 'Preço de mercado',
+                'Oportunidade',
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              Text(
+                discount > 0
+                    ? '${discount.toStringAsFixed(1)}% abaixo do mercado'
+                    : 'Preço de mercado',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: discount > 0 ? const Color(0xFF00A84E) : theme.colorScheme.onSurfaceVariant,
+                  color: discount > 0
+                      ? const Color(0xFF00A84E)
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -304,13 +332,21 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     );
   }
 
-  Widget _buildAnalysisRow(String label, String value, IconData icon, {Color? valueColor}) {
+  Widget _buildAnalysisRow(
+    String label,
+    String value,
+    IconData icon, {
+    Color? valueColor,
+  }) {
     final theme = Theme.of(context);
     return Row(
       children: [
         Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 12),
-        Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+        ),
         const Spacer(),
         Text(
           value,
@@ -331,11 +367,15 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
       children: [
         Text(
           'Histórico de Preços',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 350, 
+          height: 350,
           child: PriceHistoryChart(
             startupId: widget.offer.startupId,
             initialHistory: _startupData?.history ?? [],
@@ -354,7 +394,11 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
       children: [
         Text(
           'Quantidade desejada',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 16),
         Row(
@@ -385,14 +429,21 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       isDense: true,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                        borderSide: BorderSide(
+                          color: theme.dividerColor.withOpacity(0.1),
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF00A84E), width: 2),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF00A84E),
+                          width: 2,
+                        ),
                       ),
                     ),
                     inputFormatters: [
@@ -466,14 +517,19 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
               children: [
                 Text(
                   'Seu Saldo Disponível',
-                  style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   _formatCurrency(userBalanceCents),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: isInsufficient ? const Color(0xFFEF4444) : theme.colorScheme.onSurface,
+                    color: isInsufficient
+                        ? const Color(0xFFEF4444)
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -484,14 +540,19 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
           children: [
             Text(
               'Total a pagar',
-              style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             Text(
               _formatCurrency(totalCents),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isInsufficient ? const Color(0xFFEF4444) : const Color(0xFF00A84E),
+                color: isInsufficient
+                    ? const Color(0xFFEF4444)
+                    : const Color(0xFF00A84E),
               ),
             ),
           ],
@@ -500,9 +561,13 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: (_isPurchasing || isInsufficient) ? null : _handlePurchase,
+            onPressed: (_isPurchasing || isInsufficient)
+                ? null
+                : _handlePurchase,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isInsufficient ? theme.disabledColor : const Color(0xFF00A84E),
+              backgroundColor: isInsufficient
+                  ? theme.disabledColor
+                  : const Color(0xFF00A84E),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -514,11 +579,17 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : Text(
                     isInsufficient ? 'Saldo Insuficiente' : 'Confirmar Compra',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
           ),
         ),

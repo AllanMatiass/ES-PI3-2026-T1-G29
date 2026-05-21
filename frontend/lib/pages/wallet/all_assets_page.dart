@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import '../../models/api_response.dart';
 import '../../models/user.dart';
@@ -50,7 +50,8 @@ class _AllAssetsPageState extends State<AllAssetsPage> {
           if (startupsResponse.success) {
             _startupsMap = {for (var s in startupsResponse.data!) s.id: s};
           } else {
-            _error = startupsResponse.message ?? "Erro ao carregar dados do mercado";
+            _error =
+                startupsResponse.message ?? "Erro ao carregar dados do mercado";
           }
           _isLoading = false;
         });

@@ -13,18 +13,23 @@ import '../../widgets/price_chart.dart';
 class CurrencyInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.selection.baseOffset == 0) {
       return newValue;
     }
 
-    double value = double.parse(newValue.text.replaceAll(RegExp(r'[^0-9]'), ''));
+    double value = double.parse(
+      newValue.text.replaceAll(RegExp(r'[^0-9]'), ''),
+    );
     final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
     String newText = formatter.format(value / 100);
 
     return newValue.copyWith(
-        text: newText,
-        selection: TextSelection.collapsed(offset: newText.length));
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
   }
 }
 
@@ -35,16 +40,18 @@ class MaxValueInputFormatter extends TextInputFormatter {
 
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.isEmpty) return newValue;
-    
+
     final int? value = int.tryParse(newValue.text);
     if (value == null) return oldValue;
-    
+
     if (value > maxValue) {
       return oldValue;
     }
-    
+
     return newValue;
   }
 }
@@ -64,7 +71,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
   WalletTokenPosition? _selectedPosition;
   StartupData? _selectedStartupData;
   bool _isLoadingChart = false;
-  
+
   final TextEditingController _qtdController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   DateTime _expiresAt = DateTime.now().add(const Duration(days: 30));
@@ -90,7 +97,9 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
       if (result.success) {
         final UserProfile profile = result.data!;
         setState(() {
-          _positions = profile.wallet.positions.where((p) => p.qtdTokens > 0).toList();
+          _positions = profile.wallet.positions
+              .where((p) => p.qtdTokens > 0)
+              .toList();
           _isLoading = false;
         });
       } else {
@@ -125,8 +134,9 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
 
     final now = DateTime.now();
     final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    
-    if (_expiresAt.isBefore(todayEnd) || _expiresAt.isAtSameMomentAs(todayEnd)) {
+
+    if (_expiresAt.isBefore(todayEnd) ||
+        _expiresAt.isAtSameMomentAs(todayEnd)) {
       if (mounted) {
         FeedbackModal.show(
           context: context,
@@ -142,7 +152,10 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
 
     try {
       final int qtd = int.parse(_qtdController.text);
-      String priceText = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      String priceText = _priceController.text.replaceAll(
+        RegExp(r'[^0-9]'),
+        '',
+      );
       final int priceCents = int.parse(priceText);
 
       final result = await OfferService.createOffer(
@@ -158,7 +171,8 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
           FeedbackModal.show(
             context: context,
             title: 'Oferta Publicada!',
-            message: 'Sua oferta agora está visível para outros investidores no catálogo.',
+            message:
+                'Sua oferta agora está visível para outros investidores no catálogo.',
             type: FeedbackType.success,
             onConfirm: () => Navigator.of(context).pop(true),
             buttonText: 'Ótimo!',
@@ -187,18 +201,20 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
 
   // Remove the old _showSuccessDialog method entirely
 
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Publicar Oferta',
-          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
@@ -219,7 +235,10 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
           : LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -227,7 +246,9 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                       children: [
                         Text(
                           'Selecione a startup e defina os termos da sua oferta.',
-                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
@@ -237,18 +258,32 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                           style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: InputDecoration(
                             labelText: 'Startup',
-                            labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            prefixIcon: Icon(Icons.business, color: theme.colorScheme.onSurfaceVariant),
+                            labelStyle: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: Icon(
+                              Icons.business,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                              borderSide: BorderSide(
+                                color: theme.dividerColor.withOpacity(0.2),
+                              ),
                             ),
                           ),
                           items: _positions.map((p) {
                             return DropdownMenuItem(
                               value: p,
-                              child: Text(p.startupName, style: TextStyle(color: theme.colorScheme.onSurface)),
+                              child: Text(
+                                p.startupName,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -261,7 +296,8 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                               _loadStartupDetails(value.startupId);
                             }
                           },
-                          validator: (value) => value == null ? 'Selecione uma startup' : null,
+                          validator: (value) =>
+                              value == null ? 'Selecione uma startup' : null,
                         ),
                         if (_selectedPosition != null) ...[
                           const SizedBox(height: 24),
@@ -274,28 +310,47 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                             Expanded(
                               child: TextFormField(
                                 controller: _qtdController,
-                                style: TextStyle(color: theme.colorScheme.onSurface),
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                ),
                                 decoration: InputDecoration(
                                   labelText: 'Quantidade',
-                                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                  helperText: _selectedPosition != null ? 'Saldo: ${_selectedPosition!.qtdTokens - _selectedPosition!.lockedTokens }' : null,
-                                  helperStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                  labelStyle: TextStyle(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  helperText: _selectedPosition != null
+                                      ? 'Saldo: ${_selectedPosition!.qtdTokens - _selectedPosition!.lockedTokens}'
+                                      : null,
+                                  helperStyle: TextStyle(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                                    borderSide: BorderSide(
+                                      color: theme.dividerColor.withOpacity(
+                                        0.2,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 keyboardType: TextInputType.number,
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
-                                  if (_selectedPosition != null) MaxValueInputFormatter(_selectedPosition!.qtdTokens),
+                                  if (_selectedPosition != null)
+                                    MaxValueInputFormatter(
+                                      _selectedPosition!.qtdTokens,
+                                    ),
                                 ],
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) return 'Obrigatório';
+                                  if (value == null || value.isEmpty)
+                                    return 'Obrigatório';
                                   final int? qtd = int.tryParse(value);
                                   if (qtd == null || qtd <= 0) return 'Mín 1';
-                                  if (_selectedPosition != null && qtd > _selectedPosition!.qtdTokens) {
+                                  if (_selectedPosition != null &&
+                                      qtd > _selectedPosition!.qtdTokens) {
                                     return 'Sem saldo';
                                   }
                                   return null;
@@ -306,14 +361,24 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                             Expanded(
                               child: TextFormField(
                                 controller: _priceController,
-                                style: TextStyle(color: theme.colorScheme.onSurface),
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                ),
                                 decoration: InputDecoration(
                                   labelText: 'Preço/Token',
-                                  labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  labelStyle: TextStyle(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                                    borderSide: BorderSide(
+                                      color: theme.dividerColor.withOpacity(
+                                        0.2,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 keyboardType: TextInputType.number,
@@ -322,10 +387,17 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   CurrencyInputFormatter(),
                                 ],
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) return 'Obrigatório';
-                                  String priceText = value.replaceAll(RegExp(r'[^0-9]'), '');
-                                  final int? priceCents = int.tryParse(priceText);
-                                  if (priceCents == null || priceCents <= 0) return 'Mín R\$ 0,01';
+                                  if (value == null || value.isEmpty)
+                                    return 'Obrigatório';
+                                  String priceText = value.replaceAll(
+                                    RegExp(r'[^0-9]'),
+                                    '',
+                                  );
+                                  final int? priceCents = int.tryParse(
+                                    priceText,
+                                  );
+                                  if (priceCents == null || priceCents <= 0)
+                                    return 'Mín R\$ 0,01';
                                   return null;
                                 },
                               ),
@@ -336,48 +408,79 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                         InkWell(
                           onTap: () async {
                             final now = DateTime.now();
-                            final tomorrow = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-                            
+                            final tomorrow = DateTime(
+                              now.year,
+                              now.month,
+                              now.day,
+                            ).add(const Duration(days: 1));
+
                             final DateTime? picked = await showDatePicker(
                               context: context,
-                              initialDate: _expiresAt.isBefore(tomorrow) ? tomorrow : _expiresAt,
+                              initialDate: _expiresAt.isBefore(tomorrow)
+                                  ? tomorrow
+                                  : _expiresAt,
                               firstDate: tomorrow,
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 365),
+                              ),
                               builder: (context, child) {
                                 return Theme(
-                                  data: isDark ? ThemeData.dark().copyWith(
-                                    colorScheme: ColorScheme.dark(
-                                      primary: const Color(0xFF00A84E),
-                                      onPrimary: Colors.white,
-                                      surface: theme.colorScheme.surface,
-                                      onSurface: theme.colorScheme.onSurface,
-                                    ),
-                                    dialogBackgroundColor: theme.colorScheme.surface,
-                                  ) : theme,
+                                  data: isDark
+                                      ? ThemeData.dark().copyWith(
+                                          colorScheme: ColorScheme.dark(
+                                            primary: const Color(0xFF00A84E),
+                                            onPrimary: Colors.white,
+                                            surface: theme.colorScheme.surface,
+                                            onSurface:
+                                                theme.colorScheme.onSurface,
+                                          ),
+                                          dialogBackgroundColor:
+                                              theme.colorScheme.surface,
+                                        )
+                                      : theme,
                                   child: child!,
                                 );
                               },
                             );
                             if (picked != null) {
                               setState(() {
-                                _expiresAt = DateTime(picked.year, picked.month, picked.day, 23, 59, 59);
+                                _expiresAt = DateTime(
+                                  picked.year,
+                                  picked.month,
+                                  picked.day,
+                                  23,
+                                  59,
+                                  59,
+                                );
                               });
                             }
                           },
                           child: InputDecorator(
                             decoration: InputDecoration(
                               labelText: 'Expira em',
-                              labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              prefixIcon: Icon(Icons.calendar_today, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                              labelStyle: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.calendar_today,
+                                size: 20,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+                                borderSide: BorderSide(
+                                  color: theme.dividerColor.withOpacity(0.2),
+                                ),
                               ),
                             ),
                             child: Text(
                               DateFormat('dd/MM/yyyy').format(_expiresAt),
-                              style: TextStyle(color: theme.colorScheme.onSurface),
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface,
+                              ),
                             ),
                           ),
                         ),
@@ -399,10 +502,18 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
                                   ),
                                 )
-                              : const Text('Publicar Oferta', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              : const Text(
+                                  'Publicar Oferta',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                         const SizedBox(height: 24),
                       ],
@@ -417,49 +528,77 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
   Widget _buildMarketSummary() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     if (_isLoadingChart) {
       return Container(
         height: 150,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(isDark ? 0.1 : 0.2),
+          color: theme.colorScheme.surfaceVariant.withOpacity(
+            isDark ? 0.1 : 0.2,
+          ),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00A84E))),
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF00A84E),
+          ),
+        ),
       );
     }
 
     if (_selectedStartupData == null) return const SizedBox.shrink();
 
     final summary = _selectedStartupData!.summary;
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final currencyFormat = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(isDark ? 0.05 : 0.1),
+        color: theme.colorScheme.surfaceVariant.withOpacity(
+          isDark ? 0.05 : 0.1,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withOpacity(isDark ? 0.2 : 0.1)),
+        border: Border.all(
+          color: theme.dividerColor.withOpacity(isDark ? 0.2 : 0.1),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Resumo de Mercado',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildMetric('Atual', currencyFormat.format(summary.currentPrice)),
-              _buildMetric('Médio', currencyFormat.format(summary.averagePrice)),
-              _buildMetric('Mín/Máx', '${summary.lowestPrice.toStringAsFixed(0)}/${summary.highestPrice.toStringAsFixed(0)}'),
+              _buildMetric(
+                'Atual',
+                currencyFormat.format(summary.currentPrice),
+              ),
+              _buildMetric(
+                'Médio',
+                currencyFormat.format(summary.averagePrice),
+              ),
+              _buildMetric(
+                'Mín/Máx',
+                '${summary.lowestPrice.toStringAsFixed(0)}/${summary.highestPrice.toStringAsFixed(0)}',
+              ),
             ],
           ),
           const SizedBox(height: 24),
           SizedBox(
-            height: 360, // Increased height to avoid overflow and show more details
+            height:
+                360, // Increased height to avoid overflow and show more details
             child: PriceHistoryChart(
               startupId: _selectedPosition!.startupId,
               initialHistory: _selectedStartupData!.history,
@@ -475,12 +614,23 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     final theme = Theme.of(context);
     return Column(
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
       ],
     );
   }
 }
-
-

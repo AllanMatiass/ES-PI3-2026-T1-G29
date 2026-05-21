@@ -16,7 +16,9 @@ class MaxValueInputFormatter extends TextInputFormatter {
 
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.isEmpty) return newValue;
 
     final int? value = int.tryParse(newValue.text);
@@ -29,7 +31,6 @@ class MaxValueInputFormatter extends TextInputFormatter {
     return newValue;
   }
 }
-
 
 class BuyFromStartupPage extends StatefulWidget {
   final String startupId;
@@ -91,11 +92,13 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     final result = await StartupService.getStartupDetails(widget.startupId);
     if (!mounted) return;
 
-    if (!result.success){
+    if (!result.success) {
       FeedbackModal.show(
         context: context,
         title: 'Erro ao carregar',
-        message: result.message ?? 'Não foi possível carregar os detalhes da startup',
+        message:
+            result.message ??
+            'Não foi possível carregar os detalhes da startup',
         type: FeedbackType.error,
       );
       Navigator.of(context).pop();
@@ -108,7 +111,8 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
   }
 
   Future<void> _handlePurchase() async {
-    final userBalanceCents = UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
+    final userBalanceCents =
+        UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
     final totalCents = _selectedTokens * widget.tokenPriceCents;
 
     if (_selectedTokens <= 0) {
@@ -125,7 +129,8 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       FeedbackModal.show(
         context: context,
         title: 'Saldo Insuficiente',
-        message: 'Você não possui saldo suficiente para este investimento. Seu saldo atual é ${_formatCurrency(userBalanceCents)}.',
+        message:
+            'Você não possui saldo suficiente para este investimento. Seu saldo atual é ${_formatCurrency(userBalanceCents)}.',
         type: FeedbackType.error,
         buttonText: 'Entendido',
       );
@@ -139,17 +144,18 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     );
 
     if (!mounted) return;
-    
+
     setState(() => _isPurchasing = false);
-    
+
     if (result.success) {
       // Background refresh of user data
       UserState.refreshUser();
-      
+
       FeedbackModal.show(
         context: context,
         title: 'Investimento Realizado!',
-        message: 'Você adquiriu $_selectedTokens tokens da ${widget.startupName}.',
+        message:
+            'Você adquiriu $_selectedTokens tokens da ${widget.startupName}.',
         type: FeedbackType.success,
         onConfirm: () => Navigator.of(context).pop(true),
         buttonText: 'Voltar para o Portfólio',
@@ -182,7 +188,10 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
           appBar: AppBar(
             title: Text(
               'Confirmar Investimento',
-              style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             backgroundColor: theme.scaffoldBackgroundColor,
             elevation: 0,
@@ -209,7 +218,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
                   ),
                 ),
         );
-      }
+      },
     );
   }
 
@@ -254,8 +263,9 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
 
   Widget _buildFinancialAnalysis() {
     final theme = Theme.of(context);
-    final marketPrice = _startupData?.currentTokenPriceCents ?? widget.tokenPriceCents;
-    
+    final marketPrice =
+        _startupData?.currentTokenPriceCents ?? widget.tokenPriceCents;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -268,7 +278,11 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
         children: [
           Text(
             'Informações de Investimento',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 16),
           _buildAnalysisRow(
@@ -287,13 +301,21 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     );
   }
 
-  Widget _buildAnalysisRow(String label, String value, IconData icon, {Color? valueColor}) {
+  Widget _buildAnalysisRow(
+    String label,
+    String value,
+    IconData icon, {
+    Color? valueColor,
+  }) {
     final theme = Theme.of(context);
     return Row(
       children: [
         Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 12),
-        Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+        ),
         const Spacer(),
         Text(
           value,
@@ -313,7 +335,11 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       children: [
         Text(
           'Histórico de Preços',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 16),
         SizedBox(
@@ -331,8 +357,8 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
   Widget _buildPurchaseSelector() {
     final theme = Theme.of(context);
     // Para startups, vamos assumir um limite alto se não soubermos o disponível exato
-    final int availableTokens = (_startupData != null) 
-        ? (_startupData!.totalTokens - _startupData!.circulatingTokens) 
+    final int availableTokens = (_startupData != null)
+        ? (_startupData!.totalTokens - _startupData!.circulatingTokens)
         : 1000;
 
     return Column(
@@ -340,7 +366,11 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       children: [
         Text(
           'Quantidade de tokens',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 16),
         Row(
@@ -371,19 +401,28 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       isDense: true,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+                        borderSide: BorderSide(
+                          color: theme.dividerColor.withOpacity(0.1),
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF00A84E), width: 2),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF00A84E),
+                          width: 2,
+                        ),
                       ),
                     ),
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
-                      MaxValueInputFormatter(availableTokens > 0 ? availableTokens : 1000000),
+                      MaxValueInputFormatter(
+                        availableTokens > 0 ? availableTokens : 1000000,
+                      ),
                     ],
                     onChanged: (value) {
                       if (value.isNotEmpty) {
@@ -401,7 +440,8 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
                 ),
                 const SizedBox(width: 12),
                 _buildCounterButton(Icons.add, () {
-                  if (_selectedTokens < availableTokens || availableTokens <= 0) {
+                  if (_selectedTokens < availableTokens ||
+                      availableTokens <= 0) {
                     setState(() {
                       _selectedTokens++;
                       _quantityController.text = _selectedTokens.toString();
@@ -452,14 +492,19 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
               children: [
                 Text(
                   'Seu Saldo Disponível',
-                  style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   _formatCurrency(userBalanceCents),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: isInsufficient ? const Color(0xFFEF4444) : theme.colorScheme.onSurface,
+                    color: isInsufficient
+                        ? const Color(0xFFEF4444)
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -470,14 +515,19 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
           children: [
             Text(
               'Total do Investimento',
-              style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             Text(
               _formatCurrency(totalCents),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isInsufficient ? const Color(0xFFEF4444) : const Color(0xFF00A84E),
+                color: isInsufficient
+                    ? const Color(0xFFEF4444)
+                    : const Color(0xFF00A84E),
               ),
             ),
           ],
@@ -486,9 +536,13 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: (_isPurchasing || isInsufficient) ? null : _handlePurchase,
+            onPressed: (_isPurchasing || isInsufficient)
+                ? null
+                : _handlePurchase,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isInsufficient ? theme.disabledColor : const Color(0xFF00A84E),
+              backgroundColor: isInsufficient
+                  ? theme.disabledColor
+                  : const Color(0xFF00A84E),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -500,11 +554,19 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
                 ? const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : Text(
-                    isInsufficient ? 'Saldo Insuficiente' : 'Confirmar Investimento',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    isInsufficient
+                        ? 'Saldo Insuficiente'
+                        : 'Confirmar Investimento',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
           ),
         ),

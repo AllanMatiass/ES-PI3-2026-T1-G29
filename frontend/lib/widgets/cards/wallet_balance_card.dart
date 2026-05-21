@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 import '../animations/animated_currency.dart';
@@ -28,10 +28,7 @@ class WalletBalanceCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
-          colors: [
-            AppColors.primary,
-            AppColors.primaryDark,
-          ],
+          colors: [AppColors.primary, AppColors.primaryDark],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
@@ -50,15 +47,14 @@ class WalletBalanceCard extends StatelessWidget {
             children: [
               const Text(
                 'Saldo total',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
               IconButton(
                 onPressed: onToggleVisibility,
                 icon: Icon(
-                  isVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  isVisible
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                   color: Colors.white70,
                   size: 20,
                 ),
@@ -123,7 +119,11 @@ class WalletBalanceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, {required String label, required IconData icon}) {
+  Widget _buildActionButton(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+  }) {
     return ElevatedButton.icon(
       onPressed: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) => const DepositPage()));
@@ -152,10 +152,7 @@ class WalletBalanceCard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white60,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white60, fontSize: 12),
         ),
         const SizedBox(height: 4),
         FittedBox(
