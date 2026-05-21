@@ -229,3 +229,98 @@ export async function updateWallet({
 
   await updateUser(userId, { wallet });
 }
+
+// ==========================
+// MOVIMENTAÇÕES (DEPÓSITO E SAQUE)
+// ==========================
+
+export async function processDeposit(
+  userId: string,
+  amountInCents: number,
+): Promise<number> {
+  try {
+    const user = await getUserById(userId);
+    if (!user) {
+      throw new HttpsError("not-found", "Usuário não encontrado.");
+    }
+
+    const currentWallet = user.wallet;
+    const newBalanceInCents =
+      (Number(currentWallet?.balanceInCents) || 0) + amountInCents;
+
+    const wallet = {
+      ...currentWallet,
+      balanceInCents: newBalanceInCents,
+      updatedAt: Timestamp.now(),
+    };
+
+    // 1. Registra a movimentação exatamente como pedido no requisito
+    await usersCollection.doc(userId).collection("movements").add({
+      type: "DEPOSIT",
+      amountInCents: amountInCents,
+      createdAt: Timestamp.now(),
+    });
+
+    // 2. Atualiza o saldo do usuário
+    await updateUser(userId, { wallet });
+
+    return newBalanceInCents;
+  } catch (error: any) {
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError(
+      "internal",
+      "Erro interno ao processar o depósito.",
+      error,
+    );
+  }
+}
+
+export async function processWithdraw(
+  userId: string,
+  amountInCents: number,
+): Promise<number> {
+  try {
+    const user = await getUserById(userId);
+    if (!user) {
+      throw new HttpsError("not-found", "Usuário não encontrado.");
+    }
+
+    const currentWallet = user.wallet;
+    const currentBalance = Number(currentWallet?.balanceInCents) || 0;
+
+    // TRATAMENTO DE EXCEÇÃO: Impede o saque se não houver saldo suficiente
+    if (currentBalance < amountInCents) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Saldo insuficiente para realizar o saque.",
+      );
+    }
+
+    const newBalanceInCents = currentBalance - amountInCents;
+
+    const wallet = {
+      ...currentWallet,
+      balanceInCents: newBalanceInCents,
+      updatedAt: Timestamp.now(),
+    };
+
+    // 1. Registra a movimentação de saque
+    await usersCollection.doc(userId).collection("movements").add({
+      type: "WITHDRAW",
+      amountInCents: amountInCents,
+      createdAt: Timestamp.now(),
+    });
+
+    // 2. Atualiza o saldo do usuário
+    await updateUser(userId, { wallet });
+
+    return newBalanceInCents;
+  } catch (error: any) {
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError(
+      "internal",
+      "Erro interno ao processar o saque.",
+      error,
+    );
+  }
+}
