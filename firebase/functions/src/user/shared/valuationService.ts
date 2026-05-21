@@ -1,4 +1,5 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
+
 import { Timestamp } from "firebase-admin/firestore";
 import { getTransactionsByUserId } from "../../exchange/repositories/transactionRepository";
 import {
