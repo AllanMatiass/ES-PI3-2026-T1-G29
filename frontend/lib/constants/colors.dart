@@ -10,6 +10,15 @@ class AppColors {
   static const Color white = Colors.white;
   static const Color black = Colors.black;
   static const Color transparent = Colors.transparent;
+  static final Color grey50 = Colors.grey[50]!;
+  static final Color grey100 = Colors.grey[100]!;
+  static final Color grey200 = Colors.grey[200]!;
+  static final Color grey300 = Colors.grey[300]!;
+  static final Color grey400 = Colors.grey[400]!;
+  static final Color grey600 = Colors.grey[600]!;
+  static final Color grey700 = Colors.grey[700]!;
+  static final Color grey800 = Colors.grey[800]!;
+  static final Color grey900 = Colors.grey[900]!;
 
   // Feedback colors
   static const Color success = Color(0xFF25A830);
