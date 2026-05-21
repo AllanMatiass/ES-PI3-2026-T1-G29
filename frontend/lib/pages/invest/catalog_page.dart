@@ -7,6 +7,10 @@ import 'package:frontend/models/startup.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../widgets/cards/startup_card.dart';
 
+import '../../widgets/headers/home_header.dart';
+import '../../services/user_state.dart';
+import '../../models/user.dart';
+
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
 
@@ -39,134 +43,144 @@ class _CatalogPageState extends State<CatalogPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Investir',
-          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
-        ),
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          // Search and Filters
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
-                });
-              },
-              style: TextStyle(color: theme.colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: 'Buscar startups...',
-                hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
+    final isDark = theme.brightness == Brightness.dark;
+
+    return ValueListenableBuilder<UserProfile?>(
+      valueListenable: UserState.userNotifier,
+      builder: (context, userData, _) {
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: SafeArea(
+            child: Column(
               children: [
-                _buildFilterChip(null, 'Todas'),
-                const SizedBox(width: 8),
-                _buildFilterChip(StartupStage.nova, 'Novas'),
-                const SizedBox(width: 8),
-                _buildFilterChip(StartupStage.em_operacao, 'Em Operação'),
-                const SizedBox(width: 8),
-                _buildFilterChip(StartupStage.em_expansao, 'Em Expansão'),
+                // Custom Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                  child: AppHeader(
+                    title: 'Investir',
+                    userData: userData,
+                    isDark: isDark,
+                  ),
+                ),
+                
+                // Search and Filters
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value.toLowerCase();
+                      });
+                    },
+                    style: TextStyle(color: theme.colorScheme.onSurface),
+                    decoration: InputDecoration(
+                      hintText: 'Buscar startups...',
+                      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                      prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                  ),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      _buildFilterChip(null, 'Todas'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(StartupStage.nova, 'Novas'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(StartupStage.em_operacao, 'Em Operação'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(StartupStage.em_expansao, 'Em Expansão'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _handleRefresh,
+                    child: FutureBuilder<ApiResponse<List<StartupListItem>>>(
+                      future: _startupsFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return _buildSkeletonLoading();
+                        }
+                        
+                        if (snapshot.hasError) {
+                          return _buildErrorState(snapshot.error.toString());
+                        }
+                        
+                        if (!snapshot.hasData) {
+                          return _buildErrorState('Nenhum dado recebido');
+                        }
+
+                        final response = snapshot.data!;
+                        
+                        if (!response.success) {
+                          return _buildErrorState(response.message ?? 'Erro desconhecido');
+                        }
+
+                        var startups = response.data!;
+
+                        if (startups.isEmpty) {
+                          return ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              SizedBox(
+                                height: MediaQuery.of(context).size.height * 0.6,
+                                child: Center(child: Text('Nenhuma startup encontrada.', style: TextStyle(color: theme.colorScheme.onSurface))),
+                              ),
+                            ],
+                          );
+                        }
+
+                        if (_searchQuery.isNotEmpty) {
+                          startups = startups
+                              .where((s) =>
+                                  s.name.toLowerCase().contains(_searchQuery) ||
+                                  s.shortDescription.toLowerCase().contains(_searchQuery))
+                              .toList();
+                        }
+                        if (_selectedStage != null) {
+                          startups = startups.where((s) => s.stage == _selectedStage).toList();
+                        }
+
+                        if (startups.isEmpty) {
+                          return ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              SizedBox(
+                                height: MediaQuery.of(context).size.height * 0.6,
+                                child: Center(child: Text('Nenhuma startup corresponde aos filtros.', style: TextStyle(color: theme.colorScheme.onSurface))),
+                              ),
+                            ],
+                          );
+                        }
+
+                        return ListView.builder(
+                          itemCount: startups.length,
+                          padding: const EdgeInsets.all(16.0),
+                          itemBuilder: (context, index) {
+                            final startup = startups[index];
+                            return StartupCard(startup: startup);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _handleRefresh,
-              child: FutureBuilder<ApiResponse<List<StartupListItem>>>(
-                future: _startupsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildSkeletonLoading();
-                  }
-                  
-                  if (snapshot.hasError) {
-                    return _buildErrorState(snapshot.error.toString());
-                  }
-                  
-                  if (!snapshot.hasData) {
-                    return _buildErrorState('Nenhum dado recebido');
-                  }
-
-                  final response = snapshot.data!;
-                  
-                  if (!response.success) {
-                    return _buildErrorState(response.message ?? 'Erro desconhecido');
-                  }
-
-                  var startups = response.data!;
-
-                  if (startups.isEmpty) {
-                    return ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.6,
-                          child: Center(child: Text('Nenhuma startup encontrada.', style: TextStyle(color: theme.colorScheme.onSurface))),
-                        ),
-                      ],
-                    );
-                  }
-
-                  if (_searchQuery.isNotEmpty) {
-                    startups = startups
-                        .where((s) =>
-                            s.name.toLowerCase().contains(_searchQuery) ||
-                            s.shortDescription.toLowerCase().contains(_searchQuery))
-                        .toList();
-                  }
-                  if (_selectedStage != null) {
-                    startups = startups.where((s) => s.stage == _selectedStage).toList();
-                  }
-
-                  if (startups.isEmpty) {
-                    return ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.6,
-                          child: Center(child: Text('Nenhuma startup corresponde aos filtros.', style: TextStyle(color: theme.colorScheme.onSurface))),
-                        ),
-                      ],
-                    );
-                  }
-
-                  return ListView.builder(
-                    itemCount: startups.length,
-                    padding: const EdgeInsets.all(16.0),
-                    itemBuilder: (context, index) {
-                      final startup = startups[index];
-                      return StartupCard(startup: startup);
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
