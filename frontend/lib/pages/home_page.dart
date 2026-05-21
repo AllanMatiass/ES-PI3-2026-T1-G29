@@ -24,7 +24,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-
     _pages = [
       HomeView(
         userName: widget.userName,
@@ -55,10 +54,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -87,7 +83,9 @@ class _HomePageState extends State<HomePage> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+        unselectedItemColor: theme.colorScheme.onSurfaceVariant.withOpacity(
+          0.6,
+        ),
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         backgroundColor: theme.colorScheme.surface,
