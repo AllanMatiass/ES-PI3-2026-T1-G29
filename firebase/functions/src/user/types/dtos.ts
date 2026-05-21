@@ -33,3 +33,23 @@ export type PaginatedInvestmentsResponseDTO = {
   investments: WalletTokenPositionDTO[];
   lastStartupId: string | null;
 };
+
+export type PortfolioRange = "1D" | "1W" | "1M" | "1Y" | "YTD";
+
+export type GetUserTokenValuationsRequest = {
+  range: PortfolioRange;
+};
+
+export type PortfolioHistoryPoint = {
+  timestamp: string;
+  valueCents: number;
+};
+
+export type GetUserTokenValuationsResponse = {
+  range: PortfolioRange;
+  currency: string;
+  totalValueCents: number;
+  variationCents: number;
+  variationPercent: number;
+  history: PortfolioHistoryPoint[];
+};
