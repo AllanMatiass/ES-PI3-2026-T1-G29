@@ -85,6 +85,10 @@ class InvestmentCard extends StatelessWidget {
                         fontSize: 14,
                       ),
                     ),
+                    if (isBalanceVisible && position.qtdTokens > 0) ...[
+                      const SizedBox(height: 8),
+                      _buildTokenDistributionBar(context),
+                    ],
                   ],
                 ),
               ),
@@ -132,6 +136,78 @@ class InvestmentCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTokenDistributionBar(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = position.qtdTokens;
+    final locked = position.lockedTokens;
+    final available = total - locked;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            height: 6,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            ),
+            child: Row(
+              children: [
+                if (available > 0)
+                  Flexible(
+                    flex: available,
+                    child: Container(color: AppColors.primary),
+                  ),
+                if (locked > 0)
+                  Flexible(
+                    flex: locked,
+                    child: Container(color: AppColors.grey400),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            _buildTokenLabel(context, 'Disponível: $available', AppColors.primary),
+            if (locked > 0) ...[
+              const SizedBox(width: 12),
+              _buildTokenLabel(context, 'Bloqueado: $locked', AppColors.grey400),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTokenLabel(BuildContext context, String text, Color color) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 
