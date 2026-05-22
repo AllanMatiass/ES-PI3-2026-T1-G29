@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes e Pedro Romanato
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/offer.dart';
@@ -12,6 +12,7 @@ class OfferService {
   static const String _createOfferUrl = 'https://createoffer-obpz3whteq-uc.a.run.app';
   static const String _acceptOfferUrl = 'https://acceptoffer-obpz3whteq-uc.a.run.app';
   static const String _expireOfferUrl = 'https://expireoffer-obpz3whteq-uc.a.run.app';
+  static const String _cancelOfferUrl = 'https://canceloffer-obpz3whteq-uc.a.run.app';
 
   // Obtém a lista de ofertas globais disponíveis, suportando paginação.
   static Future<ApiResponse<Map<String, dynamic>>> getOffers({
@@ -118,6 +119,21 @@ class OfferService {
       data: {"offerId": offerId},
       forceTokenRefresh: true,
       fromJson: (responseData) => responseData['expired'] == true,
+      client: client,
+      auth: auth,
+    );
+  }
+
+  static Future<ApiResponse<bool>> cancelOffer({
+    required String offerId,
+    http.Client? client,
+    FirebaseAuth? auth,
+  }) async {
+    return BaseService.post<bool>(
+      _cancelOfferUrl,
+      data: {"id": offerId},
+      forceTokenRefresh: true,
+      fromJson: (responseData) => responseData['cancelled'] == true,
       client: client,
       auth: auth,
     );

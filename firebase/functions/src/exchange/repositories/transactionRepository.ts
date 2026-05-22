@@ -62,3 +62,43 @@ export async function getTransactionsByUserId(
     };
   });
 }
+
+export async function listTransactionsByUserId(
+  userId: string,
+  limit = 20,
+  lastTransactionId?: string,
+): Promise<{
+  transactions: TransactionWithId[];
+  lastTransactionId: string | null;
+}> {
+  let query = transactionCollection
+    .where("participants", "array-contains", userId)
+    .orderBy("createdAt", "desc");
+
+  if (lastTransactionId) {
+    const lastDoc = await transactionCollection.doc(lastTransactionId).get();
+    if (lastDoc.exists) {
+      query = query.startAfter(lastDoc);
+    }
+  }
+
+  const snapshot = await query.limit(limit).get();
+
+  const transactions = snapshot.docs.map((doc) => {
+    const data = doc.data() as Omit<Transaction, "createdAt"> & {
+      createdAt: Timestamp;
+    };
+
+    return {
+      id: doc.id,
+      ...data,
+    };
+  });
+
+  const lastId =
+    transactions.length > 0 && transactions.length === limit
+      ? transactions[transactions.length - 1].id
+      : null;
+
+  return { transactions, lastTransactionId: lastId };
+}
