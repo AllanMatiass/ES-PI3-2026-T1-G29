@@ -306,3 +306,26 @@ export async function processWithdraw(
 
   return newBalanceInCents;
 }
+
+export async function getMovementsByUserId(userId: string): Promise<
+  {
+    type: "DEPOSIT" | "WITHDRAW";
+    amountInCents: number;
+    createdAt: Timestamp;
+  }[]
+> {
+  const snapshot = await usersCollection
+    .doc(userId)
+    .collection("movements")
+    .orderBy("createdAt", "asc")
+    .get();
+
+  return snapshot.docs.map(
+    (doc) =>
+      doc.data() as {
+        type: "DEPOSIT" | "WITHDRAW";
+        amountInCents: number;
+        createdAt: Timestamp;
+      },
+  );
+}
