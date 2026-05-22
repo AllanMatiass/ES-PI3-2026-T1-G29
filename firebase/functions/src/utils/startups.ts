@@ -27,7 +27,7 @@ const DOCUMENTS = {
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/ecotech%2FEcoTech_log.png?alt=media&token=b3b12047-aa61-4c1d-bc8b-8711bd1c4553",
 
     demoVideos: [
-      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/projeto%20integrador%203%20-%20G29%20-%20Storage%20-%20Arquivos%20-%20Console%20do%20Firebase%20e%20mais%204%20p%C3%A1ginas%20-%20Perfil%201%20%E2%80%94%20Microsoft%E2%80%8B%20Edge%202026-05-11%2007-14-44.mp4?alt=media&token=4e68de69-93a3-4b6d-aa8f-abccd04cbe6f",
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/ecotech%2Fecotech_apresentacao.mp4?alt=media&token=80084fec-e43d-4233-9526-2964047a69e9",
     ],
     executiveSummary:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/PI3-2026-Mobile-MesclaInvest%20(2).pdf?alt=media&token=fc10b029-fd38-4d09-b5bd-d46357dd87be",
@@ -40,7 +40,9 @@ const DOCUMENTS = {
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FEduVerse%2FeduVerse_Business_Plan.pdf?alt=media&token=928556e7-1165-4dea-85f5-95f15a81cb49",
     coverImageUrl:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FEduVerse%2Feduverse-log.png?alt=media&token=f5c4cda8-c634-427d-9e0d-b83332f3df7c",
-    demoVideos: ["https://example.com/videos/eduverse-demo"],
+    demoVideos: [
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FEduVerse%2Feduverse_apresentacao.mp4?alt=media&token=f1e2b77d-fb65-4388-86fb-9458902f639b",
+    ],
     executiveSummary:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FEduVerse%2FeduVerse_Executive_Summary.pdf?alt=media&token=1dda59ad-9c52-44f5-ae78-3fa4f3a0abb6",
     pitchDeckUrl:
@@ -52,7 +54,9 @@ const DOCUMENTS = {
     coverImageUrl:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FFinAI%2FFinAI_logo.png?alt=media&token=f14c98ef-6aa2-4317-b7b8-6f8f33b6a69a",
 
-    demoVideos: ["https://example.com/videos/finai-demo"],
+    demoVideos: [
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FFinAI%2Ffinai_apresentacao.mp4?alt=media&token=b7ceb056-3efa-4337-b6ca-c9b1d4476654",
+    ],
     executiveSummary:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FFinAI%2FFinAI_Executive_Summary.pdf?alt=media&token=0cc01ad3-c7dd-4fa6-a1fd-8603bfc5f8d9",
     pitchDeckUrl:
@@ -69,23 +73,14 @@ const DOCUMENTS = {
     pitchDeckUrl:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FHealthTrack%20Pitch%20Deck.pdf?alt=media&token=22df9e27-5828-41b4-8180-dd375480b7b8",
   },
-  logissmart: {
-    businessPlan:
-      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FFinAI_Business_Plan.pdf?alt=media&token=07c0bacc-1aaa-469a-8d65-dcb2b6b54b2c",
-    coverImageUrl:
-      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FFinAI_logo.png?alt=media&token=8409ffbb-6f78-475e-8b83-b4dde0cd5f7c",
-    demoVideos: ["https://example.com/videos/logissmart-demo"],
-    executiveSummary:
-      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FFinAI_Executive_Summary.pdf?alt=media&token=823e4f27-51a1-40e0-8bd8-90bd7394791b",
-    pitchDeckUrl:
-      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FLogisSmart%2FFinAI%20Pitch%20Deck.pdf?alt=media&token=db1ca123-e879-4842-9a65-e7fc7c6921a8",
-  },
   mentorai: {
     businessPlan:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FMentorAI%2FMentorAI_Business_Plan.pdf?alt=media&token=9a40a278-a042-444c-a74c-956c0a2b2367",
     coverImageUrl:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FMentorAI%2Fmentorai_logo.png?alt=media&token=69951ca2-a83f-4f53-9a61-faf3114921e8",
-    demoVideos: ["https://example.com/videos/mentorai-demo"],
+    demoVideos: [
+      "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FMentorAI%2Fmentorai_apresentacao.mp4?alt=media&token=2fb9df2b-660c-4207-9f53-7634518e2358",
+    ],
     executiveSummary:
       "https://firebasestorage.googleapis.com/v0/b/projeto-integrador-3---g29.firebasestorage.app/o/stps%2FMentorAI%2FMentorAI_Executive_Summary.pdf?alt=media&token=f3616346-9a43-41aa-bd8d-c0d5149cb905",
     pitchDeckUrl:
@@ -361,34 +356,6 @@ export const startupsData: CreateStartupDocumentDTO[] = [
     pitchDeckUrl: DOCUMENTS["finai"].pitchDeckUrl,
     coverImageUrl: DOCUMENTS["finai"].coverImageUrl,
     tags: ["fintech", "ia", "estudantes"],
-    createdAt: FieldValue.serverTimestamp(),
-  },
-  {
-    id: "logissmart",
-    name: "LogisSmart",
-    stage: "em_operacao",
-    shortDescription: "Otimização de rotas de entrega.",
-    description:
-      "Sistema inteligente de roteirização logística que otimiza o 'last mile' para pequenos e-commerces.",
-    executiveSummary: DOCUMENTS["logissmart"].executiveSummary,
-    capitalRaisedCents: 300000000,
-    totalTokensIssued: 800000,
-    circulatingTokens: 620000,
-    currentTokenPriceCents: 375,
-    founders: [
-      {
-        name: "Thiago Neves",
-        role: "CEO",
-        equityPercent: 100,
-        bio: "Logístico com 15 anos de mercado.",
-      },
-    ],
-    externalMembers: [],
-    demoVideos: DOCUMENTS["logissmart"].demoVideos,
-    businessPlan: DOCUMENTS["logissmart"].businessPlan,
-    pitchDeckUrl: DOCUMENTS["logissmart"].pitchDeckUrl,
-    coverImageUrl: DOCUMENTS["logissmart"].coverImageUrl,
-    tags: ["logtech", "otimizacao", "entrega"],
     createdAt: FieldValue.serverTimestamp(),
   },
 ];
