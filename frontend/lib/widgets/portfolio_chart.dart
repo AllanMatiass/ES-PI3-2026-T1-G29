@@ -11,10 +11,10 @@ class PortfolioChart extends StatefulWidget {
   const PortfolioChart({super.key});
 
   @override
-  State<PortfolioChart> createState() => _PortfolioChartState();
+  State<PortfolioChart> createState() => PortfolioChartState();
 }
 
-class _PortfolioChartState extends State<PortfolioChart> {
+class PortfolioChartState extends State<PortfolioChart> {
   List<PortfolioHistoryPoint> _history = [];
   String _selectedRange = 'YTD';
   bool _isLoading = true;
@@ -25,10 +25,11 @@ class _PortfolioChartState extends State<PortfolioChart> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    refresh();
   }
 
-  Future<void> _loadData() async {
+  Future<void> refresh() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _selectedIndex = null;
@@ -75,7 +76,7 @@ class _PortfolioChartState extends State<PortfolioChart> {
     setState(() {
       _selectedRange = range;
     });
-    _loadData();
+    refresh();
   }
 
   void _handleTap(Offset localPosition, Size size) {
