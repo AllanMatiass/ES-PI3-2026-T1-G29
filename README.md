@@ -12,105 +12,138 @@
 
 # MesclaInvest
 
-Projeto desenvolvido para a disciplina **Projeto Integrador 3** do curso de **Engenharia de Software da PUC-Campinas (2026)**.
-
-O **MesclaInvest** é uma aplicação mobile que simula uma plataforma de investimento em startups vinculadas ao ecossistema de inovação **Mescla**. A proposta é criar um ambiente digital onde usuários possam visualizar startups, acompanhar informações institucionais e realizar **negociações simuladas de tokens**, representando participações digitais nos projetos.
-
-O objetivo do projeto é proporcionar experiência prática no desenvolvimento de um sistema completo, envolvendo **backend, API, banco de dados e aplicação mobile**, além da aplicação de conceitos de arquitetura de software, modelagem de dados e integração entre serviços.
-
-> ⚠️ Todas as operações financeiras presentes no sistema são **simulações** e não envolvem dinheiro real ou integração com instituições financeiras.
+O **MesclaInvest** é uma plataforma de investimento em startups que simula um ecossistema real de Venture Capital e Mercado de Capitais. O projeto permite que usuários invistam em startups através da compra de **tokens**, participem de rodadas primárias, negociem no mercado secundário e acompanhem a valorização de seu portfólio em tempo real.
 
 ---
 
-# Funcionalidades Principais
+## 🏛️ Arquitetura e Padrões
 
-- Cadastro e autenticação de usuários
-- Catálogo de startups do ecossistema Mescla
-- Visualização de informações institucionais das startups
-- Sistema de perguntas e interações com empreendedores
-- Simulação de compra e venda de tokens
-- Carteira digital com saldo fictício
-- Dashboard para acompanhamento de valorização dos tokens
-- Autenticação multifator (2FA/MFA)
+### Backend (Firebase Functions + TypeScript)
 
----
+- **Repository Pattern**: Abstração da camada de dados para facilitar testes e manutenção (ex: `startupRepository.ts`).
+- **Service Layer**: Lógica de negócio isolada (ex: `valuationService.ts`, `pricingEngine.ts`).
+- **Middleware de Erros (`withCallHandler`)**: Padronização de respostas da API.
+- **Atomicidade**: Uso extensivo de **Firestore Transactions** para garantir integridade em operações financeiras.
 
-# Arquitetura do Sistema
+### Frontend (Flutter + Dart)
 
-O projeto é dividido em duas principais camadas:
-
-### Backend
-
-Responsável por:
-
-- Regras de negócio
-- Autenticação de usuários
-- Simulação das negociações de tokens
-- APIs para consumo pelo aplicativo mobile
-- Persistência de dados
-
-### Mobile (Frontend)
-
-Aplicação mobile responsável por:
-
-- Interface do usuário
-- Consumo das APIs
-- Visualização de startups
-- Interação com o sistema de investimentos simulados
+- **Service Pattern**: Chamadas de API centralizadas em `BaseService`.
+- **Global State Management**: Uso de `ChangeNotifier` (ex: `UserState`) para dados do usuário.
+- **Atomic Design Principles**: Componentização modular (Cards, Tiles, Modais).
+- **Consistência Visual**: Widgets de estado para Loading (`Shimmer`), Erro e Vazio.
 
 ---
 
-# Tecnologias Utilizadas
+## 🛠️ Funções do Backend (Cloud Functions)
 
-## Backend
+### 🔐 Autenticação (Auth)
 
-- **Node.js**
-- **TypeScript**
-- **Firebase Admin SDK**
-- **Firebase Authentication**
-- **Firebase Firestore**
+- `signup`: Realiza o cadastro de novos investidores no sistema.
 
-## Mobile
+### 📈 Mercado e Negociação (Exchange)
 
-- **Flutter**
-- **Dart**
+- `buyTokensFromStartup`: **Mercado Primário**. Compra direta da startup, impactando o preço via oferta e demanda.
+- `createOffer`: Cria uma oferta de venda no **Mercado Secundário**.
+- `acceptOffer`: Executa a compra de uma oferta existente de outro investidor.
+- `cancelOffer`: Remove uma oferta de venda do mercado.
+- `getOffers` / `getMyOffers`: Listagem de oportunidades de investimento.
+- `expireOffer`: Processo automático de expiração de ofertas antigas.
 
-## Banco de Dados
+### 🚀 Startups
 
-- **Firebase Firestore**
+- `listStartups`: Catálogo completo com filtros e busca.
+- `getStartupDetails`: Agrega métricas de risco, retorno esperado e dados institucionais.
+- `getStartupPriceHistory`: Dados históricos para geração de gráficos.
+- `getStartupQuestions` / `createStartupQuestion`: Sistema de Q&A entre investidores e founders.
+- `seedStartupCatalog`: Ferramenta de carga inicial de dados.
 
-## Ferramentas de Desenvolvimento
+### 👤 Usuário e Carteira (User)
 
-- **Git**
-- **GitHub**
-- **Visual Studio Code**
-- **Android Studio**
+- `getUser`: Detalhes do perfil, saldo e posições custodiadas.
+- `getUserTokenValuations`: Histórico de evolução do patrimônio (NAV).
+- `createDeposit`: Adição de saldo fictício (BRL).
+- `createWithdraw`: Retirada de fundos da carteira.
 
 ---
 
-# Como rodar o projeto
+## 🧮 Fórmulas e Lógica de Negócio
 
-`git clone https://github.com/AllanMatiass/ES-PI3-2026-T1-G29.git`
-`cd ES-PI3-2026-T1-G29`
+### 1. NAV (Net Asset Value) - Valorização de Portfólio
+
+O valor total do patrimônio do usuário é calculado em tempo real:
+`Patrimônio = Saldo em Conta + Σ (Quantidade de Tokens_i * Preço Atual_i)`
+
+A função `getUserTokenValuations` reconstrói o histórico do NAV "desfazendo" transações passadas a partir do estado atual para gerar o gráfico evolutivo.
+
+### 2. Pricing Engine (Motor de Preço)
+
+O preço dos tokens não é estático. Ele reage a cada negociação:
+
+- **Segurança (Safety Lock)**: Nenhuma negociação pode alterar o preço em mais de **±5%** (Delta Max) de uma única vez.
+- **Mercado Primário**:
+  `P_novo = P_atual * (1 + (Q_comprada / Total_Tokens * K_primario))`
+- **Mercado Secundário**:
+  `P_novo = P_atual * (1 + ((P_oferta - P_atual) / P_atual * Q_negociada / Total_Tokens * K_secundario))`
+- **Mercado Terciário (Eventos)**:
+  `P_novo = P_atual * (1 + Delta_Evento)`
+
+### 3. Investment Metric Service (Risco e Retorno)
+
+O risco de cada startup (0-10) é calculado com base em pesos:
+
+- **Estágio (Stage)**: Startups "novas" possuem risco maior que "em expansão".
+- **Equipe (Team)**: Founders solo aumentam o risco; múltiplos founders reduzem.
+- **Complexidade**: Tags como "DeepTech" ou "IoT" aumentam a pontuação de risco.
+- **Mentoria**: Presença de conselheiros reduz o risco.
+
+---
+
+## 🛡️ Tratamento de Erros e Segurança
+
+### `withCallHandler`
+
+Todas as funções são envolvidas por este wrapper, que garante:
+
+1. **Logs centralizados**: Erros são registrados no Firebase Logger com contexto (UID, dados).
+2. **Resposta Padronizada**: A resposta segue sempre o modelo:
+   ```json
+   {
+     "success": boolean,
+     "data": T,
+     "error": { "code": string, "message": string, "status": number }
+   }
+   ```
+3. **Mapeamento Automático**: Converte `HttpsError` para status codes HTTP correspondentes (400, 401, 403, 404, etc).
+
+### Por que usar Transactions?
+
+As **Transactions do Firestore** são cruciais no MesclaInvest para evitar **Race Conditions**:
+
+- **Consistência de Saldo**: Garante que o usuário não gaste mais do que possui se clicar no botão "Comprar" várias vezes rapidamente.
+- **Integridade de Estoque**: Impede que o mesmo token seja vendido para dois compradores simultâneos no Mercado Secundário.
+- **Sincronismo**: Atualiza o preço da startup, cria o registro da transação e altera o saldo do usuário como uma única operação atômica. Se uma parte falhar, nada é persistido.
+
+---
+
+## 🚀 Como rodar o projeto
 
 ### Setup Backend
 
-`cd backend`
+`cd firebase/functions`
 
-- Criar um arquivo .env ao lado de .env-example e colocar todas as variáveis do exemplo preenchida com dados reais
-- Colocar em `/secrets` o arquivo `firebase-service-account.json` disponibilizado aos membros ou pegar um novo json no service account do firebase e renomear o arquivo para `firebase-service-account`
-
-`npm install`
-`npm start`
+1. `npm install`
+2. Configure o Firebase CLI e selecione o projeto.
+3. `npm run build`
+4. `firebase emulators:start` (para teste local) ou `firebase deploy`
 
 ### Setup Frontend (Flutter)
 
 `cd frontend`
 
-- Criar um arquivo .env ao lado de .env.example e colocar todas as variáveis do exemplo preenchida com dados reais
-
-`flutter pub get`
-`flutter run`
+1. `flutter pub get`
+2. Crie o arquivo `.env` com as chaves do Firebase.
+3. Coloque o arquivo `google-services.json` em `frontend/android/app`
+4. `flutter run`
 
 ---
 
