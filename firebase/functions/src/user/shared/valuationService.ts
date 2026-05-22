@@ -6,7 +6,10 @@ import {
   getValuationHistory,
   getStartupsByIds,
 } from "../../startups/repositories/startupRepository";
-import { getUserById } from "../repositories/userRepository";
+import {
+  getUserById,
+  getMovementsByUserId,
+} from "../repositories/userRepository";
 import {
   GetUserTokenValuationsResponse,
   PortfolioRange,
@@ -25,7 +28,10 @@ export class ValuationService {
       throw new HttpsError("not-found", "Usuário não encontrado.");
     }
 
-    const transactions = await getTransactionsByUserId(userId);
+    const [transactions, movements] = await Promise.all([
+      getTransactionsByUserId(userId),
+      getMovementsByUserId(userId),
+    ]);
     const timestamps = this.generateTimestamps(range || "1M");
 
     if (timestamps.length === 0) {
@@ -79,12 +85,16 @@ export class ValuationService {
       currentHoldings.set(p.startupId, p.qtdTokens);
     });
 
-    // Ordenar transações decrescentemente por data para facilitar o "rewind"
+    // Ordenar transações e movimentações decrescentemente por data para o "rewind"
     const sortedTransactions = [...transactions].sort(
+      (a, b) => b.createdAt.toMillis() - a.createdAt.toMillis(),
+    );
+    const sortedMovements = [...movements].sort(
       (a, b) => b.createdAt.toMillis() - a.createdAt.toMillis(),
     );
 
     let transactionIndex = 0;
+    let movementIndex = 0;
 
     for (const point of timestamps) {
       const pointMillis = point.getTime();
@@ -108,6 +118,20 @@ export class ValuationService {
           currentHoldings.set(tx.startupId, currentQty + tx.qtdTokens);
         }
         transactionIndex++;
+      }
+
+      // "Desfazer" movimentações (depósitos/saques) que ocorreram após este ponto
+      while (
+        movementIndex < sortedMovements.length &&
+        sortedMovements[movementIndex].createdAt.toMillis() > pointMillis
+      ) {
+        const mov = sortedMovements[movementIndex];
+        if (mov.type === "DEPOSIT") {
+          currentBalance -= mov.amountInCents;
+        } else if (mov.type === "WITHDRAW") {
+          currentBalance += mov.amountInCents;
+        }
+        movementIndex++;
       }
 
       // Calcular valor do portfólio neste ponto
