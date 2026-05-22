@@ -27,6 +27,8 @@ class WalletView extends StatefulWidget {
 }
 
 class _WalletViewState extends State<WalletView> {
+  final GlobalKey<PortfolioChartState> _chartKey =
+      GlobalKey<PortfolioChartState>();
   List<Transaction> _transactions = [];
   Map<String, StartupListItem> _startupsMap = {};
   bool _isLoading = true;
@@ -52,6 +54,7 @@ class _WalletViewState extends State<WalletView> {
         UserState.refreshUser(),
         TransactionService.getUserTransactions(limit: 5),
         StartupService.listStartups(),
+        _chartKey.currentState?.refresh() ?? Future.value(),
       ]);
 
       final transactionResult =
@@ -141,7 +144,7 @@ class _WalletViewState extends State<WalletView> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        const PortfolioChart(),
+                        PortfolioChart(key: _chartKey),
                         const SizedBox(height: 32),
 
                         // Investimentos (Ativos)
