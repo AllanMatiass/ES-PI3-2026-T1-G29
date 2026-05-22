@@ -21,7 +21,21 @@ export type WalletDTO = Omit<Wallet, "positions"> & {
 };
 
 export type DepositRequestDTO = {
-  amountInCents: number;
+  amount: number;
+};
+
+export type DepositResponseDTO = {
+  userId: string;
+  newBalance: number;
+};
+
+export type WithdrawRequestDTO = {
+  amount: number;
+};
+
+export type WithdrawResponseDTO = {
+  userId: string;
+  newBalance: number;
 };
 
 export type GetUserInvestmentsRequestDTO = {
