@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:frontend/services/auth.dart';
-import 'package:frontend/models/api_response.dart';
 
 // Generate a MockClient using Mockito
 @GenerateMocks([http.Client])
@@ -27,16 +26,20 @@ void main() {
           "data": {
             "uid": "LP2zQlJx54N9NPYwiwMQfLADIdC3",
             "name": "Matias",
-            "email": "matias3@22e.com"
-          }
-        }
+            "email": "matias3@22e.com",
+          },
+        },
       };
 
-      when(mockClient.post(
-        Uri.parse(signUpUrl),
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode(successResponse), 200));
+      when(
+        mockClient.post(
+          Uri.parse(signUpUrl),
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer(
+        (_) async => http.Response(jsonEncode(successResponse), 200),
+      );
 
       final result = await AuthService.signUp(
         cpf: "881.973.540-73",
@@ -59,16 +62,18 @@ void main() {
           "error": {
             "code": "already-exists",
             "message": "CPF já cadastrado no sistema.",
-            "status": 409
-          }
-        }
+            "status": 409,
+          },
+        },
       };
 
-      when(mockClient.post(
-        Uri.parse(signUpUrl),
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenAnswer((_) async => http.Response(jsonEncode(errorResponse), 409));
+      when(
+        mockClient.post(
+          Uri.parse(signUpUrl),
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenAnswer((_) async => http.Response(jsonEncode(errorResponse), 409));
 
       final result = await AuthService.signUp(
         cpf: "881.973.540-73",
@@ -85,11 +90,13 @@ void main() {
     });
 
     test('returns error ApiResponse when connection fails', () async {
-      when(mockClient.post(
-        Uri.parse(signUpUrl),
-        headers: anyNamed('headers'),
-        body: anyNamed('body'),
-      )).thenThrow(Exception('Falha na rede'));
+      when(
+        mockClient.post(
+          Uri.parse(signUpUrl),
+          headers: anyNamed('headers'),
+          body: anyNamed('body'),
+        ),
+      ).thenThrow(Exception('Falha na rede'));
 
       final result = await AuthService.signUp(
         cpf: "881.973.540-73",

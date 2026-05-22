@@ -3,11 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:frontend/firebase_options.dart';
-import 'package:frontend/pages/forgot_password_page.dart';
+import 'package:frontend/pages/auth/forgot_password_page.dart';
 import 'package:frontend/pages/home_page.dart';
-import 'package:frontend/pages/login_page.dart';
-import 'package:frontend/pages/register_page.dart';
+import 'package:frontend/pages/auth/login_page.dart';
+import 'package:frontend/pages/auth/register_page.dart';
+import 'package:frontend/constants/colors.dart';
 
 /// Notificador global para alternar entre os temas Light e Dark.
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
@@ -25,6 +27,9 @@ void main() async {
 
   // Inicializa o Firebase com as configurações da plataforma atual
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Inicializa a formatação de data para o locale brasileiro
+  await initializeDateFormatting('pt_BR', null);
   
   runApp(const MesclaInvest());
 }
@@ -48,23 +53,23 @@ class MesclaInvest extends StatelessWidget {
           // Configuração do Tema Claro
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF00A84E),
+              seedColor: AppColors.primary,
               brightness: Brightness.light,
             ),
             useMaterial3: true,
             fontFamily: 'Inter',
-            scaffoldBackgroundColor: Colors.white,
+            scaffoldBackgroundColor: AppColors.white,
           ),
           // Configuração do Tema Escuro
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF00A84E),
+              seedColor: AppColors.primary,
               brightness: Brightness.dark,
-              surface: const Color(0xFF0F172A),
+              surface: AppColors.surfaceDark,
             ),
             useMaterial3: true,
             fontFamily: 'Inter',
-            scaffoldBackgroundColor: const Color(0xFF0F172A),
+            scaffoldBackgroundColor: AppColors.surfaceDark,
           ),
           // Página inicial: Login se deslogado, Home se autenticado
           home: user == null 
@@ -75,7 +80,7 @@ class MesclaInvest extends StatelessWidget {
             '/login': (context) => const LoginPage(),
             '/register': (context) => const RegisterPage(),
             '/forgotPassword': (context) => const ForgotPasswordPage(),
-            '/home': (context) => HomePage(userName: FirebaseAuth.instance.currentUser?.displayName ?? 'Cida Paulino'),
+            '/home': (context) => HomePage(userName: FirebaseAuth.instance.currentUser?.displayName ?? 'Desconhecido'),
           },
         );
       },

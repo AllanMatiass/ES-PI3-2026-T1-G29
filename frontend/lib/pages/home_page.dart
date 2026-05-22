@@ -1,10 +1,12 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/catalog_page.dart';
-import 'package:frontend/widgets/home_view.dart';
-import 'package:frontend/widgets/soon_view.dart';
-import 'package:frontend/widgets/offers_view.dart';
+import 'package:frontend/constants/colors.dart';
+import 'package:frontend/pages/invest/catalog_page.dart';
+import 'package:frontend/views/home_view.dart';
+import 'package:frontend/pages/profile/profile_page.dart';
+import 'package:frontend/views/offers_view.dart';
+import 'package:frontend/views/wallet_view.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
@@ -22,16 +24,15 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-
     _pages = [
       HomeView(
         userName: widget.userName,
         onNavigateToCatalog: () => _onItemTapped(1),
       ),
-      CatalogPage(),
+      const CatalogPage(),
       const OffersView(),
-      const SoonView(title: 'Conta'),
-      const SoonView(title: 'Perfil'),
+      const WalletView(),
+      const ProfilePage(),
     ];
   }
 
@@ -53,10 +54,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -69,13 +67,13 @@ class _HomePageState extends State<HomePage> {
             label: 'Investir',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.local_offer_outlined),
-            activeIcon: Icon(Icons.local_offer),
-            label: 'Ofertas',
+            icon: Icon(Icons.candlestick_chart),
+            activeIcon: Icon(Icons.candlestick_chart),
+            label: 'Mercado',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.credit_card),
-            label: 'Conta',
+            label: 'Carteira',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
@@ -84,8 +82,10 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF00A84E),
-        unselectedItemColor: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: theme.colorScheme.onSurfaceVariant.withOpacity(
+          0.6,
+        ),
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         backgroundColor: theme.colorScheme.surface,

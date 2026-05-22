@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes e Pedro Vinicius Romanato
 import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
@@ -8,17 +8,19 @@ import {
   getOffersBySellerId,
   listOffers,
   createOfferInTransaction,
+  cancelOfferInTransaction,
   expireOfferInTransaction,
 } from "../repositories/offerRepository";
-import { getUserById } from "../../auth/repositories/userRepository";
 import { upsertStartupInvestor } from "../../startups/shared/upsertInvestor";
-import { Wallet, WalletTokenPositionDTO } from "../../auth/types";
+import { Wallet } from "../../user/types";
 import { TransactionService } from "./transactionService";
 import { Offer, OfferWithId } from "../types";
 import {
   CreateOfferRequestDTO,
   AcceptOfferRequestDTO,
   AcceptOfferResponseDTO,
+  CancelOfferRequestDTO,
+  CancelOfferResponseDTO,
   ExpireOfferResponseDTO,
   GetMyOffersResponseDTO,
   MyOfferDTO,
@@ -28,8 +30,11 @@ import {
 import { validateTransactionData } from "../utils";
 import { TokenPricingService } from "./tokenPricingService";
 import { StartupDocument } from "../../startups/types";
+import { UserService } from "../../user/shared/userService";
+import { WalletTokenPositionDTO } from "../../user/types/dtos";
 
 const transactionService = new TransactionService();
+const userService = new UserService();
 
 export class OfferService {
   private tokenPricingService = new TokenPricingService();
@@ -66,7 +71,7 @@ export class OfferService {
     const now = Timestamp.now();
 
     const sellerPosition = sellerUser?.wallet?.positions?.find(
-      (p) => p.startupId === startupId,
+      (p: WalletTokenPositionDTO) => p.startupId === startupId,
     );
     const averageAcquisitionPriceCents = sellerPosition?.averagePriceCents || 0;
 
@@ -106,6 +111,44 @@ export class OfferService {
     return offer;
   }
 
+  async cancelOffer(
+    sellerId: string,
+    data: CancelOfferRequestDTO,
+  ): Promise<CancelOfferResponseDTO> {
+    const offerId = normalizeString(data?.id);
+
+    if (!offerId) {
+      throw new HttpsError(
+        "invalid-argument",
+        "offerId deve estar presente no corpo da requisição.",
+      );
+    }
+
+    const offer = await getOfferById(offerId);
+
+    if (!offer) {
+      throw new HttpsError("not-found", "Oferta não encontrada.");
+    }
+
+    if (offer.seller.id !== sellerId) {
+      throw new HttpsError(
+        "permission-denied",
+        "Apenas o vendedor pode cancelar a própria oferta.",
+      );
+    }
+
+    if (offer.status !== "OPEN") {
+      throw new HttpsError(
+        "failed-precondition",
+        `Oferta não pode ser cancelada: status atual é ${offer.status}.`,
+      );
+    }
+
+    const cancelled = await cancelOfferInTransaction(offerId, sellerId);
+
+    return { offerId, cancelled };
+  }
+
   async acceptOffer(
     buyerId: string,
     data: AcceptOfferRequestDTO,
@@ -122,7 +165,7 @@ export class OfferService {
 
     const [offer, buyerUser] = await Promise.all([
       getOfferById(offerId),
-      getUserById(buyerId),
+      userService.get(buyerId),
     ]);
 
     if (!offer) {
@@ -275,7 +318,8 @@ export class OfferService {
         (Number(sellerWallet.balanceInCents) || 0) + purchaseTotalCents;
 
       sellerWallet.totalInvestedCents = sellerWallet.positions.reduce(
-        (acc, p) => acc + (Number(p.investedCents) || 0),
+        (acc: number, p: WalletTokenPositionDTO) =>
+          acc + (Number(p.investedCents) || 0),
         0,
       );
 
@@ -324,7 +368,8 @@ export class OfferService {
         (Number(buyerWallet.balanceInCents) || 0) - purchaseTotalCents;
 
       buyerWallet.totalInvestedCents = buyerWallet.positions.reduce(
-        (acc, p) => acc + (Number(p.investedCents) || 0),
+        (acc: number, p: WalletTokenPositionDTO) =>
+          acc + (Number(p.investedCents) || 0),
         0,
       );
 
