@@ -1,29 +1,26 @@
-import { onRequest } from "firebase-functions/v2/https";
+// Autor: Murilo Rigoni
+import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { processWithdraw } from "../repositories/userRepository";
+import { withCallHandler } from "../../shared/middlewares/errorHandler";
+import { WithdrawRequestDTO, WithdrawResponseDTO } from "../types/dtos";
+import { requireAuthenticatedUser } from "../../shared/auth";
 
-export const createWithdraw = onRequest(async (req, res) => {
-  try {
-    const { userId, amount } = req.body;
+export const createWithdraw = onCall(
+  withCallHandler<WithdrawRequestDTO, WithdrawResponseDTO>(async (request) => {
+    const userId = requireAuthenticatedUser(request).uid;
+    const { amount } = request.data;
 
-    if (!userId || !amount || amount <= 0) {
-      res.status(400).send({ success: false, message: "Dados inválidos." });
-      return;
+    if (!amount || amount <= 0) {
+      throw new HttpsError("invalid-argument", "Dados inválidos.");
     }
 
     const amountInCents = Math.round(amount * 100);
     const newBalanceInCents = await processWithdraw(userId, amountInCents);
 
-    // Retorna exatamente: id do usuário + nova quantidade de fundos
-    res.status(200).send({
+    // Retorna exatamente: id do usuário + nova quantidade de fundos (em centavos)
+    return {
       userId: userId,
-      newBalance: newBalanceInCents / 100,
-    });
-  } catch (error: any) {
-    // Se cair no erro de "Saldo insuficiente" (failed-precondition), retorna status 400
-    const statusCode = error.code === "failed-precondition" ? 400 : 500;
-    res.status(statusCode).send({
-      success: false,
-      message: error.message || "Erro ao sacar.",
-    });
-  }
-});
+      newBalance: newBalanceInCents,
+    };
+  }),
+);
