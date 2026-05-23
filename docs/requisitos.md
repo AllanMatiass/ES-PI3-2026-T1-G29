@@ -56,12 +56,7 @@ O sistema deve permitir visualização de vídeos das startups.
 
 ---
 
-**RF10 - Favoritos**  
-O sistema deve permitir que o usuário favorite startups.
-
----
-
-**RF11 - Filtros Avançados**  
+**RF10 - Filtros Avançados**  
 O sistema deve permitir filtragem por:
 
 - Estágio
@@ -70,39 +65,39 @@ O sistema deve permitir filtragem por:
 
 ---
 
-**RF12 - Atualizações de Startup**  
+**RF11 - Atualizações de Startup**  
 O sistema deve exibir atualizações publicadas pelas startups.
 
 ---
 
 ### 💰 Mercado e Investimentos
 
-**RF13 - Carteira Digital**  
+**RF12 - Carteira Digital**  
 O sistema deve permitir saldo fictício para operações.
 
 ---
 
-**RF14 - Emissão de Tokens**  
+**RF13 - Emissão de Tokens**  
 Cada startup deve possuir quantidade fixa de tokens.
 
 ---
 
-**RF15 - Propriedade de Tokens**  
+**RF14 - Propriedade de Tokens**  
 O sistema deve registrar a posse de tokens por usuário.
 
 ---
 
-**RF16 - Compra de Tokens**  
+**RF15 - Compra de Tokens**  
 O usuário deve poder comprar tokens utilizando saldo disponível.
 
 ---
 
-**RF17 - Venda de Tokens**  
+**RF16 - Venda de Tokens**  
 O usuário deve poder vender tokens que possui.
 
 ---
 
-**RF18 - Validação de Operações**  
+**RF17 - Validação de Operações**  
 O sistema deve impedir:
 
 - Compra sem saldo suficiente
@@ -110,34 +105,34 @@ O sistema deve impedir:
 
 ---
 
-**RF19 - Registro de Transações**  
+**RF18 - Registro de Transações**  
 O sistema deve registrar todas as operações realizadas.
 
 ---
 
 ### 📈 Precificação e Análise
 
-**RF20 - Definição de Preço**  
+**RF19 - Definição de Preço**  
 O preço do token deve ser baseado na última transação realizada.
 
 ---
 
-**RF21 - Atualização de Preço**  
+**RF20 - Atualização de Preço**  
 O preço deve ser atualizado automaticamente a cada compra ou venda.
 
 ---
 
-**RF22 - Variação Percentual**  
+**RF21 - Variação Percentual**  
 O sistema deve calcular a variação percentual do preço.
 
 ---
 
-**RF23 - Histórico de Preços**  
+**RF22 - Histórico de Preços**  
 O sistema deve armazenar o histórico de preços dos tokens.
 
 ---
 
-**RF24 - Dashboard de Valorização**  
+**RF23 - Dashboard de Valorização**  
 O sistema deve exibir gráficos de variação:
 
 - Diário
@@ -146,7 +141,7 @@ O sistema deve exibir gráficos de variação:
 
 ---
 
-**RF25 - Portfólio do Usuário**  
+**RF24 - Portfólio do Usuário**  
 O sistema deve exibir:
 
 - Tokens adquiridos
@@ -156,24 +151,14 @@ O sistema deve exibir:
 
 ---
 
-### 🔔 Interação
-
-**RF26 - Notificações**  
-O sistema deve notificar o usuário sobre:
-
-- Execução de operações
-- Respostas no mural
-
----
-
 ### 🔐 Segurança
 
-**RF27 - Controle de Acesso**  
+**RF25 - Controle de Acesso**  
 Apenas usuários autenticados podem realizar operações.
 
 ---
 
-**RF28 - Rastreabilidade**  
+**RF26 - Rastreabilidade**  
 O sistema deve registrar:
 
 - Usuário
@@ -183,9 +168,7 @@ O sistema deve registrar:
 
 ---
 
-## ⭐ DIFERENCIAL DO SISTEMA
-
-**RF29 - Simulação de Mercado Dinâmico**
+**RF27 - Simulação de Mercado Dinâmico**
 
 O sistema deve simular variação de preço baseada nas ações dos usuários:
 
@@ -225,7 +208,7 @@ As senhas devem ser armazenadas utilizando hash seguro.
 ---
 
 **RNF06 - Desempenho**  
-O sistema deve responder em até 2 segundos.
+Quando a função firebase estiver em estado cold, deve responder em menos de 5 segundos
 
 ---
 

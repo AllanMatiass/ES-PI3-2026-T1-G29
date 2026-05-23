@@ -4,21 +4,32 @@ import 'package:intl/intl.dart';
 import '../services/user_state.dart';
 import '../models/user.dart';
 import '../constants/colors.dart';
+import '../services/wallet_service.dart';
+import '../widgets/modals/feedback_modal.dart';
 
-class DepositPage extends StatefulWidget {
-  const DepositPage({super.key});
+enum WalletTransactionType { deposit, withdraw }
+
+class WalletTransactionPage extends StatefulWidget {
+  final WalletTransactionType type;
+
+  const WalletTransactionPage({
+    super.key,
+    required this.type,
+  });
 
   @override
-  State<DepositPage> createState() => _DepositPageState();
+  State<WalletTransactionPage> createState() => _WalletTransactionPageState();
 }
 
-class _DepositPageState extends State<DepositPage> {
+class _WalletTransactionPageState extends State<WalletTransactionPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _amountController = TextEditingController();
   final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
   
   String? _selectedMethod;
   bool _isLoading = false;
+
+  bool get isDeposit => widget.type == WalletTransactionType.deposit;
 
   @override
   void dispose() {
@@ -34,24 +45,54 @@ class _DepositPageState extends State<DepositPage> {
   }
 
   bool _isFormValid() {
-    final amountText = _amountController.text.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', '.').trim();
-    final amount = double.tryParse(amountText) ?? 0.0;
-    return amount >= 10.0 && _selectedMethod != null;
+    final cleanText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final amountInCents = int.tryParse(cleanText) ?? 0;
+    
+    return amountInCents >= 1000 && (isDeposit ? _selectedMethod != null : true);
   }
 
-  Future<void> _handleDeposit() async {
+  Future<void> _handleTransaction() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2));
+    final cleanText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final amountInCents = int.tryParse(cleanText) ?? 0;
+
+    final response = isDeposit 
+        ? await WalletService.deposit(amountInCents / 100.0)
+        : await WalletService.withdraw(amountInCents / 100.0);
 
     if (mounted) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Solicitação de depósito enviada!')),
-      );
-      Navigator.pop(context);
+      final data = response.data;
+      if (response.success && data != null) {
+        final currentUser = UserState.user;
+        if (currentUser != null) {
+          // Update user state using copyWith and the new balance from API
+          final updatedUser = currentUser.copyWith(
+            wallet: currentUser.wallet.copyWith(
+              balanceInCents: data.newBalance.toDouble(),
+            ),
+          );
+          UserState.updateUser(updatedUser);
+        }
+
+        FeedbackModal.show(
+          context: context,
+          title: isDeposit ? 'Depósito Realizado' : 'Saque Realizado',
+          message: 'Sua transação de ${_currencyFormat.format(amountInCents / 100)} foi processada com sucesso.',
+          type: FeedbackType.success,
+          onConfirm: () => Navigator.pop(context),
+        );
+      } else {
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro na Transação',
+          message: response.message ?? 'Ocorreu um erro ao processar sua solicitação.',
+          type: FeedbackType.error,
+        );
+      }
     }
   }
 
@@ -62,7 +103,7 @@ class _DepositPageState extends State<DepositPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Depositar Saldo'),
+        title: Text(isDeposit ? 'Depositar Saldo' : 'Sacar Saldo'),
         centerTitle: true,
       ),
       body: LayoutBuilder(
@@ -117,10 +158,16 @@ class _DepositPageState extends State<DepositPage> {
                         ],
                         validator: (value) {
                           if (value == null || value.isEmpty) return 'Informe o valor';
-                          final amountText = value.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', '.').trim();
-                          final n = double.tryParse(amountText);
-                          if (n == null || n <= 0) return 'Valor inválido';
-                          if (n < 10.0) return 'Mínimo de R\$ 10,00';
+                          final cleanText = value.replaceAll(RegExp(r'[^0-9]'), '');
+                          final amountInCents = int.tryParse(cleanText) ?? 0;
+                          if (amountInCents <= 0) return 'Valor inválido';
+                          if (amountInCents < 1000) return 'Mínimo de R\$ 10,00';
+                          
+                          if (!isDeposit) {
+                            final balance = UserState.user?.wallet.balanceInCents ?? 0;
+                            if (amountInCents > balance) return 'Saldo insuficiente';
+                          }
+                          
                           return null;
                         },
                       ),
@@ -138,39 +185,50 @@ class _DepositPageState extends State<DepositPage> {
                       ),
                       const SizedBox(height: 40),
 
-                      Text(
-                        'Selecione o método',
-                        style: TextStyle(
-                          fontSize: 16, 
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
+                      if (isDeposit) ...[
+                        Text(
+                          'Selecione o método',
+                          style: TextStyle(
+                            fontSize: 16, 
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      _MethodTile(
-                        title: 'Pix',
-                        subtitle: 'Aprovação imediata',
-                        icon: Icons.qr_code,
-                        value: 'pix',
-                        selectedValue: _selectedMethod,
-                        onTap: (val) => setState(() => _selectedMethod = val),
-                      ),
-                      const SizedBox(height: 12),
-                      _MethodTile(
-                        title: 'Boleto',
-                        subtitle: 'Compensação em até 3 dias úteis',
-                        icon: Icons.receipt_long,
-                        value: 'boleto',
-                        selectedValue: _selectedMethod,
-                        onTap: (val) => setState(() => _selectedMethod = val),
-                      ),
+                        _MethodTile(
+                          title: 'Pix',
+                          subtitle: 'Aprovação imediata',
+                          icon: Icons.qr_code,
+                          value: 'pix',
+                          selectedValue: _selectedMethod,
+                          onTap: (val) => setState(() => _selectedMethod = val),
+                        ),
+                        const SizedBox(height: 12),
+                        _MethodTile(
+                          title: 'Boleto',
+                          subtitle: 'Compensação em até 3 dias úteis',
+                          icon: Icons.receipt_long,
+                          value: 'boleto',
+                          selectedValue: _selectedMethod,
+                          onTap: (val) => setState(() => _selectedMethod = val),
+                        ),
+                      ] else ...[
+                         Text(
+                          'O valor será enviado para sua conta bancária cadastrada.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? AppColors.grey400 : AppColors.grey600,
+                          ),
+                        ),
+                      ],
                       
                       const Spacer(),
                       const SizedBox(height: 32),
 
                       ElevatedButton(
-                        onPressed: (_isFormValid() && !_isLoading) ? _handleDeposit : null,
+                        onPressed: (_isFormValid() && !_isLoading) ? _handleTransaction : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -187,9 +245,9 @@ class _DepositPageState extends State<DepositPage> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Confirmar Depósito',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            : Text(
+                                isDeposit ? 'Confirmar Depósito' : 'Confirmar Saque',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                       ),
                     ],
@@ -300,7 +358,6 @@ class _CurrencyInputFormatter extends TextInputFormatter {
       return newValue.copyWith(text: '');
     }
 
-    // Remove tudo que não é dígito
     String cleanText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
     
     if (cleanText.isEmpty) {
