@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 import '../animations/animated_currency.dart';
-import 'package:frontend/pages/deposit_page.dart';
+import 'package:frontend/pages/wallet_transaction_page.dart';
 
 class WalletBalanceCard extends StatelessWidget {
   final double balanceCents;
@@ -101,6 +101,7 @@ class WalletBalanceCard extends StatelessWidget {
                   context,
                   label: 'Depositar',
                   icon: Icons.add_circle_outline,
+                  type: WalletTransactionType.deposit,
                 ),
               ),
               const SizedBox(width: 12),
@@ -109,6 +110,7 @@ class WalletBalanceCard extends StatelessWidget {
                   context,
                   label: 'Sacar',
                   icon: Icons.remove_circle_outline,
+                  type: WalletTransactionType.withdraw,
                 ),
               ),
             ],
@@ -122,12 +124,15 @@ class WalletBalanceCard extends StatelessWidget {
     BuildContext context, {
     required String label,
     required IconData icon,
+    required WalletTransactionType type,
   }) {
     return ElevatedButton.icon(
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const DepositPage()),
+          MaterialPageRoute(
+            builder: (context) => WalletTransactionPage(type: type),
+          ),
         );
       },
 

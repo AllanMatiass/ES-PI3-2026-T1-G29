@@ -277,7 +277,7 @@ class Access {
 //Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
 // Classe que contém todos os dados detalhados de uma startup.
 class StartupData {
-  // 🔹 básicos
+  // básicos
   final String id;
   final String name;
   final String segment;
@@ -285,18 +285,18 @@ class StartupData {
   final String shortDescription;
   final String longDescription;
 
-  // 🔹 métricas
+  // métricas
   final double expectedReturn;
   final String riskLabel;
   final String horizon;
   final int valuation;
 
-  // 🔹 tokens
+  // tokens
   final int totalTokens;
   final int circulatingTokens;
   final int currentTokenPriceCents;
 
-  // 🔹 startup
+  // startup
   final List<String> demoVideos;
   final String? pitchDeckUrl;
   final String? businessPlanUrl;
@@ -309,16 +309,16 @@ class StartupData {
   final FirestoreTimestamp createdAt;
   final FirestoreTimestamp updatedAt;
 
-  // 🔹 relações
+  // relações
   final List<Founder> founders;
   final List<String> tags;
 
-  // 🔹 mercado
+  // mercado
   final List<PriceHistoryItem> history;
   final PriceSummary summary;
   final PriceMeta meta;
 
-  // 🔹 interação
+  // interação
   final List<Question> questions;
   final Access access;
 

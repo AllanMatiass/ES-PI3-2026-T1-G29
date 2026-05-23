@@ -110,8 +110,8 @@ class OfferWithId {
   final String startupName;
   final TransactionSeller seller;
   final int qtdTokens;
-  final int tokenPriceCents;
-  final int totalCents;
+  final double tokenPriceCents;
+  final double totalCents;
   final TransactionType transactionType;
   final FirestoreTimestamp createdAt;
   
@@ -146,8 +146,8 @@ class OfferWithId {
       startupName: json['startupName'] ?? '',
       seller: TransactionSeller.fromJson(json['seller'] ?? {}),
       qtdTokens: (json['qtdTokens'] as num?)?.toInt() ?? 0,
-      tokenPriceCents: (json['tokenPriceCents'] as num?)?.toInt() ?? 0,
-      totalCents: (json['totalCents'] as num?)?.toInt() ?? 0,
+      tokenPriceCents: (json['tokenPriceCents'] as num?)?.toDouble() ?? 0.0,
+      totalCents: (json['totalCents'] as num?)?.toDouble() ?? 0.0,
       transactionType: TransactionType.fromString(json['transactionType'] ?? ''),
       createdAt: json['createdAt'] != null
           ? FirestoreTimestamp.fromJson(json['createdAt'])
