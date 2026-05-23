@@ -1,8 +1,8 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/wallet/wallet_transaction_page.dart';
 import '../../constants/colors.dart';
 import '../animations/animated_currency.dart';
-import 'package:frontend/pages/wallet_transaction_page.dart';
 
 class WalletBalanceCard extends StatelessWidget {
   final double balanceCents;
