@@ -6,8 +6,9 @@ import 'package:frontend/models/user.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/services/user_state.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
-import 'package:frontend/widgets/price_chart.dart';
 import 'package:intl/intl.dart';
+
+import '../../../widgets/charts/price_chart.dart';
 
 class MaxValueInputFormatter extends TextInputFormatter {
   final int maxValue;

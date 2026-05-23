@@ -5,8 +5,6 @@ import 'package:frontend/models/user.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/services/user_state.dart';
-import 'package:frontend/widgets/empty_state_widget.dart';
-import 'package:frontend/widgets/error_state_widget.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 
@@ -14,6 +12,8 @@ import 'package:frontend/widgets/headers/home_header.dart';
 import 'package:frontend/widgets/cards/balance_card.dart';
 import 'package:frontend/widgets/quick_action_button.dart';
 import 'package:frontend/widgets/cards/startup_card.dart';
+import 'package:frontend/widgets/states/empty_state_widget.dart';
+import 'package:frontend/widgets/states/error_state_widget.dart';
 
 // Visão principal da tela inicial, responsável por exibir saldo, ações rápidas e lista de startups em destaque.
 class HomeView extends StatefulWidget {

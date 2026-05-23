@@ -468,9 +468,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirmed != true) return;
-    await AuthService.signOut();
-    if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
-    }
+    await AuthService.signOut(context);
   }
 }
