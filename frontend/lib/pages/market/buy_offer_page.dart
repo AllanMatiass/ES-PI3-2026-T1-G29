@@ -316,7 +316,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
               ),
               Text(
                 discount > 0
-                    ? '${discount.toStringAsFixed(1)}% abaixo do mercado'
+                    ? '${discount.toStringAsFixed(2)}% abaixo do mercado'
                     : 'Preço de mercado',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -502,7 +502,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   /// Rodapé com exibição do saldo do usuário, total da compra e botão de ação.
-  Widget _buildBottomButton(int totalCents, UserProfile? userData) {
+  Widget _buildBottomButton(double totalCents, UserProfile? userData) {
     final theme = Theme.of(context);
     final userBalanceCents = userData?.wallet.balanceInCents ?? 0.0;
     final isInsufficient = totalCents > userBalanceCents;
