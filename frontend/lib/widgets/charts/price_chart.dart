@@ -1,8 +1,8 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/models/startup.dart';
+import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
-import '../models/startup.dart';
-import '../services/startup_service.dart';
 
 /// Widget que exibe um gráfico de histórico de preços de uma startup.
 class PriceHistoryChart extends StatefulWidget {
@@ -348,7 +348,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   /// Formata a data ISO para o padrão brasileiro DD/MM/AAAA.
   String _formatDate(String timestamp) {
     try {
-      final date = DateTime.parse(timestamp);
+      final date = DateTime.parse(timestamp).toLocal();
       return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
     } catch (e) {
       return timestamp.split('T').first;

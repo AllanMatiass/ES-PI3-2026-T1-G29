@@ -1,8 +1,10 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/api_response.dart';
 import 'base_service.dart';
+import 'user_state.dart';
 
 // Serviço responsável pela autenticação de usuários via Firebase e Cloud Functions.
 class AuthService {
@@ -72,6 +74,13 @@ class AuthService {
   // Retorna o objeto do usuário atualmente logado no Firebase.
   static User? getCurrentUser() => FirebaseAuth.instance.currentUser;
 
-  // Finaliza a sessão do usuário no Firebase.
-  static Future<void> signOut() => FirebaseAuth.instance.signOut();
+  // Finaliza a sessão do usuário no Firebase, limpa o estado global e redireciona para o login.
+  static Future<void> signOut([BuildContext? context]) async {
+    await FirebaseAuth.instance.signOut();
+    UserState.clear();
+
+    if (context != null && context.mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
+  }
 }

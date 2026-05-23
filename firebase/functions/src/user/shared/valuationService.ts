@@ -6,10 +6,7 @@ import {
   getValuationHistory,
   getStartupsByIds,
 } from "../../startups/repositories/startupRepository";
-import {
-  getUserById,
-  getMovementsByUserId,
-} from "../repositories/userRepository";
+import { getUserById } from "../repositories/userRepository";
 import {
   GetUserTokenValuationsResponse,
   PortfolioRange,
@@ -28,10 +25,7 @@ export class ValuationService {
       throw new HttpsError("not-found", "Usuário não encontrado.");
     }
 
-    const [transactions, movements] = await Promise.all([
-      getTransactionsByUserId(userId),
-      getMovementsByUserId(userId),
-    ]);
+    const transactions = await getTransactionsByUserId(userId);
     const timestamps = this.generateTimestamps(range || "1M");
 
     if (timestamps.length === 0) {
@@ -79,22 +73,17 @@ export class ValuationService {
     const history: PortfolioHistoryPoint[] = [];
 
     // Reconstruir do presente para o passado
-    let currentBalance = user.wallet.balanceInCents;
     const currentHoldings = new Map<string, number>();
     user.wallet.positions.forEach((p) => {
       currentHoldings.set(p.startupId, p.qtdTokens);
     });
 
-    // Ordenar transações e movimentações decrescentemente por data para o "rewind"
+    // Ordenar transações decrescentemente por data para o "rewind"
     const sortedTransactions = [...transactions].sort(
-      (a, b) => b.createdAt.toMillis() - a.createdAt.toMillis(),
-    );
-    const sortedMovements = [...movements].sort(
       (a, b) => b.createdAt.toMillis() - a.createdAt.toMillis(),
     );
 
     let transactionIndex = 0;
-    let movementIndex = 0;
 
     for (const point of timestamps) {
       const pointMillis = point.getTime();
@@ -109,32 +98,16 @@ export class ValuationService {
         const isSeller = tx.seller?.id === userId;
 
         if (isBuyer) {
-          currentBalance += tx.totalCents;
           const currentQty = currentHoldings.get(tx.startupId) || 0;
           currentHoldings.set(tx.startupId, currentQty - tx.qtdTokens);
         } else if (isSeller) {
-          currentBalance -= tx.totalCents;
           const currentQty = currentHoldings.get(tx.startupId) || 0;
           currentHoldings.set(tx.startupId, currentQty + tx.qtdTokens);
         }
         transactionIndex++;
       }
 
-      // "Desfazer" movimentações (depósitos/saques) que ocorreram após este ponto
-      while (
-        movementIndex < sortedMovements.length &&
-        sortedMovements[movementIndex].createdAt.toMillis() > pointMillis
-      ) {
-        const mov = sortedMovements[movementIndex];
-        if (mov.type === "DEPOSIT") {
-          currentBalance -= mov.amountInCents;
-        } else if (mov.type === "WITHDRAW") {
-          currentBalance += mov.amountInCents;
-        }
-        movementIndex++;
-      }
-
-      // Calcular valor do portfólio neste ponto
+      // Calcular valor do portfólio neste ponto (apenas ativos)
       let portfolioValue = 0;
       currentHoldings.forEach((qty, startupId) => {
         if (qty <= 0) return;
@@ -153,7 +126,7 @@ export class ValuationService {
 
       history.push({
         timestamp: point.toISOString(),
-        valueCents: Math.round(currentBalance + portfolioValue),
+        valueCents: Math.round(portfolioValue),
       });
     }
 
@@ -161,12 +134,16 @@ export class ValuationService {
     const chronologicalHistory = history.reverse();
     const latestValue =
       chronologicalHistory[chronologicalHistory.length - 1].valueCents;
-    const firstValue = chronologicalHistory[0].valueCents;
-    const variationCents = latestValue - firstValue;
+
+    // CÁLCULO DE VALORIZAÇÃO REAL (ROI):
+    // Em vez de comparar apenas o início e fim do gráfico (que pode ser 0 se a compra foi recente),
+    // calculamos o lucro real comparando o valor atual dos ativos com o total investido (custo médio).
+    const totalInvested = user.wallet.totalInvestedCents;
+    const variationCents = latestValue - totalInvested;
     const variationPercent =
-      firstValue === 0
+      totalInvested === 0
         ? 0
-        : Number(((variationCents / firstValue) * 100).toFixed(2));
+        : Number(((variationCents / totalInvested) * 100).toFixed(2));
 
     return {
       range,
@@ -181,8 +158,6 @@ export class ValuationService {
   private generateTimestamps(range: PortfolioRange): Date[] {
     const points: Date[] = [];
     const now = new Date();
-    // Normalizar para o início do minuto/hora para consistência
-    now.setSeconds(0, 0);
 
     switch (range) {
       case "1D": {
@@ -248,25 +223,32 @@ export class ValuationService {
     for (const entry of history) {
       if (entry.createdAt.toMillis() <= tsMillis) {
         lastValuation = entry.value;
-        continue;
+      } else {
+        // Como o history está ordenado ASC, o primeiro que for depois do timestamp
+        // significa que os anteriores eram válidos.
+        break;
       }
-      // Como o history está ordenado ASC, o primeiro que for depois do timestamp
-      // significa que os anteriores eram válidos.
-      break;
     }
 
-    if (lastValuation === null) {
-      // Se não houver histórico antes, usa o preço inicial se a startup já existia
-      // Ou 0 se a startup foi criada depois
-      if (startup.createdAt && startup.createdAt.toMillis() <= tsMillis) {
-        // Precisamos do tokenPriceCents. Se não gravamos no histórico,
-        // estimamos pelo totalTokensIssued.
-        // No startupRepository, saveValuationSnapshot grava o 'value' (valuation total).
-        return (startup.lastValuationCents || 0) / startup.totalTokensIssued;
-      }
-      return 0;
+    if (lastValuation !== null) {
+      return lastValuation / startup.totalTokensIssued;
     }
 
-    return lastValuation / startup.totalTokensIssued;
+    // Se não houver histórico NO RANGE, mas o timestamp for o presente ou próximo dele,
+    // usamos o preço atual da startup para evitar mostrar valores defasados.
+    const isRecent = Math.abs(new Date().getTime() - tsMillis) < 5 * 60 * 1000; // 5 minutos
+    if (history.length === 0 || isRecent) {
+      return startup.currentTokenPriceCents;
+    }
+
+    // Fallback: Se o timestamp for anterior à primeira avaliação do range,
+    // tentamos usar o lastValuationCents (valor anterior à última mudança registrada)
+    if (history.length > 0 && history[0].createdAt.toMillis() > tsMillis) {
+      if (startup.lastValuationCents && startup.lastValuationCents > 0) {
+        return startup.lastValuationCents / startup.totalTokensIssued;
+      }
+    }
+
+    return startup.currentTokenPriceCents;
   }
 }

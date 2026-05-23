@@ -46,7 +46,7 @@ abstract class BaseService {
         return ApiResponse.error('Resposta vazia do servidor');
       }
 
-      // Tenta decodificar o JSON com segurança para evitar FormatException (ex: erro HTML 401/403)
+
       dynamic body;
       try {
         body = jsonDecode(response.body);
