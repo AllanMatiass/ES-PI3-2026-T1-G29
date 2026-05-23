@@ -39,4 +39,10 @@ class UserState {
   static void updateUser(UserProfile profile) {
     userNotifier.value = profile;
   }
+
+  // Limpa o estado global do usuário.
+  static void clear() {
+    userNotifier.value = null;
+    isLoadingNotifier.value = false;
+  }
 }

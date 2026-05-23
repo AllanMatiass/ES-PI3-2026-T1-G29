@@ -1,5 +1,8 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/charts/portfolio_chart.dart';
+import 'package:frontend/widgets/states/empty_state_widget.dart';
+import 'package:frontend/widgets/states/error_state_widget.dart';
 import '../models/user.dart';
 import '../models/startup.dart';
 import '../models/transaction.dart';
@@ -9,10 +12,7 @@ import '../services/transaction_service.dart';
 import '../widgets/cards/wallet_balance_card.dart';
 import '../widgets/tiles/transaction_list_tile.dart';
 import '../widgets/cards/investment_card.dart';
-import '../widgets/portfolio_chart.dart';
 import '../widgets/shimmer_placeholder.dart';
-import '../widgets/empty_state_widget.dart';
-import '../widgets/error_state_widget.dart';
 import '../models/api_response.dart';
 import '../pages/wallet/transaction_history_page.dart';
 import '../pages/wallet/all_assets_page.dart';

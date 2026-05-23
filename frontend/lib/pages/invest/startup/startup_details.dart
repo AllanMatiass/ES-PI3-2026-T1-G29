@@ -1,12 +1,12 @@
 //Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
 
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/charts/price_chart.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/socio_row.dart';
 import 'package:intl/intl.dart';
 import '../../../models/startup.dart';
 import '../../../services/startup_service.dart';
-import '../../../widgets/price_chart.dart';
 import '../../../widgets/headers/startup_fixed_header.dart';
 import '../../../widgets/cards/card_sobre_startup.dart';
 import '../../../widgets/demo_video_player.dart';

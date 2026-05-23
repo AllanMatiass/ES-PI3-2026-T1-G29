@@ -75,12 +75,7 @@ class AppHeader extends StatelessWidget {
                     ),
                   );
                 } else if (value == 'logout') {
-                  await AuthService.signOut();
-                  if (context.mounted) {
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil('/login', (route) => false);
-                  }
+                  await AuthService.signOut(context);
                 }
               },
               itemBuilder: (context) => [
