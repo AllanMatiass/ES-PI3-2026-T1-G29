@@ -8,7 +8,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../widgets/cards/startup_card.dart';
 
 import '../../widgets/headers/home_header.dart';
-import '../../services/user_state.dart';
+import '../../states/user_state.dart';
 import '../../models/user.dart';
 
 class CatalogPage extends StatefulWidget {
