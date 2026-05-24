@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/models/startup.dart';
@@ -20,11 +21,11 @@ class InvestmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     final currentPriceCents = position is WalletTokenPositionDTO
         ? (position as WalletTokenPositionDTO).currentTokenPriceCents
         : (startup?.currentTokenPriceCents.toDouble() ?? 0.0);
-        
+
     final currentValueCents = position is WalletTokenPositionDTO
         ? (position as WalletTokenPositionDTO).currentValueCents
         : (position.qtdTokens * currentPriceCents);
@@ -61,7 +62,10 @@ class InvestmentCard extends StatelessWidget {
                   color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.business, color: theme.colorScheme.onSurfaceVariant),
+                child: Icon(
+                  Icons.business,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -95,15 +99,21 @@ class InvestmentCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (profitCents >= 0 || !isBalanceVisible ? AppColors.primary : AppColors.danger).withOpacity(0.1),
+                  color:
+                      (profitCents >= 0 || !isBalanceVisible
+                              ? AppColors.primary
+                              : AppColors.danger)
+                          .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  isBalanceVisible 
+                  isBalanceVisible
                       ? '${profitCents >= 0 ? '+' : ''}${profitPercentage.toStringAsFixed(0)}%'
                       : '••%',
                   style: TextStyle(
-                    color: profitCents >= 0 || !isBalanceVisible ? AppColors.primary : AppColors.danger,
+                    color: profitCents >= 0 || !isBalanceVisible
+                        ? AppColors.primary
+                        : AppColors.danger,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -117,7 +127,11 @@ class InvestmentCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDetail(context, 'Investido', position.investedCents.toDouble()),
+              _buildDetail(
+                context,
+                'Investido',
+                position.investedCents.toDouble(),
+              ),
               _buildDetail(context, 'Valor atual', currentValueCents),
             ],
           ),
@@ -129,7 +143,9 @@ class InvestmentCard extends StatelessWidget {
                 context,
                 'Lucro',
                 profitCents,
-                valueColor: profitCents >= 0 || !isBalanceVisible ? AppColors.primary : AppColors.danger,
+                valueColor: profitCents >= 0 || !isBalanceVisible
+                    ? AppColors.primary
+                    : AppColors.danger,
                 showSign: true,
               ),
             ],
@@ -175,10 +191,18 @@ class InvestmentCard extends StatelessWidget {
         const SizedBox(height: 4),
         Row(
           children: [
-            _buildTokenLabel(context, 'Disponível: $available', AppColors.primary),
+            _buildTokenLabel(
+              context,
+              'Disponível: $available',
+              AppColors.primary,
+            ),
             if (locked > 0) ...[
               const SizedBox(width: 12),
-              _buildTokenLabel(context, 'Bloqueado: $locked', AppColors.grey400),
+              _buildTokenLabel(
+                context,
+                'Bloqueado: $locked',
+                AppColors.grey400,
+              ),
             ],
           ],
         ),
@@ -193,10 +217,7 @@ class InvestmentCard extends StatelessWidget {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
         Text(
@@ -211,14 +232,23 @@ class InvestmentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDetail(BuildContext context, String label, double valueCents, {Color? valueColor, bool showSign = false}) {
+  Widget _buildDetail(
+    BuildContext context,
+    String label,
+    double valueCents, {
+    Color? valueColor,
+    bool showSign = false,
+  }) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+          style: TextStyle(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
         const SizedBox(height: 4),
         AnimatedCurrency(

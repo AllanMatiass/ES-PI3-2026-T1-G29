@@ -1,3 +1,5 @@
+// Autor: Allan Giovanni Matias Paes
+
 import 'package:flutter/material.dart';
 
 class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
@@ -19,15 +21,17 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
     return Container(
       padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 10,
-          left: 20,
-          right: 20,
-          bottom: 15),
+        top: MediaQuery.of(context).padding.top + 10,
+        left: 20,
+        right: 20,
+        bottom: 15,
+      ),
       decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          border: Border(
-              bottom:
-                  BorderSide(color: theme.dividerColor.withOpacity(0.1)))),
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withOpacity(0.1)),
+        ),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,8 +52,11 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                   height: 50,
                   width: 50,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(Icons.business,
-                      size: 50, color: theme.colorScheme.onSurfaceVariant),
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.business,
+                    size: 50,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
               const SizedBox(width: 15),
@@ -57,22 +64,29 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: theme.colorScheme.onSurface)),
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF00A84E).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         segment.replaceFirst(
-                            segment[0], segment[0].toUpperCase()),
+                          segment[0],
+                          segment[0].toUpperCase(),
+                        ),
                         style: const TextStyle(
                           color: Color(0xFF00A84E),
                           fontWeight: FontWeight.bold,
@@ -91,9 +105,10 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: theme.colorScheme.onSurfaceVariant),
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

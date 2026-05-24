@@ -1,3 +1,4 @@
+// Autor: Pedro Romanato
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
@@ -60,9 +61,10 @@ class DocumentsDownloadCard extends StatelessWidget {
           Text(
             'Documentos',
             style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: theme.colorScheme.onSurface),
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 12),
           _DocItem(
@@ -108,7 +110,9 @@ class _DocItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = available ? const Color(0xFF00A84E) : theme.colorScheme.onSurfaceVariant.withOpacity(0.5);
+    final color = available
+        ? const Color(0xFF00A84E)
+        : theme.colorScheme.onSurfaceVariant.withOpacity(0.5);
 
     return InkWell(
       onTap: available ? onTap : null,
@@ -134,14 +138,14 @@ class _DocItem extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
-                  color: available ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  color: available
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
                 ),
               ),
             ),
             Icon(
-              available
-                  ? Icons.download_rounded
-                  : Icons.lock_outline_rounded,
+              available ? Icons.download_rounded : Icons.lock_outline_rounded,
               color: color,
               size: 20,
             ),

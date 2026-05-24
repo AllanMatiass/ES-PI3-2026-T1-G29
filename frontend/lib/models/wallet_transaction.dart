@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import './firebase.dart';
 
 /// Request DTO for wallet transactions (deposit/withdraw).
@@ -7,9 +7,7 @@ class WalletTransactionRequest {
 
   WalletTransactionRequest({required this.amount});
 
-  Map<String, dynamic> toJson() => {
-    'amount': amount,
-  };
+  Map<String, dynamic> toJson() => {'amount': amount};
 }
 
 /// Response DTO for wallet transactions.
@@ -17,10 +15,7 @@ class WalletTransactionResponse {
   final String userId;
   final num newBalance;
 
-  WalletTransactionResponse({
-    required this.userId,
-    required this.newBalance,
-  });
+  WalletTransactionResponse({required this.userId, required this.newBalance});
 
   factory WalletTransactionResponse.fromJson(Map<String, dynamic> json) {
     return WalletTransactionResponse(
@@ -56,10 +51,7 @@ class PaginatedMovementsResponse {
   final List<Movement> movements;
   final String? lastMovementId;
 
-  PaginatedMovementsResponse({
-    required this.movements,
-    this.lastMovementId,
-  });
+  PaginatedMovementsResponse({required this.movements, this.lastMovementId});
 
   factory PaginatedMovementsResponse.fromJson(Map<String, dynamic> json) {
     return PaginatedMovementsResponse(

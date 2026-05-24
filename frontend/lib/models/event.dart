@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import './firebase.dart';
 
 enum NewsSentiment {
@@ -68,10 +68,7 @@ class EventPaginatedResponse {
   final List<Event> events;
   final String? lastEventId;
 
-  EventPaginatedResponse({
-    required this.events,
-    this.lastEventId,
-  });
+  EventPaginatedResponse({required this.events, this.lastEventId});
 
   factory EventPaginatedResponse.fromJson(Map<String, dynamic> json) {
     return EventPaginatedResponse(
