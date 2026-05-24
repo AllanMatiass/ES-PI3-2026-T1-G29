@@ -1,3 +1,5 @@
+// Autor: Allan Giovanni Matias Paes
+
 import 'package:flutter/material.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:intl/intl.dart';
@@ -111,7 +113,10 @@ class MarketOfferCard extends StatelessWidget {
                 children: [
                   Text(
                     'Total da Oferta',
-                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                   Text(
                     _formatCurrency(offer.totalCents),
@@ -160,7 +165,12 @@ class MarketOfferCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoItem(BuildContext context, IconData icon, String value, {String? label}) {
+  Widget _buildInfoItem(
+    BuildContext context,
+    IconData icon,
+    String value, {
+    String? label,
+  }) {
     final theme = Theme.of(context);
     return Row(
       children: [
@@ -177,7 +187,10 @@ class MarketOfferCard extends StatelessWidget {
           const SizedBox(width: 2),
           Text(
             label,
-            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+            style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
           ),
         ],
       ],

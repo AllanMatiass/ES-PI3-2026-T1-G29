@@ -1,3 +1,4 @@
+// Autor: Pedro Romanato
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
@@ -18,24 +19,30 @@ class _CardSobreStartupState extends State<CardSobreStartup> {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
-          borderRadius: BorderRadius.circular(15)),
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sobre a startup',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: theme.colorScheme.onSurface)),
+          Text(
+            'Sobre a startup',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
           const SizedBox(height: 8),
           LayoutBuilder(
             builder: (context, constraints) {
               final span = TextSpan(
                 text: widget.descricao,
                 style: TextStyle(
-                    color: theme.colorScheme.onSurfaceVariant, height: 1.5),
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
               );
               final tp = TextPainter(
                 text: span,
@@ -56,7 +63,9 @@ class _CardSobreStartupState extends State<CardSobreStartup> {
                         ? TextOverflow.visible
                         : TextOverflow.ellipsis,
                     style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant, height: 1.5),
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
                   ),
                   if (needsExpansion)
                     Padding(
@@ -65,15 +74,19 @@ class _CardSobreStartupState extends State<CardSobreStartup> {
                         onTap: () => setState(() => isExpanded = !isExpanded),
                         child: Row(
                           children: [
-                            Text(isExpanded ? 'Ver menos' : 'Ver mais',
-                                style: const TextStyle(
-                                    color: Color(0xFF00A84E),
-                                    fontWeight: FontWeight.bold)),
+                            Text(
+                              isExpanded ? 'Ver menos' : 'Ver mais',
+                              style: const TextStyle(
+                                color: Color(0xFF00A84E),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             Icon(
-                                isExpanded
-                                    ? Icons.keyboard_arrow_up
-                                    : Icons.keyboard_arrow_down,
-                                color: const Color(0xFF00A84E)),
+                              isExpanded
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                              color: const Color(0xFF00A84E),
+                            ),
                           ],
                         ),
                       ),
