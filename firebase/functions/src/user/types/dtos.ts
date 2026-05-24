@@ -1,5 +1,5 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { UserProfile, Wallet, WalletTokenPosition } from ".";
+import { UserProfile, Wallet, WalletTokenPosition, Movement } from ".";
 
 export type UserCreateDTO = UserProfile & {
   uid: string;
@@ -66,4 +66,14 @@ export type GetUserTokenValuationsResponse = {
   variationCents: number;
   variationPercent: number;
   history: PortfolioHistoryPoint[];
+};
+
+export type GetUserMovementsRequestDTO = {
+  limit?: number;
+  lastMovementId?: string;
+};
+
+export type PaginatedMovementsResponseDTO = {
+  movements: (Omit<Movement, "createdAt"> & { createdAt: string })[];
+  lastMovementId: string | null;
 };
