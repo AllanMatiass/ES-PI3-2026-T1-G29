@@ -11,6 +11,7 @@ import 'package:frontend/widgets/headers/home_header.dart';
 import 'package:frontend/states/user_state.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/pages/news/news_detail_page.dart';
+import 'package:frontend/widgets/tiles/sentiment_badge.dart';
 import 'package:intl/intl.dart';
 
 class NewsView extends StatefulWidget {
@@ -372,22 +373,29 @@ class _NewsCard extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
                       ),
                     ),
-                    if (event.tags.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          event.tags.first.toUpperCase(),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
+                    Row(
+                      children: [
+                        SentimentBadge(sentiment: event.sentiment, compact: true),
+                        if (event.tags.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              event.tags.first.toUpperCase(),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),

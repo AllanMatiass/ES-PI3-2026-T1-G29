@@ -1,6 +1,32 @@
 // Autor: Gemini CLI
 import './firebase.dart';
 
+enum NewsSentiment {
+  excellent,
+  good,
+  neutral,
+  bad,
+  disaster;
+
+  static NewsSentiment fromDelta(double delta) {
+    if (delta > 0.6) return NewsSentiment.excellent;
+    if (delta > 0.1) return NewsSentiment.good;
+    if (delta >= -0.1) return NewsSentiment.neutral;
+    if (delta > -0.6) return NewsSentiment.bad;
+    return NewsSentiment.disaster;
+  }
+
+  String get label {
+    return switch (this) {
+      NewsSentiment.excellent => 'Excelente',
+      NewsSentiment.good => 'Boa',
+      NewsSentiment.neutral => 'Neutra',
+      NewsSentiment.bad => 'Ruim',
+      NewsSentiment.disaster => 'Desastre',
+    };
+  }
+}
+
 class Event {
   final String id;
   final String startupId;
@@ -21,6 +47,8 @@ class Event {
     required this.tags,
     required this.createdAt,
   });
+
+  NewsSentiment get sentiment => NewsSentiment.fromDelta(delta);
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
