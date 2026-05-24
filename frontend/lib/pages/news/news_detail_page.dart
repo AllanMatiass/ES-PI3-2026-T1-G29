@@ -28,7 +28,9 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   }
 
   Future<void> _loadStartup() async {
-    final result = await StartupService.getStartupDetails(widget.event.startupId);
+    final result = await StartupService.getStartupDetails(
+      widget.event.startupId,
+    );
     if (result.success && mounted) {
       setState(() {
         _startup = result.data;
@@ -43,7 +45,10 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final dateStr = DateFormat('dd MMMM yyyy, HH:mm', 'pt_BR').format(widget.event.createdAt);
+    final dateStr = DateFormat(
+      'dd MMMM yyyy, HH:mm',
+      'pt_BR',
+    ).format(widget.event.createdAt);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -68,21 +73,26 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   SentimentBadge(sentiment: widget.event.sentiment),
-                  ...widget.event.tags.map((tag) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      tag.toUpperCase(),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
+                  ...widget.event.tags.map(
+                    (tag) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        tag.toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
-                  )),
+                  ),
                 ],
               ),
             ),
@@ -94,7 +104,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Autor: Mescla Invest
             Row(
               children: [
@@ -123,7 +133,9 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       Text(
                         'Autor Oficial',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                            0.7,
+                          ),
                         ),
                       ),
                     ],
@@ -131,12 +143,12 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Perfil da Startup relacionada
             _buildStartupProfile(theme, isDark, dateStr),
-            
+
             const SizedBox(height: 24),
             Container(
               width: double.infinity,
@@ -145,7 +157,9 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 color: isDark ? AppColors.surfaceDark : Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(
+                    0.05,
+                  ),
                 ),
               ),
               child: Text(
@@ -189,9 +203,13 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: _startup!.logoUrl != null ? NetworkImage(_startup!.logoUrl!) : null,
+            backgroundImage: _startup!.logoUrl != null
+                ? NetworkImage(_startup!.logoUrl!)
+                : null,
             backgroundColor: AppColors.primary.withOpacity(0.1),
-            child: _startup!.logoUrl == null ? const Icon(Icons.business, color: AppColors.primary) : null,
+            child: _startup!.logoUrl == null
+                ? const Icon(Icons.business, color: AppColors.primary)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
