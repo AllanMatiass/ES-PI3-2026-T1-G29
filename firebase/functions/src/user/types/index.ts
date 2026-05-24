@@ -31,6 +31,7 @@ export type UserProfile = {
   cpf: string;
   profileImageUrl?: string | null;
   wallet: WalletDTO;
+  uid: string;
 
   createdAt: Timestamp;
 };
