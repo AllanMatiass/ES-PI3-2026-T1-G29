@@ -28,7 +28,7 @@ import {
   PaginatedOffersResponseDTO,
 } from "../types/dtos";
 import { validateTransactionData } from "../utils";
-import { TokenPricingService } from "./tokenPricingService";
+import { TokenPricingService } from "../../shared/tokenPricingService";
 import { StartupDocument } from "../../startups/types";
 import { UserService } from "../../user/shared/userService";
 import { WalletTokenPositionDTO } from "../../user/types/dtos";

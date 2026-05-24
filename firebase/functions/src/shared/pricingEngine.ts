@@ -3,7 +3,7 @@
  * Este arquivo contém apenas lógica matemática pura, sem efeitos colaterais.
  */
 
-import { PRICING_CONFIG } from "./constants";
+import { PRICING_CONFIG } from "../exchange/shared/constants";
 
 /**
  * Aplica a trava de segurança de variação máxima permitida.

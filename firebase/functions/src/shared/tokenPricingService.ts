@@ -1,14 +1,14 @@
 // Autor: Allan Giovanni Matias Paes
 import { FieldValue } from "firebase-admin/firestore";
-import { db } from "../../shared/firebase";
-import { MarketType, StartupDocument } from "../../startups/types";
+import { db } from "./firebase";
+import { MarketType, StartupDocument } from "../startups/types";
 import {
   calculatePrimaryMarketPrice,
   calculateSecondaryMarketPrice,
   calculateTertiaryMarketPrice,
 } from "./pricingEngine";
 import { HttpsError } from "firebase-functions/https";
-import { PricingUpdateResultDTO } from "../../startups/types/dtos";
+import { PricingUpdateResultDTO } from "../startups/types/dtos";
 
 export class TokenPricingService {
   private startupsCollection = db.collection("startups");
@@ -178,7 +178,7 @@ export class TokenPricingService {
         );
         break;
       case "event":
-        if (!params.deltaEvent) {
+        if (params.deltaEvent === undefined) {
           throw new HttpsError(
             "failed-precondition",
             "Para o tipo 'event', o parâmetro 'deltaEvent' é obrigatório",
