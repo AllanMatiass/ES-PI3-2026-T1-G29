@@ -8,6 +8,8 @@ import 'package:frontend/pages/profile/profile_page.dart';
 import 'package:frontend/views/offers_view.dart';
 import 'package:frontend/views/wallet_view.dart';
 
+import 'package:frontend/views/news_view.dart';
+
 class HomePage extends StatefulWidget {
   final String userName;
   const HomePage({super.key, required this.userName});
@@ -27,8 +29,9 @@ class _HomePageState extends State<HomePage> {
     _pages = [
       HomeView(
         userName: widget.userName,
-        onNavigateToCatalog: () => _onItemTapped(1),
+        onNavigateToCatalog: () => _onItemTapped(2),
       ),
+      const NewsView(),
       const CatalogPage(),
       const OffersView(),
       const WalletView(),
@@ -61,6 +64,11 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Início',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.newspaper_outlined),
+            activeIcon: Icon(Icons.newspaper),
+            label: 'Notícias',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.trending_up),
