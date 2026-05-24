@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
 import 'package:frontend/widgets/placeholders/error_state_widget.dart';
@@ -107,33 +107,33 @@ class _MovementHistoryPageState extends State<MovementHistoryPage> {
         child: _movements.isEmpty && _isLoading
             ? _buildLoadingState()
             : _error != null && _movements.isEmpty
-                ? ErrorStateWidget(errorMessage: _error, onRetry: _loadMore)
-                : _movements.isEmpty
-                    ? const EmptyStateWidget(
-                        icon: Icons.history,
-                        title: 'Nenhuma movimentação',
-                        message: 'Seus depósitos e saques aparecerão aqui.',
-                      )
-                    : ListView.separated(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(24),
-                        itemCount: _movements.length + (_hasMore ? 1 : 0),
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          if (index == _movements.length) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
-                          return MovementListTile(
-                            movement: _movements[index],
-                            isVisible: widget.isVisible,
-                          );
-                        },
+            ? ErrorStateWidget(errorMessage: _error, onRetry: _loadMore)
+            : _movements.isEmpty
+            ? const EmptyStateWidget(
+                icon: Icons.history,
+                title: 'Nenhuma movimentação',
+                message: 'Seus depósitos e saques aparecerão aqui.',
+              )
+            : ListView.separated(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(24),
+                itemCount: _movements.length + (_hasMore ? 1 : 0),
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  if (index == _movements.length) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: CircularProgressIndicator(),
                       ),
+                    );
+                  }
+                  return MovementListTile(
+                    movement: _movements[index],
+                    isVisible: widget.isVisible,
+                  );
+                },
+              ),
       ),
     );
   }

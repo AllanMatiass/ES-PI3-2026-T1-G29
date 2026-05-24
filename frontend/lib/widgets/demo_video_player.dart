@@ -19,23 +19,27 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer> {
   void initState() {
     super.initState();
 
-    if (!widget.videoUrl.startsWith('https://firebasestorage.googleapis.com/')) {
+    if (!widget.videoUrl.startsWith(
+      'https://firebasestorage.googleapis.com/',
+    )) {
       setState(() => _hasError = true);
       return;
     }
 
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isInitialized = true;
+      ..initialize()
+          .then((_) {
+            if (mounted) {
+              setState(() {
+                _isInitialized = true;
+              });
+            }
+          })
+          .catchError((error) {
+            if (mounted) {
+              setState(() => _hasError = true);
+            }
           });
-        }
-      }).catchError((error) {
-        if (mounted) {
-          setState(() => _hasError = true);
-        }
-      });
   }
 
   @override
@@ -64,7 +68,9 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer> {
     if (!_isInitialized) {
       return const SizedBox(
         height: 200,
-        child: Center(child: CircularProgressIndicator(color: Color(0xFF00A84E))),
+        child: Center(
+          child: CircularProgressIndicator(color: Color(0xFF00A84E)),
+        ),
       );
     }
 
@@ -140,7 +146,8 @@ class _ControlsOverlayState extends State<_ControlsOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isFinished = widget.controller.value.isInitialized &&
+    final bool isFinished =
+        widget.controller.value.isInitialized &&
         widget.controller.value.position >= widget.controller.value.duration;
 
     return GestureDetector(
