@@ -9,7 +9,6 @@ class UserProfile {
   final String phone;
   final String cpf;
   final Wallet wallet;
-  final String? profileImageUrl;
   final FirestoreTimestamp createdAt;
 
   UserProfile({
@@ -19,7 +18,6 @@ class UserProfile {
     required this.phone,
     required this.cpf,
     required this.wallet,
-    required this.profileImageUrl,
     required this.createdAt,
   });
 
@@ -30,7 +28,6 @@ class UserProfile {
     String? phone,
     String? cpf,
     Wallet? wallet,
-    String? profileImageUrl,
     FirestoreTimestamp? createdAt,
   }) {
     return UserProfile(
@@ -40,7 +37,6 @@ class UserProfile {
       phone: phone ?? this.phone,
       cpf: cpf ?? this.cpf,
       wallet: wallet ?? this.wallet,
-      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -48,14 +44,13 @@ class UserProfile {
   // Converte dados do JSON para uma instância de UserProfile.
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final data = json;
-    
+
     return UserProfile(
       uid: data['uid'] ?? '',
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
       cpf: data['cpf'] ?? '',
-      profileImageUrl: data['profileImageUrl'],
       wallet: Wallet.fromJson(data['wallet'] ?? {}),
       createdAt: FirestoreTimestamp.fromJson(data['createdAt']),
     );
@@ -93,7 +88,8 @@ class Wallet {
   factory Wallet.fromJson(Map<String, dynamic> json) {
     return Wallet(
       balanceInCents: (json['balanceInCents'] as num?)?.toDouble() ?? 0.0,
-      totalInvestedCents: (json['totalInvestedCents'] as num?)?.toDouble() ?? 0.0,
+      totalInvestedCents:
+          (json['totalInvestedCents'] as num?)?.toDouble() ?? 0.0,
       updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
       positions: (json['positions'] as List? ?? [])
           .map((e) => WalletTokenPosition.fromJson(e))
@@ -161,7 +157,8 @@ class WalletTokenPositionDTO extends WalletTokenPosition {
       averagePriceCents: (json['averagePriceCents'] as num?)?.toDouble() ?? 0.0,
       investedCents: (json['investedCents'] as num?)?.toDouble() ?? 0.0,
       updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
-      currentTokenPriceCents: (json['currentTokenPriceCents'] as num?)?.toDouble() ?? 0.0,
+      currentTokenPriceCents:
+          (json['currentTokenPriceCents'] as num?)?.toDouble() ?? 0.0,
       currentValueCents: (json['currentValueCents'] as num?)?.toDouble() ?? 0.0,
     );
   }

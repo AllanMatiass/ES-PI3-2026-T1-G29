@@ -32,19 +32,20 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _authSubscription = FirebaseAuth.instance.userChanges().listen((user) async {
+    _authSubscription = FirebaseAuth.instance.userChanges().listen((
+      user,
+    ) async {
       if (user == null || user.email == null) return;
       final current = UserState.userNotifier.value;
       if (current == null || current.email == user.email) return;
-try {
+      try {
         await BaseService.post<void>(
           'https://updateuserprofile-obpz3whteq-uc.a.run.app',
           data: {'email': user.email},
           fromJson: (_) {},
         );
         UserState.userNotifier.value = current.copyWith(email: user.email!);
-      } catch (_) {
-      }
+      } catch (_) {}
     });
   }
 
@@ -110,7 +111,9 @@ try {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Email de verificação enviado! Verifique sua caixa de entrada.'),
+          content: Text(
+            'Email de verificação enviado! Verifique sua caixa de entrada.',
+          ),
           behavior: SnackBarBehavior.floating,
           duration: Duration(seconds: 4),
         ),
@@ -167,7 +170,12 @@ try {
       if (mounted) setState(() => _isSendingPasswordReset = false);
     }
   }
-  void _showEditEmailSheet(BuildContext context, ThemeData theme, String currentEmail) async {
+
+  void _showEditEmailSheet(
+    BuildContext context,
+    ThemeData theme,
+    String currentEmail,
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     final factors = user != null
         ? await user.multiFactor.getEnrolledFactors()
@@ -194,7 +202,11 @@ try {
                     color: Colors.orange.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.lock_outlined, color: Colors.orange, size: 32),
+                  child: const Icon(
+                    Icons.lock_outlined,
+                    color: Colors.orange,
+                    size: 32,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -310,10 +322,13 @@ try {
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Informe o novo email';
+                        if (v == null || v.trim().isEmpty)
+                          return 'Informe o novo email';
                         final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                        if (!emailRegex.hasMatch(v.trim())) return 'Email inválido';
-                        if (v.trim() == currentEmail) return 'Informe um email diferente do atual';
+                        if (!emailRegex.hasMatch(v.trim()))
+                          return 'Email inválido';
+                        if (v.trim() == currentEmail)
+                          return 'Informe um email diferente do atual';
                         return null;
                       },
                     ),
@@ -328,7 +343,9 @@ try {
                                 setModalState(() => sending = true);
                                 try {
                                   await FirebaseAuth.instance.currentUser
-                                      ?.verifyBeforeUpdateEmail(emailCtrl.text.trim());
+                                      ?.verifyBeforeUpdateEmail(
+                                        emailCtrl.text.trim(),
+                                      );
 
                                   if (ctx.mounted) Navigator.of(ctx).pop();
                                   if (mounted) {
@@ -373,7 +390,11 @@ try {
                                 ),
                               )
                             : const Icon(Icons.send_outlined, size: 18),
-                        label: Text(sending ? 'Enviando...' : 'Enviar link de verificação'),
+                        label: Text(
+                          sending
+                              ? 'Enviando...'
+                              : 'Enviar link de verificação',
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -394,7 +415,11 @@ try {
     );
   }
 
-  void _showEditPhoneSheet(BuildContext context, ThemeData theme, String currentPhone) {
+  void _showEditPhoneSheet(
+    BuildContext context,
+    ThemeData theme,
+    String currentPhone,
+  ) {
     final controller = TextEditingController(text: currentPhone);
     final formKey = GlobalKey<FormState>();
     bool saving = false;
@@ -456,7 +481,8 @@ try {
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Informe o telefone';
+                        if (v == null || v.trim().isEmpty)
+                          return 'Informe o telefone';
                         final digits = v.replaceAll(RegExp(r'\D'), '');
                         if (digits.length < 10 || digits.length > 11) {
                           return 'Telefone deve ter 10 ou 11 dígitos';
@@ -474,7 +500,10 @@ try {
                                 if (!formKey.currentState!.validate()) return;
                                 setModalState(() => saving = true);
 
-                                final digits = controller.text.replaceAll(RegExp(r'\D'), '');
+                                final digits = controller.text.replaceAll(
+                                  RegExp(r'\D'),
+                                  '',
+                                );
                                 final res = await BaseService.post<void>(
                                   'https://updateuserprofile-obpz3whteq-uc.a.run.app',
                                   data: {'phone': digits},
@@ -487,14 +516,16 @@ try {
                                 if (res.success) {
                                   final current = UserState.userNotifier.value;
                                   if (current != null) {
-                                    UserState.userNotifier.value =
-                                        current.copyWith(phone: digits);
+                                    UserState.userNotifier.value = current
+                                        .copyWith(phone: digits);
                                   }
                                   Navigator.of(ctx).pop();
                                   if (mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Telefone atualizado com sucesso!'),
+                                        content: Text(
+                                          'Telefone atualizado com sucesso!',
+                                        ),
                                         behavior: SnackBarBehavior.floating,
                                       ),
                                     );
@@ -502,7 +533,10 @@ try {
                                 } else {
                                   ScaffoldMessenger.of(ctx).showSnackBar(
                                     SnackBar(
-                                      content: Text(res.message ?? 'Erro ao atualizar telefone.'),
+                                      content: Text(
+                                        res.message ??
+                                            'Erro ao atualizar telefone.',
+                                      ),
                                       backgroundColor: Colors.red,
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -553,7 +587,6 @@ try {
         final email = userData?.email ?? firebaseUser?.email ?? '';
         final phone = userData?.phone ?? '';
         final cpf = userData?.cpf ?? '';
-        final profileImageUrl = userData?.profileImageUrl;
         final initials = _getInitials(name);
         final emailVerified = firebaseUser?.emailVerified ?? true;
 
@@ -576,14 +609,19 @@ try {
                       alignment: Alignment.center,
                       children: [
                         InkWell(
-                          onTap: _isUploadingPicture ? null : _changeProfilePicture,
+                          onTap: _isUploadingPicture
+                              ? null
+                              : _changeProfilePicture,
                           borderRadius: BorderRadius.circular(44),
                           child: ValueListenableBuilder<String?>(
-                            valueListenable: UserState.profilePictureUrlNotifier,
+                            valueListenable:
+                                UserState.profilePictureUrlNotifier,
                             builder: (context, profileUrl, _) {
                               return CircleAvatar(
                                 radius: 44,
-                                backgroundColor: AppColors.primary.withOpacity(0.15),
+                                backgroundColor: AppColors.primary.withOpacity(
+                                  0.15,
+                                ),
                                 backgroundImage: profileUrl != null
                                     ? NetworkImage(profileUrl)
                                     : null,
@@ -616,9 +654,16 @@ try {
                             decoration: BoxDecoration(
                               color: AppColors.primary,
                               shape: BoxShape.circle,
-                              border: Border.all(color: theme.scaffoldBackgroundColor, width: 2),
+                              border: Border.all(
+                                color: theme.scaffoldBackgroundColor,
+                                width: 2,
+                              ),
                             ),
-                            child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -632,14 +677,20 @@ try {
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.orange.withOpacity(0.4)),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.4),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Row(
                             children: [
-                              Icon(Icons.mark_email_unread_outlined, color: Colors.orange, size: 20),
+                              Icon(
+                                Icons.mark_email_unread_outlined,
+                                color: Colors.orange,
+                                size: 20,
+                              ),
                               SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -665,7 +716,9 @@ try {
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton.icon(
-                              onPressed: _isSendingVerification ? null : _sendVerificationEmail,
+                              onPressed: _isSendingVerification
+                                  ? null
+                                  : _sendVerificationEmail,
                               icon: _isSendingVerification
                                   ? const SizedBox(
                                       width: 14,
@@ -677,13 +730,17 @@ try {
                                     )
                                   : const Icon(Icons.send_outlined, size: 16),
                               label: Text(
-                                _isSendingVerification ? 'Enviando...' : 'Reenviar email de verificação',
+                                _isSendingVerification
+                                    ? 'Enviando...'
+                                    : 'Reenviar email de verificação',
                                 style: const TextStyle(fontSize: 13),
                               ),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.orange,
                                 side: const BorderSide(color: Colors.orange),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -707,7 +764,10 @@ try {
                         value: _maskCpf(cpf),
                       ),
                     if (cpf.isNotEmpty)
-                      Divider(height: 1, color: theme.dividerColor.withOpacity(0.15)),
+                      Divider(
+                        height: 1,
+                        color: theme.dividerColor.withOpacity(0.15),
+                      ),
 
                     _editableRow(
                       theme,
@@ -716,13 +776,18 @@ try {
                       value: email,
                       onEdit: () => _showEditEmailSheet(context, theme, email),
                     ),
-                    Divider(height: 1, color: theme.dividerColor.withOpacity(0.15)),
+                    Divider(
+                      height: 1,
+                      color: theme.dividerColor.withOpacity(0.15),
+                    ),
 
                     _editableRow(
                       theme,
                       icon: Icons.phone_outlined,
                       label: 'Telefone',
-                      value: phone.isNotEmpty ? _maskPhone(phone) : 'Não informado',
+                      value: phone.isNotEmpty
+                          ? _maskPhone(phone)
+                          : 'Não informado',
                       onEdit: () => _showEditPhoneSheet(context, theme, phone),
                     ),
                   ]),
@@ -737,7 +802,9 @@ try {
                     title: 'Alterar senha',
                     subtitle: 'Enviaremos um link para redefinir sua senha',
                     isLoading: _isSendingPasswordReset,
-                    onTap: _isSendingPasswordReset ? null : _sendPasswordResetEmail,
+                    onTap: _isSendingPasswordReset
+                        ? null
+                        : _sendPasswordResetEmail,
                   ),
                   const SizedBox(height: 8),
 
@@ -762,15 +829,18 @@ try {
                       return _infoCard(theme, [
                         _infoRow(
                           theme,
-                          icon: isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                          icon: isDark
+                              ? Icons.dark_mode_outlined
+                              : Icons.light_mode_outlined,
                           label: 'Tema escuro',
                           value: '',
                           trailing: Switch(
                             value: isDark,
                             activeColor: AppColors.primary,
                             onChanged: (_) {
-                              themeNotifier.value =
-                                  isDark ? ThemeMode.light : ThemeMode.dark;
+                              themeNotifier.value = isDark
+                                  ? ThemeMode.light
+                                  : ThemeMode.dark;
                             },
                           ),
                         ),
@@ -786,7 +856,10 @@ try {
                       icon: const Icon(Icons.logout),
                       label: const Text(
                         'Sair da conta',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.danger,
@@ -868,7 +941,10 @@ try {
         children: [
           Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Row(
@@ -881,7 +957,10 @@ try {
                       value,
                       textAlign: TextAlign.right,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
               ],
@@ -905,14 +984,20 @@ try {
         children: [
           Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.right,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -921,7 +1006,11 @@ try {
             borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+              child: Icon(
+                Icons.edit_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
             ),
           ),
         ],
@@ -973,7 +1062,10 @@ try {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -985,7 +1077,10 @@ try {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             else
-              Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
           ],
         ),
       ),

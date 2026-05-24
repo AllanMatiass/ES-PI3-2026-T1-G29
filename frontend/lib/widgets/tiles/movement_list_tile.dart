@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/wallet_transaction.dart';

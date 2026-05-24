@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/startup.dart';
@@ -75,9 +76,10 @@ class StartupCard extends StatelessWidget {
                             child: Text(
                               startup.name,
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  color: theme.colorScheme.onSurface),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                                color: theme.colorScheme.onSurface,
+                              ),
                             ),
                           ),
                           if (startup.priceVariation != null)
@@ -86,7 +88,10 @@ class StartupCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: _getStageColor(startup.stage).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
@@ -101,7 +106,6 @@ class StartupCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-
                     ],
                   ),
                 ),
@@ -114,7 +118,11 @@ class StartupCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               startup.shortDescription,
-              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14, height: 1.5),
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+                height: 1.5,
+              ),
             ),
           ),
 
@@ -126,20 +134,26 @@ class StartupCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildInfoRow(context, 
-                    'Capital Levantado',
-                    _formatCurrency(startup.capitalRaisedCents),
-                    Icons.account_balance),
+                _buildInfoRow(
+                  context,
+                  'Capital Levantado',
+                  _formatCurrency(startup.capitalRaisedCents),
+                  Icons.account_balance,
+                ),
                 const SizedBox(height: 12),
-                _buildInfoRow(context, 
-                    'Total de Tokens',
-                    _formatNumber(startup.totalTokensIssued),
-                    Icons.token_outlined),
+                _buildInfoRow(
+                  context,
+                  'Total de Tokens',
+                  _formatNumber(startup.totalTokensIssued),
+                  Icons.token_outlined,
+                ),
                 const SizedBox(height: 12),
-                _buildInfoRow(context, 
-                    'Preço Atual do Token',
-                    _formatCurrency(startup.currentTokenPriceCents),
-                    Icons.monetization_on_outlined),
+                _buildInfoRow(
+                  context,
+                  'Preço Atual do Token',
+                  _formatCurrency(startup.currentTokenPriceCents),
+                  Icons.monetization_on_outlined,
+                ),
               ],
             ),
           ),
@@ -165,10 +179,13 @@ class StartupCard extends StatelessWidget {
                       side: const BorderSide(color: Color(0xFF00A84E)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Ver detalhes',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Ver detalhes',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -193,10 +210,13 @@ class StartupCard extends StatelessWidget {
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Investir',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Investir',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
@@ -210,7 +230,9 @@ class StartupCard extends StatelessWidget {
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: startup.tags.map((tag) => _buildTag(context, tag)).toList(),
+                children: startup.tags
+                    .map((tag) => _buildTag(context, tag))
+                    .toList(),
               ),
             ),
         ],
@@ -218,17 +240,33 @@ class StartupCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     final theme = Theme.of(context);
     return Row(
       children: [
         Icon(icon, size: 18, color: const Color(0xFF00A84E)),
         const SizedBox(width: 12),
-        Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
+        Text(
+          label,
+          style: TextStyle(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 14,
+          ),
+        ),
         const Spacer(),
-        Text(value,
-            style: TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 14, color: theme.colorScheme.onSurface)),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
       ],
     );
   }
@@ -276,7 +314,10 @@ class StartupCard extends StatelessWidget {
       child: Text(
         tag,
         style: TextStyle(
-            color: theme.colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w500),
+          color: theme.colorScheme.onSurfaceVariant,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

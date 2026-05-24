@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/widgets/animations/animated_currency.dart';
@@ -47,7 +48,9 @@ class BalanceCard extends StatelessWidget {
               ),
               IconButton(
                 icon: Icon(
-                  isVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  isVisible
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                   color: Colors.white70,
                   size: 20,
                 ),
@@ -84,7 +87,11 @@ class BalanceCard extends StatelessWidget {
                 AnimatedCurrency(
                   valueCents: userData?.wallet.totalInvestedCents ?? 0,
                   isVisible: isVisible,
-                  style: const TextStyle(color: AppColors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
