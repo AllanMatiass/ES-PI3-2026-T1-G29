@@ -1,8 +1,5 @@
 import { HttpsError } from "firebase-functions/https";
-import {
-  createEventTx,
-  getEventByIdRepo,
-} from "../repositories/eventRepository";
+import { createEventTx } from "../repositories/eventRepository";
 import { EventRequestDTO, EventResponseDTO } from "../types/dtos/dtos";
 import { normalizeString } from "../../shared/validation";
 import { db } from "../../firebase";
@@ -59,9 +56,5 @@ export class EventService {
         newTokenPrice: pricingResult.newPriceCents,
       };
     });
-  }
-
-  async getEventById(eventId: string) {
-    return getEventByIdRepo(eventId);
   }
 }
