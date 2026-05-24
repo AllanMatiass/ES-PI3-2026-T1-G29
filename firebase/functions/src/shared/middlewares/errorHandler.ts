@@ -59,6 +59,16 @@ export function withCallHandler<T, R>(
 
         // Adiciona a validação typeof code === "string"
         if (typeof code === "string" && code.startsWith("auth/")) {
+          if (code.includes("auth/email-already-exists")) {
+            return {
+              success: false,
+              error: {
+                code,
+                message: "Email já registrado.",
+                status: 409,
+              },
+            };
+          }
           return {
             success: false,
             error: {

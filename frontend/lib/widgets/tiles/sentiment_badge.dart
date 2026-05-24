@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Páes
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/event.dart';
@@ -16,7 +16,7 @@ class SentimentBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     final Color color = _getColor();
     final IconData icon = _getIcon();
     final String label = sentiment.label;
