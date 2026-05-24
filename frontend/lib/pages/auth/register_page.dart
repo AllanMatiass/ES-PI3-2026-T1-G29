@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/validators.dart';
-import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/pages/auth/login_page.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../../widgets/custom_text_field.dart';
@@ -80,6 +80,7 @@ class _RegisterPageState extends State<RegisterPage> {
             password: _passwordController.text,
           );
           await credential.user?.sendEmailVerification();
+          await FirebaseAuth.instance.signOut();
         } catch (_) {
         }
 
@@ -87,18 +88,16 @@ class _RegisterPageState extends State<RegisterPage> {
           context: context,
           title: 'Conta criada!',
           message:
-              'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text} — confirme antes de ativar o 2FA.',
+              'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text}. Confirme seu email antes de fazer login.',
           type: FeedbackType.success,
         );
 
-        // Wait a bit to show success message then navigate
+        
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (context) => HomePage(
-                userName: result.data?['name'] ?? _nameController.text,
-              ),
+              builder: (context) => const LoginPage(),
             ),
             (route) => false,
           );
