@@ -12,8 +12,8 @@ import 'package:frontend/widgets/headers/home_header.dart';
 import 'package:frontend/widgets/cards/balance_card.dart';
 import 'package:frontend/widgets/quick_action_button.dart';
 import 'package:frontend/widgets/cards/startup_card.dart';
-import 'package:frontend/widgets/states/empty_state_widget.dart';
-import 'package:frontend/widgets/states/error_state_widget.dart';
+import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
+import 'package:frontend/widgets/placeholders/error_state_widget.dart';
 
 // Visão principal da tela inicial, responsável por exibir saldo, ações rápidas e lista de startups em destaque.
 class HomeView extends StatefulWidget {

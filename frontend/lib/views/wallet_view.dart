@@ -1,8 +1,8 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/widgets/charts/portfolio_chart.dart';
-import 'package:frontend/widgets/states/empty_state_widget.dart';
-import 'package:frontend/widgets/states/error_state_widget.dart';
+import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
+import 'package:frontend/widgets/placeholders/error_state_widget.dart';
 import '../models/user.dart';
 import '../models/startup.dart';
 import '../models/transaction.dart';
