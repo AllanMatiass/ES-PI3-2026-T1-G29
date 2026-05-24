@@ -1,5 +1,6 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/wallet/movement_history_page.dart';
 import 'package:frontend/widgets/charts/portfolio_chart.dart';
 import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
 import 'package:frontend/widgets/placeholders/error_state_widget.dart';
@@ -175,6 +176,44 @@ class _WalletViewState extends State<WalletView> {
                         ),
                         const SizedBox(height: 16),
                         _buildInvestmentsSection(userData, isInitialLoading),
+                        const SizedBox(height: 32),
+
+                        // Movimentações
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Movimentações',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MovementHistoryPage(
+                                          isVisible: _isVisible,
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: const Text('Ver todas'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Acompanhe seus depósitos e saques',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                         const SizedBox(height: 32),
 
                         // Transações

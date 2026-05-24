@@ -50,3 +50,11 @@ export type UpdateWalletParams = {
 export type UserEntity = UserProfile & {
   createdAt: Timestamp;
 };
+
+export type Movement = {
+  type: "DEPOSIT" | "WITHDRAW";
+  amountInCents: number;
+  createdAt: Timestamp;
+};
+
+export type MovementWithId = Movement & { id: string };
