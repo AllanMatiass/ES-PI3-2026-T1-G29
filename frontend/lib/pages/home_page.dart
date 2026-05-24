@@ -12,26 +12,35 @@ import 'package:frontend/views/news_view.dart';
 
 class HomePage extends StatefulWidget {
   final String userName;
-  const HomePage({super.key, required this.userName});
+  final int initialIndex;
+  final String? initialStartupId;
+
+  const HomePage({
+    super.key,
+    required this.userName,
+    this.initialIndex = 0,
+    this.initialStartupId,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
 
     _pages = [
       HomeView(
         userName: widget.userName,
         onNavigateToCatalog: () => _onItemTapped(2),
       ),
-      const NewsView(),
+      NewsView(initialStartupId: widget.initialStartupId),
       const CatalogPage(),
       const OffersView(),
       const WalletView(),

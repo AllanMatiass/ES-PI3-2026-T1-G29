@@ -8,13 +8,14 @@ import 'package:frontend/models/startup.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/states/empty_state_widget.dart';
 import 'package:frontend/widgets/headers/home_header.dart';
-import 'package:frontend/services/user_state.dart';
+import 'package:frontend/states/user_state.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/pages/news/news_detail_page.dart';
 import 'package:intl/intl.dart';
 
 class NewsView extends StatefulWidget {
-  const NewsView({super.key});
+  final String? initialStartupId;
+  const NewsView({super.key, this.initialStartupId});
 
   @override
   State<NewsView> createState() => _NewsViewState();
@@ -35,6 +36,7 @@ class _NewsViewState extends State<NewsView> {
   @override
   void initState() {
     super.initState();
+    _selectedStartupId = widget.initialStartupId;
     _loadInitialData();
     _scrollController.addListener(_onScroll);
   }
@@ -198,9 +200,19 @@ class _NewsViewState extends State<NewsView> {
   }
 
   Widget _buildFilters(ThemeData theme, bool isDark) {
-    final selectedStartupName = _selectedStartupId == null
-        ? 'Todas as Startups'
-        : _startups.firstWhere((s) => s.id == _selectedStartupId).name;
+    String selectedStartupName = 'Todas as Startups';
+    
+    if (_selectedStartupId != null) {
+      if (_startups.isEmpty) {
+        selectedStartupName = 'Carregando...';
+      } else {
+        final startup = _startups.cast<StartupListItem?>().firstWhere(
+          (s) => s?.id == _selectedStartupId,
+          orElse: () => null,
+        );
+        selectedStartupName = startup?.name ?? 'Startup Selecionada';
+      }
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),

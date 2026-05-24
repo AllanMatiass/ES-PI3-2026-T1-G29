@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/startup_service.dart';
-import 'package:frontend/services/user_state.dart';
+import 'package:frontend/states/user_state.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 

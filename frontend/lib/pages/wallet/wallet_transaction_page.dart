@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../../services/user_state.dart';
+import '../../states/user_state.dart';
 import '../../models/user.dart';
 import '../../constants/colors.dart';
 import '../../services/wallet_service.dart';
