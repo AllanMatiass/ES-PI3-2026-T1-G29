@@ -1,6 +1,8 @@
 // Autor: Pedro Vinicius Romanato
 import 'dart:async';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/constants/colors.dart';
@@ -10,6 +12,7 @@ import 'package:frontend/pages/profile/mfa_setup_page.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/base_service.dart';
 import 'package:frontend/states/user_state.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../widgets/headers/home_header.dart';
 
@@ -23,6 +26,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool _isSendingVerification = false;
   bool _isSendingPasswordReset = false;
+  bool _isUploadingPicture = false;
   StreamSubscription<User?>? _authSubscription;
 
   @override
@@ -48,6 +52,55 @@ try {
   void dispose() {
     _authSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _changeProfilePicture() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 512,
+      maxHeight: 512,
+    );
+
+    if (image == null) return;
+
+    setState(() => _isUploadingPicture = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final fileName = 'profilePicture.jpg';
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('users')
+          .child(user.uid)
+          .child(fileName);
+
+      await storageRef.putFile(File(image.path));
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      // Standardize the URL in the local state directly from Storage
+      UserState.profilePictureUrlNotifier.value = downloadUrl;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto de perfil atualizada!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao carregar imagem: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingPicture = false);
+    }
   }
 
   Future<void> _sendVerificationEmail() async {
@@ -519,40 +572,53 @@ try {
                   ),
                   const SizedBox(height: 28),
                   Center(
-                    child: Column(
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        CircleAvatar(
-                          radius: 44,
-                          backgroundColor: AppColors.primary.withOpacity(0.15),
-                          backgroundImage: profileImageUrl != null
-                              ? NetworkImage(profileImageUrl)
-                              : null,
-                          child: profileImageUrl == null
-                              ? Text(
-                                  initials,
-                                  style: const TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
+                        InkWell(
+                          onTap: _isUploadingPicture ? null : _changeProfilePicture,
+                          borderRadius: BorderRadius.circular(44),
+                          child: ValueListenableBuilder<String?>(
+                            valueListenable: UserState.profilePictureUrlNotifier,
+                            builder: (context, profileUrl, _) {
+                              return CircleAvatar(
+                                radius: 44,
+                                backgroundColor: AppColors.primary.withOpacity(0.15),
+                                backgroundImage: profileUrl != null
+                                    ? NetworkImage(profileUrl)
+                                    : null,
+                                child: profileUrl == null
+                                    ? Text(
+                                        initials,
+                                        style: const TextStyle(
+                                          fontSize: 30,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : null,
+                              );
+                            },
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          email,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: theme.colorScheme.onSurfaceVariant,
+                        if (_isUploadingPicture)
+                          const Positioned.fill(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: theme.scaffoldBackgroundColor, width: 2),
+                            ),
+                            child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
                           ),
                         ),
                       ],
@@ -803,13 +869,24 @@ try {
           Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
           Text(label, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
-          const Spacer(),
-          if (trailing != null) trailing,
-          if (value.isNotEmpty)
-            Text(
-              value,
-              style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (trailing != null) trailing,
+                if (value.isNotEmpty)
+                  Flexible(
+                    child: Text(
+                      value,
+                      textAlign: TextAlign.right,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -829,10 +906,14 @@ try {
           Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
           Text(label, style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
-          const Spacer(),
-          Text(
-            value,
-            style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurfaceVariant),
+            ),
           ),
           const SizedBox(width: 8),
           InkWell(

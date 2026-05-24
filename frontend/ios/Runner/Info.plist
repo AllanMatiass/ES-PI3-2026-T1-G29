@@ -68,5 +68,11 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Precisamos de acesso à sua galeria para você escolher sua foto de perfil.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Precisamos de acesso à sua câmera para você tirar sua foto de perfil.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Precisamos de acesso ao microfone para gravação de vídeos (se necessário).</string>
 	</dict>
 </plist>
