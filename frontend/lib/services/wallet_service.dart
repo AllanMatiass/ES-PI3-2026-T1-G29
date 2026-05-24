@@ -12,6 +12,23 @@ class WalletService extends BaseService {
       'https://createdeposit-obpz3whteq-uc.a.run.app';
   static const String _withdrawUrl =
       'https://createwithdraw-obpz3whteq-uc.a.run.app';
+  static const String _movementsUrl =
+      'https://getusermovements-obpz3whteq-uc.a.run.app';
+
+  /// Busca o histórico de movimentações financeiras (depósitos e saques) do usuário.
+  static Future<ApiResponse<PaginatedMovementsResponse>> getUserMovements({
+    int? limit,
+    String? lastMovementId,
+  }) async {
+    return BaseService.post<PaginatedMovementsResponse>(
+      _movementsUrl,
+      data: {
+        if (limit != null) 'limit': limit,
+        if (lastMovementId != null) 'lastMovementId': lastMovementId,
+      },
+      fromJson: (json) => PaginatedMovementsResponse.fromJson(json),
+    );
+  }
 
   /// Busca o histórico de valorização da carteira do usuário.
   static Future<ApiResponse<GetUserTokenValuationsResponse>>

@@ -2,9 +2,19 @@
 
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
-import { UpdateWalletParams, UserProfile, Wallet } from "../types";
-import { UserCreateDTO, WalletTokenPositionDTO } from "../types/dtos";
+import {
+  UpdateWalletParams,
+  UserProfile,
+  Wallet,
+  MovementWithId,
+} from "../types";
+import {
+  UserCreateDTO,
+  WalletTokenPositionDTO,
+  PaginatedMovementsResponseDTO,
+} from "../types/dtos";
 import { HttpsError } from "firebase-functions/https";
+import { listPaginated } from "../../shared/paginatedQueryBuilder";
 
 const usersCollection = db.collection("users");
 
@@ -328,4 +338,31 @@ export async function getMovementsByUserId(userId: string): Promise<
         createdAt: Timestamp;
       },
   );
+}
+
+export async function listMovementsByUserId(
+  userId: string,
+  limit = 10,
+  lastMovementId?: string,
+): Promise<PaginatedMovementsResponseDTO> {
+  const collection = usersCollection.doc(userId).collection("movements");
+
+  const { docs, lastDocId } = await listPaginated<MovementWithId>(
+    collection,
+    undefined,
+    limit,
+    lastMovementId,
+  );
+
+  const movements = docs.map((doc) => ({
+    id: doc.id,
+    type: doc.type,
+    amountInCents: doc.amountInCents,
+    createdAt: doc.createdAt.toDate().toISOString(),
+  }));
+
+  return {
+    movements,
+    lastMovementId: lastDocId,
+  };
 }
