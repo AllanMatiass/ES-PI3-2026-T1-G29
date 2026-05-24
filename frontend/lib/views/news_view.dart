@@ -6,7 +6,7 @@ import 'package:frontend/services/event_service.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
-import 'package:frontend/widgets/states/empty_state_widget.dart';
+import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
 import 'package:frontend/widgets/headers/home_header.dart';
 import 'package:frontend/states/user_state.dart';
 import 'package:frontend/models/user.dart';

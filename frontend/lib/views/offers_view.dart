@@ -11,7 +11,7 @@ import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/market_filters.dart';
 import 'package:frontend/widgets/cards/market_offer_card.dart';
 import 'package:frontend/constants/colors.dart';
-import 'package:frontend/widgets/states/empty_state_widget.dart';
+import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
 
 import '../widgets/headers/home_header.dart';
 import '../states/user_state.dart';
