@@ -13,10 +13,11 @@ class MarketOfferCard extends StatelessWidget {
     required this.onBuyPressed,
   });
 
-  String _formatCurrency(int cents) {
+  String _formatCurrency(double cents) {
     final format = NumberFormat.currency(
       locale: 'pt_BR',
       symbol: 'R\$',
+      decimalDigits: 2,
     );
     return format.format(cents / 100);
   }

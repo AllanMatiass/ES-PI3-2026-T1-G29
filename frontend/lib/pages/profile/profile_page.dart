@@ -6,7 +6,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/pages/profile/mfa_setup_page.dart';
 import 'package:frontend/services/auth.dart';
-import 'package:frontend/services/user_state.dart';
+import 'package:frontend/states/user_state.dart';
 
 import '../../widgets/headers/home_header.dart';
 
@@ -468,9 +468,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirmed != true) return;
-    await AuthService.signOut();
-    if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
-    }
+    await AuthService.signOut(context);
   }
 }

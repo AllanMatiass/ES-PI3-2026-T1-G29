@@ -1,3 +1,4 @@
+// Autor: Pedro Vinícius Romanato
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -77,14 +78,20 @@ class _DemoVideoPlayerState extends State<DemoVideoPlayer> {
               alignment: Alignment.bottomCenter,
               children: [
                 VideoPlayer(_controller),
-                _ControlsOverlay(controller: _controller),
-                VideoProgressIndicator(
-                  _controller,
-                  allowScrubbing: true,
-                  colors: const VideoProgressColors(
-                    playedColor: Color(0xFF00A84E),
-                    bufferedColor: Colors.white24,
-                    backgroundColor: Colors.white12,
+                AbsorbPointer(
+                  absorbing: !_isInitialized,
+                  child: _ControlsOverlay(controller: _controller),
+                ),
+                AbsorbPointer(
+                  absorbing: !_isInitialized,
+                  child: VideoProgressIndicator(
+                    _controller,
+                    allowScrubbing: true,
+                    colors: const VideoProgressColors(
+                      playedColor: Color(0xFF00A84E),
+                      bufferedColor: Colors.white24,
+                      backgroundColor: Colors.white12,
+                    ),
                   ),
                 ),
               ],

@@ -1,20 +1,20 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/models/portfolio.dart';
+import 'package:frontend/services/wallet_service.dart';
+import 'package:frontend/widgets/modals/feedback_modal.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:intl/intl.dart';
-import '../models/portfolio.dart';
-import '../services/wallet_service.dart';
-import '../widgets/modals/feedback_modal.dart';
-import '../constants/colors.dart';
 
 /// Widget que exibe o gráfico de valorização do patrimônio do usuário.
 class PortfolioChart extends StatefulWidget {
   const PortfolioChart({super.key});
 
   @override
-  State<PortfolioChart> createState() => _PortfolioChartState();
+  State<PortfolioChart> createState() => PortfolioChartState();
 }
 
-class _PortfolioChartState extends State<PortfolioChart> {
+class PortfolioChartState extends State<PortfolioChart> {
   List<PortfolioHistoryPoint> _history = [];
   String _selectedRange = 'YTD';
   bool _isLoading = true;
@@ -25,10 +25,11 @@ class _PortfolioChartState extends State<PortfolioChart> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    refresh();
   }
 
-  Future<void> _loadData() async {
+  Future<void> refresh() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _selectedIndex = null;
@@ -75,7 +76,7 @@ class _PortfolioChartState extends State<PortfolioChart> {
     setState(() {
       _selectedRange = range;
     });
-    _loadData();
+    refresh();
   }
 
   void _handleTap(Offset localPosition, Size size) {
@@ -280,7 +281,7 @@ class _PortfolioChartState extends State<PortfolioChart> {
 
   String _formatDate(String timestamp) {
     try {
-      final date = DateTime.parse(timestamp);
+      final date = DateTime.parse(timestamp).toLocal();
       if (_selectedRange == '1D') {
         return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
       }

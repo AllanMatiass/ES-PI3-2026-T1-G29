@@ -6,10 +6,11 @@ import 'package:frontend/models/startup.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/services/offer_service.dart';
 import 'package:frontend/services/startup_service.dart';
-import 'package:frontend/services/user_state.dart';
+import 'package:frontend/states/user_state.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
-import 'package:frontend/widgets/price_chart.dart';
 import 'package:intl/intl.dart';
+
+import '../../widgets/charts/price_chart.dart';
 
 /// Formatador para impedir a entrada de valores superiores ao máximo permitido.
 class MaxValueInputFormatter extends TextInputFormatter {
@@ -316,7 +317,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
               ),
               Text(
                 discount > 0
-                    ? '${discount.toStringAsFixed(1)}% abaixo do mercado'
+                    ? '${discount.toStringAsFixed(2)}% abaixo do mercado'
                     : 'Preço de mercado',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -502,7 +503,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   }
 
   /// Rodapé com exibição do saldo do usuário, total da compra e botão de ação.
-  Widget _buildBottomButton(int totalCents, UserProfile? userData) {
+  Widget _buildBottomButton(double totalCents, UserProfile? userData) {
     final theme = Theme.of(context);
     final userBalanceCents = userData?.wallet.balanceInCents ?? 0.0;
     final isInsufficient = totalCents > userBalanceCents;

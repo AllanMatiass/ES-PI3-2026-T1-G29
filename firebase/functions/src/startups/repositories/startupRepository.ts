@@ -14,7 +14,7 @@ import {
   Variation,
 } from "../types/dtos";
 
-const startupsCollection = db.collection("startups");
+export const startupsCollection = db.collection("startups");
 
 function toListItem(id: string, startup: StartupDocument): StartupListItem {
   const currentValuation =

@@ -1,18 +1,24 @@
 //Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/charts/price_chart.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/socio_row.dart';
 import 'package:intl/intl.dart';
 import '../../../models/startup.dart';
 import '../../../services/startup_service.dart';
-import '../../../widgets/price_chart.dart';
 import '../../../widgets/headers/startup_fixed_header.dart';
 import '../../../widgets/cards/card_sobre_startup.dart';
 import '../../../widgets/demo_video_player.dart';
 import '../../../widgets/cards/documents_download_card.dart';
 import 'faq_page.dart';
 import 'package:frontend/pages/invest/startup/buy_from_startup_page.dart';
+import 'package:frontend/services/event_service.dart';
+import 'package:frontend/models/event.dart';
+import 'package:frontend/pages/news/news_detail_page.dart';
+import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/widgets/shimmer_placeholder.dart';
 
 class StartupDetailsPage extends StatefulWidget {
   final String startupId;
@@ -25,7 +31,9 @@ class StartupDetailsPage extends StatefulWidget {
 
 class _StartupDetailsPageState extends State<StartupDetailsPage> {
   StartupData? _startupData;
+  List<Event> _newsEvents = [];
   bool _isLoading = true;
+  bool _isLoadingNews = true;
   String? _errorMessage;
 
   final NumberFormat _currencyFormat = NumberFormat.currency(
@@ -43,6 +51,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
   void initState() {
     super.initState();
     _loadData();
+    _loadNews();
   }
 
   Future<void> _loadData() async {
@@ -69,6 +78,24 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
     }
   }
 
+  Future<void> _loadNews() async {
+    setState(() => _isLoadingNews = true);
+    final result = await EventService.listEvents(
+      startupId: widget.startupId,
+      limit: 3,
+    );
+    if (mounted) {
+      if (result.success) {
+        setState(() {
+          _newsEvents = result.data?.events ?? [];
+          _isLoadingNews = false;
+        });
+      } else {
+        setState(() => _isLoadingNews = false);
+      }
+    }
+  }
+
   String _formatCurrency(num value) {
     return _currencyFormat.format(value);
   }
@@ -90,7 +117,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
   }
 
   Future<void> _handleRefresh() async {
-    await _loadData();
+    await Future.wait([_loadData(), _loadNews()]);
   }
 
   @override
@@ -335,6 +362,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
 
                 CardSobreStartup(descricao: data.longDescription),
                 const SizedBox(height: 15),
+
                 if (data.demoVideos.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 15),
@@ -359,13 +387,18 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                       ),
                     ),
                   ),
+
+                // Notícias da Startup
+                _buildNewsSection(theme, data),
                 const SizedBox(height: 15),
+
                 DocumentsDownloadCard(
                   pitchDeckUrl: data.pitchDeckUrl,
                   businessPlanUrl: data.businessPlanUrl,
                   executiveSummary: data.executiveSummary,
                 ),
                 const SizedBox(height: 15),
+
                 // Tags
                 Container(
                   padding: const EdgeInsets.all(15),
@@ -499,6 +532,121 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 fontSize: 17,
                 color: theme.colorScheme.onSurface)),
       ],
+    );
+  }
+
+  Widget _buildNewsSection(ThemeData theme, StartupData data) {
+    if (_isLoadingNews) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Notícias Recentes',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
+          const SizedBox(height: 12),
+          ...List.generate(3, (index) => const ShimmerPlaceholder(
+            height: 80,
+            borderRadius: 12,
+            margin: EdgeInsets.only(bottom: 12),
+          )),
+        ],
+      );
+    }
+
+    if (_newsEvents.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Notícias Recentes',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: theme.colorScheme.onSurface)),
+              TextButton(
+                onPressed: () {
+                  final user = FirebaseAuth.instance.currentUser;
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomePage(
+                        userName: user?.displayName ?? 'Usuário',
+                        initialIndex: 1,
+                        initialStartupId: widget.startupId,
+                      ),
+                    ),
+                    (route) => false,
+                  );
+                },
+                child: const Text('Mais notícias',
+                    style: TextStyle(color: Color(0xFF00A84E), fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ..._newsEvents.map((event) => _buildNewsTile(theme, event)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewsTile(ThemeData theme, Event event) {
+    final dateStr = DateFormat('dd/MM/yyyy').format(event.createdAt);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => NewsDetailPage(event: event),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceVariant.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      dateStr,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFF00A84E)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

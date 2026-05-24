@@ -1,18 +1,18 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/charts/portfolio_chart.dart';
+import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
+import 'package:frontend/widgets/placeholders/error_state_widget.dart';
 import '../models/user.dart';
 import '../models/startup.dart';
 import '../models/transaction.dart';
-import '../services/user_state.dart';
+import '../states/user_state.dart';
 import '../services/startup_service.dart';
 import '../services/transaction_service.dart';
 import '../widgets/cards/wallet_balance_card.dart';
 import '../widgets/tiles/transaction_list_tile.dart';
 import '../widgets/cards/investment_card.dart';
-import '../widgets/portfolio_chart.dart';
 import '../widgets/shimmer_placeholder.dart';
-import '../widgets/empty_state_widget.dart';
-import '../widgets/error_state_widget.dart';
 import '../models/api_response.dart';
 import '../pages/wallet/transaction_history_page.dart';
 import '../pages/wallet/all_assets_page.dart';
@@ -27,6 +27,8 @@ class WalletView extends StatefulWidget {
 }
 
 class _WalletViewState extends State<WalletView> {
+  final GlobalKey<PortfolioChartState> _chartKey =
+      GlobalKey<PortfolioChartState>();
   List<Transaction> _transactions = [];
   Map<String, StartupListItem> _startupsMap = {};
   bool _isLoading = true;
@@ -52,6 +54,7 @@ class _WalletViewState extends State<WalletView> {
         UserState.refreshUser(),
         TransactionService.getUserTransactions(limit: 5),
         StartupService.listStartups(),
+        _chartKey.currentState?.refresh() ?? Future.value(),
       ]);
 
       final transactionResult =
@@ -141,7 +144,7 @@ class _WalletViewState extends State<WalletView> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        const PortfolioChart(),
+                        PortfolioChart(key: _chartKey),
                         const SizedBox(height: 32),
 
                         // Investimentos (Ativos)

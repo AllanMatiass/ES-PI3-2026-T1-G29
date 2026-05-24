@@ -6,15 +6,15 @@ import 'package:frontend/services/offer_service.dart';
 import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/pages/market/buy_offer_page.dart';
 import 'package:frontend/pages/market/create_offer_page.dart';
-import 'package:frontend/widgets/empty_state_widget.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/market_filters.dart';
 import 'package:frontend/widgets/cards/market_offer_card.dart';
 import 'package:frontend/constants/colors.dart';
+import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
 
 import '../widgets/headers/home_header.dart';
-import '../services/user_state.dart';
+import '../states/user_state.dart';
 import '../models/user.dart';
 
 // Visão que exibe todas as ofertas abertas de tokens no mercado secundário.
