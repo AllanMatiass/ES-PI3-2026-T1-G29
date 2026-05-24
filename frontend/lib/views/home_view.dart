@@ -7,6 +7,8 @@ import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/states/user_state.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:frontend/widgets/headers/home_header.dart';
 import 'package:frontend/widgets/cards/balance_card.dart';
@@ -40,6 +42,26 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _loadInitialData();
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isFirstRun = prefs.getBool('is_first_run') ?? true;
+
+    if (isFirstRun) {
+      // Pedir permissões de galeria e câmera
+      final status = await [
+        Permission.photos,
+        Permission.camera,
+        Permission.storage,
+      ].request();
+
+      // Log para debug (opcional)
+      debugPrint('Permissões solicitadas: $status');
+
+      await prefs.setBool('is_first_run', false);
+    }
   }
 
   // Carrega os dados do usuário e a lista de startups em destaque.

@@ -5,6 +5,8 @@ import 'package:frontend/services/auth.dart';
 import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/constants/colors.dart';
 
+import '../../states/user_state.dart';
+
 class AppHeader extends StatelessWidget {
   final String title;
   final UserProfile? userData;
@@ -108,21 +110,26 @@ class AppHeader extends StatelessWidget {
                   ),
                 ),
               ],
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.primary.withOpacity(0.1),
-                backgroundImage: profileImageUrl != null
-                    ? NetworkImage(profileImageUrl)
-                    : null,
-                child: profileImageUrl == null
-                    ? Text(
-                        _getInitials(displayName),
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    : null,
+              child: ValueListenableBuilder<String?>(
+                valueListenable: UserState.profilePictureUrlNotifier,
+                builder: (context, profileUrl, _) {
+                  return CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundImage: profileUrl != null && profileUrl.isNotEmpty
+                        ? NetworkImage(profileUrl)
+                        : null,
+                    child: profileUrl == null || profileUrl.isEmpty
+                        ? Text(
+                            _getInitials(displayName),
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
+                  );
+                },
               ),
             ),
           ],
