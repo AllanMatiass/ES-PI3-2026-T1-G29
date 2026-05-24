@@ -5,6 +5,7 @@ import 'package:frontend/models/event.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
+import 'package:frontend/widgets/tiles/sentiment_badge.dart';
 import 'package:intl/intl.dart';
 
 class NewsDetailPage extends StatefulWidget {
@@ -59,13 +60,15 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.event.tags.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: widget.event.tags.map((tag) => Container(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SentimentBadge(sentiment: widget.event.sentiment),
+                  ...widget.event.tags.map((tag) => Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.1),
@@ -79,9 +82,10 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                         fontSize: 10,
                       ),
                     ),
-                  )).toList(),
-                ),
+                  )),
+                ],
               ),
+            ),
             Text(
               widget.event.title,
               style: theme.textTheme.headlineMedium?.copyWith(
@@ -106,22 +110,24 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Mescla Invest',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mescla Invest',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Autor Oficial',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      Text(
+                        'Autor Oficial',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
