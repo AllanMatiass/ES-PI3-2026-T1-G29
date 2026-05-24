@@ -1,4 +1,4 @@
-// Autor: Gemini CLI
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/event.dart';
@@ -56,10 +56,7 @@ class _NewsViewState extends State<NewsView> {
   }
 
   Future<void> _loadInitialData() async {
-    await Future.wait([
-      _loadMoreEvents(refresh: true),
-      _loadStartups(),
-    ]);
+    await Future.wait([_loadMoreEvents(refresh: true), _loadStartups()]);
   }
 
   Future<void> _loadStartups() async {
@@ -111,8 +108,11 @@ class _NewsViewState extends State<NewsView> {
 
   List<Event> get _filteredEvents {
     return _events.where((event) {
-      final matchesTitle = event.title.toLowerCase().contains(_searchTitle.toLowerCase());
-      final matchesStartup = _selectedStartupId == null || event.startupId == _selectedStartupId;
+      final matchesTitle = event.title.toLowerCase().contains(
+        _searchTitle.toLowerCase(),
+      );
+      final matchesStartup =
+          _selectedStartupId == null || event.startupId == _selectedStartupId;
       return matchesTitle && matchesStartup;
     }).toList();
   }
@@ -146,16 +146,18 @@ class _NewsViewState extends State<NewsView> {
                         ? ListView.builder(
                             itemCount: 5,
                             padding: const EdgeInsets.all(16.0),
-                            itemBuilder: (context, index) => const ShimmerPlaceholder(
-                              height: 120,
-                              borderRadius: 16,
-                              margin: EdgeInsets.only(bottom: 16),
-                            ),
+                            itemBuilder: (context, index) =>
+                                const ShimmerPlaceholder(
+                                  height: 120,
+                                  borderRadius: 16,
+                                  margin: EdgeInsets.only(bottom: 16),
+                                ),
                           )
                         : ListView.builder(
                             controller: _scrollController,
                             physics: const AlwaysScrollableScrollPhysics(),
-                            itemCount: _filteredEvents.length + (_hasMore ? 1 : 0),
+                            itemCount:
+                                _filteredEvents.length + (_hasMore ? 1 : 0),
                             padding: const EdgeInsets.all(16.0),
                             itemBuilder: (context, index) {
                               if (index == _filteredEvents.length) {
@@ -166,16 +168,16 @@ class _NewsViewState extends State<NewsView> {
                                     message: 'Tente ajustar seus filtros!',
                                   );
                                 }
-                                return _hasMore 
-                                  ? const Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(16.0),
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    )
-                                  : const SizedBox(height: 80);
+                                return _hasMore
+                                    ? const Center(
+                                        child: Padding(
+                                          padding: EdgeInsets.all(16.0),
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      )
+                                    : const SizedBox(height: 80);
                               }
-                              
+
                               final event = _filteredEvents[index];
                               return _NewsCard(
                                 event: event,
@@ -183,7 +185,8 @@ class _NewsViewState extends State<NewsView> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => NewsDetailPage(event: event),
+                                      builder: (context) =>
+                                          NewsDetailPage(event: event),
                                     ),
                                   );
                                 },
@@ -202,7 +205,7 @@ class _NewsViewState extends State<NewsView> {
 
   Widget _buildFilters(ThemeData theme, bool isDark) {
     String selectedStartupName = 'Todas as Startups';
-    
+
     if (_selectedStartupId != null) {
       if (_startups.isEmpty) {
         selectedStartupName = 'Carregando...';
@@ -229,7 +232,9 @@ class _NewsViewState extends State<NewsView> {
                 borderSide: BorderSide.none,
               ),
               filled: true,
-              fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200],
+              fillColor: isDark
+                  ? Colors.white.withOpacity(0.05)
+                  : Colors.grey[200],
             ),
           ),
           const SizedBox(height: 12),
@@ -239,7 +244,9 @@ class _NewsViewState extends State<NewsView> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200],
+                color: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.grey[200],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -247,15 +254,21 @@ class _NewsViewState extends State<NewsView> {
                   Icon(
                     Icons.filter_list,
                     size: 20,
-                    color: _selectedStartupId != null ? AppColors.primary : theme.colorScheme.onSurfaceVariant,
+                    color: _selectedStartupId != null
+                        ? AppColors.primary
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       selectedStartupName,
                       style: TextStyle(
-                        color: _selectedStartupId != null ? AppColors.primary : theme.colorScheme.onSurface,
-                        fontWeight: _selectedStartupId != null ? FontWeight.bold : FontWeight.normal,
+                        color: _selectedStartupId != null
+                            ? AppColors.primary
+                            : theme.colorScheme.onSurface,
+                        fontWeight: _selectedStartupId != null
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ),
@@ -272,7 +285,11 @@ class _NewsViewState extends State<NewsView> {
     );
   }
 
-  void _showStartupFilterModal(BuildContext context, ThemeData theme, bool isDark) {
+  void _showStartupFilterModal(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -287,7 +304,9 @@ class _NewsViewState extends State<NewsView> {
             children: [
               Text(
                 'Filtrar por Startup',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               Flexible(
@@ -297,26 +316,36 @@ class _NewsViewState extends State<NewsView> {
                     ListTile(
                       leading: const Icon(Icons.business_center_outlined),
                       title: const Text('Todas as Startups'),
-                      trailing: _selectedStartupId == null ? const Icon(Icons.check, color: AppColors.primary) : null,
+                      trailing: _selectedStartupId == null
+                          ? const Icon(Icons.check, color: AppColors.primary)
+                          : null,
                       onTap: () {
                         setState(() => _selectedStartupId = null);
                         Navigator.pop(context);
                       },
                     ),
                     const Divider(height: 1),
-                    ..._startups.map((startup) => ListTile(
-                      leading: CircleAvatar(
-                        radius: 14,
-                        backgroundColor: AppColors.primary.withOpacity(0.1),
-                        child: const Icon(Icons.business, size: 16, color: AppColors.primary),
+                    ..._startups.map(
+                      (startup) => ListTile(
+                        leading: CircleAvatar(
+                          radius: 14,
+                          backgroundColor: AppColors.primary.withOpacity(0.1),
+                          child: const Icon(
+                            Icons.business,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        title: Text(startup.name),
+                        trailing: _selectedStartupId == startup.id
+                            ? const Icon(Icons.check, color: AppColors.primary)
+                            : null,
+                        onTap: () {
+                          setState(() => _selectedStartupId = startup.id);
+                          Navigator.pop(context);
+                        },
                       ),
-                      title: Text(startup.name),
-                      trailing: _selectedStartupId == startup.id ? const Icon(Icons.check, color: AppColors.primary) : null,
-                      onTap: () {
-                        setState(() => _selectedStartupId = startup.id);
-                        Navigator.pop(context);
-                      },
-                    )),
+                    ),
                   ],
                 ),
               ),
@@ -343,9 +372,13 @@ class _NewsCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surfaceVariant.withOpacity(0.15) : AppColors.white,
+        color: isDark
+            ? theme.colorScheme.surfaceVariant.withOpacity(0.15)
+            : AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: isDark ? Border.all(color: Colors.white.withOpacity(0.1)) : null,
+        border: isDark
+            ? Border.all(color: Colors.white.withOpacity(0.1))
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
@@ -370,16 +403,24 @@ class _NewsCard extends StatelessWidget {
                     Text(
                       dateStr,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                        color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                          0.7,
+                        ),
                       ),
                     ),
                     Row(
                       children: [
-                        SentimentBadge(sentiment: event.sentiment, compact: true),
+                        SentimentBadge(
+                          sentiment: event.sentiment,
+                          compact: true,
+                        ),
                         if (event.tags.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
