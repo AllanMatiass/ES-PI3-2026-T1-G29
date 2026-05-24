@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/services/event_service.dart';
+import 'package:frontend/services/startup_service.dart';
+import 'package:frontend/models/startup.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/states/empty_state_widget.dart';
 import 'package:frontend/widgets/headers/home_header.dart';
@@ -25,10 +27,15 @@ class _NewsViewState extends State<NewsView> {
   bool _hasMore = true;
   String? _lastEventId;
 
+  // Filtros
+  String _searchTitle = "";
+  String? _selectedStartupId;
+  List<StartupListItem> _startups = [];
+
   @override
   void initState() {
     super.initState();
-    _loadMoreEvents();
+    _loadInitialData();
     _scrollController.addListener(_onScroll);
   }
 
@@ -42,6 +49,22 @@ class _NewsViewState extends State<NewsView> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       _loadMoreEvents();
+    }
+  }
+
+  Future<void> _loadInitialData() async {
+    await Future.wait([
+      _loadMoreEvents(refresh: true),
+      _loadStartups(),
+    ]);
+  }
+
+  Future<void> _loadStartups() async {
+    final result = await StartupService.listStartups();
+    if (result.success && mounted) {
+      setState(() {
+        _startups = result.data ?? [];
+      });
     }
   }
 
@@ -83,6 +106,14 @@ class _NewsViewState extends State<NewsView> {
     }
   }
 
+  List<Event> get _filteredEvents {
+    return _events.where((event) {
+      final matchesTitle = event.title.toLowerCase().contains(_searchTitle.toLowerCase());
+      final matchesStartup = _selectedStartupId == null || event.startupId == _selectedStartupId;
+      return matchesTitle && matchesStartup;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -104,6 +135,7 @@ class _NewsViewState extends State<NewsView> {
                     isDark: isDark,
                   ),
                 ),
+                _buildFilters(theme, isDark),
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () => _loadMoreEvents(refresh: true),
@@ -120,15 +152,15 @@ class _NewsViewState extends State<NewsView> {
                         : ListView.builder(
                             controller: _scrollController,
                             physics: const AlwaysScrollableScrollPhysics(),
-                            itemCount: _events.length + (_hasMore ? 1 : 0),
+                            itemCount: _filteredEvents.length + (_hasMore ? 1 : 0),
                             padding: const EdgeInsets.all(16.0),
                             itemBuilder: (context, index) {
-                              if (index == _events.length) {
-                                if (_events.isEmpty && !_isLoading) {
+                              if (index == _filteredEvents.length) {
+                                if (_filteredEvents.isEmpty && !_isLoading) {
                                   return const EmptyStateWidget(
                                     icon: Icons.newspaper,
                                     title: 'Nenhuma notícia no momento',
-                                    message: 'Fique atento às atualizações do mercado!',
+                                    message: 'Tente ajustar seus filtros!',
                                   );
                                 }
                                 return _hasMore 
@@ -141,7 +173,7 @@ class _NewsViewState extends State<NewsView> {
                                   : const SizedBox(height: 80);
                               }
                               
-                              final event = _events[index];
+                              final event = _filteredEvents[index];
                               return _NewsCard(
                                 event: event,
                                 onTap: () {
@@ -159,6 +191,123 @@ class _NewsViewState extends State<NewsView> {
                 ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilters(ThemeData theme, bool isDark) {
+    final selectedStartupName = _selectedStartupId == null
+        ? 'Todas as Startups'
+        : _startups.firstWhere((s) => s.id == _selectedStartupId).name;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+      child: Column(
+        children: [
+          TextField(
+            onChanged: (value) => setState(() => _searchTitle = value),
+            decoration: InputDecoration(
+              hintText: 'Buscar por título...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200],
+            ),
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () => _showStartupFilterModal(context, theme, isDark),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.filter_list,
+                    size: 20,
+                    color: _selectedStartupId != null ? AppColors.primary : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      selectedStartupName,
+                      style: TextStyle(
+                        color: _selectedStartupId != null ? AppColors.primary : theme.colorScheme.onSurface,
+                        fontWeight: _selectedStartupId != null ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showStartupFilterModal(BuildContext context, ThemeData theme, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Filtrar por Startup',
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.business_center_outlined),
+                      title: const Text('Todas as Startups'),
+                      trailing: _selectedStartupId == null ? const Icon(Icons.check, color: AppColors.primary) : null,
+                      onTap: () {
+                        setState(() => _selectedStartupId = null);
+                        Navigator.pop(context);
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ..._startups.map((startup) => ListTile(
+                      leading: CircleAvatar(
+                        radius: 14,
+                        backgroundColor: AppColors.primary.withOpacity(0.1),
+                        child: const Icon(Icons.business, size: 16, color: AppColors.primary),
+                      ),
+                      title: Text(startup.name),
+                      trailing: _selectedStartupId == startup.id ? const Icon(Icons.check, color: AppColors.primary) : null,
+                      onTap: () {
+                        setState(() => _selectedStartupId = startup.id);
+                        Navigator.pop(context);
+                      },
+                    )),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
