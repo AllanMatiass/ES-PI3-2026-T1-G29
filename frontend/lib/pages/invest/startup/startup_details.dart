@@ -19,6 +19,7 @@ import 'package:frontend/models/event.dart';
 import 'package:frontend/pages/news/news_detail_page.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
+import 'package:frontend/widgets/tiles/sentiment_badge.dart';
 
 class StartupDetailsPage extends StatefulWidget {
   final String startupId;
@@ -633,11 +634,17 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                       style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      dateStr,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          dateStr,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        SentimentBadge(sentiment: event.sentiment, compact: true),
+                      ],
                     ),
                   ],
                 ),
