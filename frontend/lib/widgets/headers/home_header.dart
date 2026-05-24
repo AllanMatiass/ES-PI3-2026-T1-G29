@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/user.dart';

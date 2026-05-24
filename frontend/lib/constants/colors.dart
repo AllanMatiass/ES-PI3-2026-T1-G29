@@ -1,10 +1,11 @@
+// Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary colors
   static const Color primary = Color(0xFF00A84E);
   static const Color primaryDark = Color(0xFF00873E);
-  
+
   // Neutral colors
   static const Color surfaceDark = Color(0xFF0F172A);
   static const Color white = Colors.white;
