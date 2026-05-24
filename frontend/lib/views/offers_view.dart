@@ -14,7 +14,7 @@ import 'package:frontend/constants/colors.dart';
 import 'package:frontend/widgets/states/empty_state_widget.dart';
 
 import '../widgets/headers/home_header.dart';
-import '../services/user_state.dart';
+import '../states/user_state.dart';
 import '../models/user.dart';
 
 // Visão que exibe todas as ofertas abertas de tokens no mercado secundário.

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/api_response.dart';
 import 'base_service.dart';
-import 'user_state.dart';
+import '../states/user_state.dart';
 
 // Serviço responsável pela autenticação de usuários via Firebase e Cloud Functions.
 class AuthService {
