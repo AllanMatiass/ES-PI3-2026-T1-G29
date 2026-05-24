@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/api_response.dart';
 import 'base_service.dart';
+import 'user_service.dart';
 import '../states/user_state.dart';
 
-// Serviço responsável pela autenticação de usuários via Firebase e Cloud Functions.
 class AuthService {
   static const String _signUpUrl = 'https://signup-obpz3whteq-uc.a.run.app';
-
-  // Realiza o login do usuário utilizando email e senha através do Firebase Auth.
-  static Future<ApiResponse<Map<String, dynamic>>> login(
+  static const String _updateProfileUrl =
+      'https://updateuserprofile-obpz3whteq-uc.a.run.app';
+static Future<ApiResponse<Map<String, dynamic>>> login(
     String email,
     String password,
   ) async {
@@ -28,6 +28,7 @@ class AuthService {
       }
 
       final token = await user.getIdToken();
+      await _syncEmailIfNeeded(user);
 
       return ApiResponse.success({
         "uid": user.uid,
@@ -43,8 +44,27 @@ class AuthService {
     }
   }
 
-  // Cria um novo cadastro de usuário invocando a Cloud Function de registro.
-  static Future<ApiResponse<Map<String, dynamic>>> signUp({
+  static Future<void> _syncEmailIfNeeded(User user) async {
+    try {
+      final result = await UserService.getUserData(uid: user.uid);
+      if (!result.success || result.data == null) return;
+
+      final profile = result.data!;
+      UserState.setUser(profile);
+
+      final authEmail = user.email;
+      if (authEmail != null && authEmail != profile.email) {
+        await BaseService.post<void>(
+          _updateProfileUrl,
+          data: {'email': authEmail},
+          fromJson: (_) {},
+        );
+        UserState.setUser(profile.copyWith(email: authEmail));
+      }
+    } catch (_) {
+    }
+  }
+static Future<ApiResponse<Map<String, dynamic>>> signUp({
     required String cpf,
     required String name,
     required String email,
@@ -59,7 +79,6 @@ class AuthService {
         "cpf": cpf,
         "name": name,
         "email": email,
-        // Remove caracteres não numéricos do telefone antes de enviar.
         "phone": phone.replaceAll(RegExp(r'\D'), ''),
         "password": password,
       },
@@ -68,13 +87,10 @@ class AuthService {
     );
   }
 
-  // Verifica se existe um usuário autenticado na sessão atual.
   static bool isAuthenticated() => FirebaseAuth.instance.currentUser != null;
 
-  // Retorna o objeto do usuário atualmente logado no Firebase.
   static User? getCurrentUser() => FirebaseAuth.instance.currentUser;
 
-  // Finaliza a sessão do usuário no Firebase, limpa o estado global e redireciona para o login.
   static Future<void> signOut([BuildContext? context]) async {
     await FirebaseAuth.instance.signOut();
     UserState.clear();
