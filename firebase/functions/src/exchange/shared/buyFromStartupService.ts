@@ -12,7 +12,7 @@ import {
   BuyTokensFromStartupRequestDTO,
   BuyTokensFromStartupResponseDTO,
 } from "../types/dtos";
-import { TokenPricingService } from "./tokenPricingService";
+import { TokenPricingService } from "../../shared/tokenPricingService";
 import { StartupDocument } from "../../startups/types";
 import { UserService } from "../../user/shared/userService";
 

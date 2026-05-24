@@ -42,13 +42,13 @@ class AppHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          title,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
+                title,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
         Row(
           children: [
             if (actions != null) ...actions!,
@@ -75,12 +75,7 @@ class AppHeader extends StatelessWidget {
                     ),
                   );
                 } else if (value == 'logout') {
-                  await AuthService.signOut();
-                  if (context.mounted) {
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil('/login', (route) => false);
-                  }
+                  await AuthService.signOut(context);
                 }
               },
               itemBuilder: (context) => [

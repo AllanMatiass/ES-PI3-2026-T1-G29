@@ -1,14 +1,14 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/widgets/placeholders/empty_state_widget.dart';
+import 'package:frontend/widgets/placeholders/error_state_widget.dart';
 import '../../models/api_response.dart';
 import '../../models/user.dart';
 import '../../models/startup.dart';
-import '../../services/user_state.dart';
+import '../../states/user_state.dart';
 import '../../services/startup_service.dart';
 import '../../widgets/cards/investment_card.dart';
 import '../../widgets/shimmer_placeholder.dart';
-import '../../widgets/empty_state_widget.dart';
-import '../../widgets/error_state_widget.dart';
 
 class AllAssetsPage extends StatefulWidget {
   final bool isVisible;

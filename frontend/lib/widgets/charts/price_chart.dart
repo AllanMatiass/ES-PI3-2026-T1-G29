@@ -1,8 +1,8 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
+import 'package:frontend/models/startup.dart';
+import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
-import '../models/startup.dart';
-import '../services/startup_service.dart';
 
 /// Widget que exibe um gráfico de histórico de preços de uma startup.
 class PriceHistoryChart extends StatefulWidget {
@@ -227,20 +227,23 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           ),
           const SizedBox(height: 12),
           // Botões de filtro
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterButton('1D'),
-                const SizedBox(width: 8),
-                _buildFilterButton('Semestre'),
-                const SizedBox(width: 8),
-                _buildFilterButton('1 ano'),
-                const SizedBox(width: 8),
-                _buildFilterButton('YTD'),
-                const SizedBox(width: 8),
-                _buildCustomRangeButton(),
-              ],
+          AbsorbPointer(
+            absorbing: isLoading,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterButton('1D'),
+                  const SizedBox(width: 8),
+                  _buildFilterButton('Semestre'),
+                  const SizedBox(width: 8),
+                  _buildFilterButton('1 ano'),
+                  const SizedBox(width: 8),
+                  _buildFilterButton('YTD'),
+                  const SizedBox(width: 8),
+                  _buildCustomRangeButton(),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 15),
@@ -249,26 +252,29 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
             height: 190,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return GestureDetector(
-                  onPanUpdate: (details) => _handleTap(details.localPosition, constraints.biggest),
-                  onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: isLoading
-                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E)))
-                        : history.isEmpty
-                            ? Center(
-                                child: Text('Histórico indisponível',
-                                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
-                            : CustomPaint(
-                                size: Size.infinite,
-                                painter: _LineChartPainter(
-                                  history: history,
-                                  lineColor: const Color(0xFF00A84E),
-                                  selectedIndex: selectedIndex,
-                                  isDark: isDark,
+                return AbsorbPointer(
+                  absorbing: isLoading,
+                  child: GestureDetector(
+                    onPanUpdate: (details) => _handleTap(details.localPosition, constraints.biggest),
+                    onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: isLoading
+                          ? const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E)))
+                          : history.isEmpty
+                              ? Center(
+                                  child: Text('Histórico indisponível',
+                                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
+                              : CustomPaint(
+                                  size: Size.infinite,
+                                  painter: _LineChartPainter(
+                                    history: history,
+                                    lineColor: const Color(0xFF00A84E),
+                                    selectedIndex: selectedIndex,
+                                    isDark: isDark,
+                                  ),
                                 ),
-                              ),
+                    ),
                   ),
                 );
               }
@@ -348,7 +354,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   /// Formata a data ISO para o padrão brasileiro DD/MM/AAAA.
   String _formatDate(String timestamp) {
     try {
-      final date = DateTime.parse(timestamp);
+      final date = DateTime.parse(timestamp).toLocal();
       return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
     } catch (e) {
       return timestamp.split('T').first;

@@ -5,11 +5,7 @@ class ErrorStateWidget extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback onRetry;
 
-  const ErrorStateWidget({
-    super.key,
-    this.errorMessage,
-    required this.onRetry,
-  });
+  const ErrorStateWidget({super.key, this.errorMessage, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +35,7 @@ class ErrorStateWidget extends StatelessWidget {
             style: const TextStyle(color: AppColors.danger, fontSize: 13),
           ),
           const SizedBox(height: 16),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('Tentar novamente'),
-          ),
+          TextButton(onPressed: onRetry, child: const Text('Tentar novamente')),
         ],
       ),
     );

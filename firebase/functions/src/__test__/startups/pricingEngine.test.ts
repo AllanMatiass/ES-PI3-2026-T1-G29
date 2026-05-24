@@ -3,7 +3,7 @@ import {
   calculateSecondaryMarketPrice,
   calculateTertiaryMarketPrice,
   applySafetyLock,
-} from "../../exchange/shared/pricingEngine";
+} from "../../shared/pricingEngine";
 
 describe("PricingEngine", () => {
   describe("applySafetyLock", () => {

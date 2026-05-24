@@ -23,6 +23,28 @@ class UserProfile {
     required this.createdAt,
   });
 
+  UserProfile copyWith({
+    String? uid,
+    String? name,
+    String? email,
+    String? phone,
+    String? cpf,
+    Wallet? wallet,
+    String? profileImageUrl,
+    FirestoreTimestamp? createdAt,
+  }) {
+    return UserProfile(
+      uid: uid ?? this.uid,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      cpf: cpf ?? this.cpf,
+      wallet: wallet ?? this.wallet,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   // Converte dados do JSON para uma instância de UserProfile.
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     final data = json;
@@ -53,6 +75,20 @@ class Wallet {
     required this.positions,
     required this.updatedAt,
   });
+
+  Wallet copyWith({
+    double? balanceInCents,
+    double? totalInvestedCents,
+    List<WalletTokenPosition>? positions,
+    FirestoreTimestamp? updatedAt,
+  }) {
+    return Wallet(
+      balanceInCents: balanceInCents ?? this.balanceInCents,
+      totalInvestedCents: totalInvestedCents ?? this.totalInvestedCents,
+      positions: positions ?? this.positions,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 
   factory Wallet.fromJson(Map<String, dynamic> json) {
     return Wallet(

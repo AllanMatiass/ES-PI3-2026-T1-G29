@@ -8,27 +8,39 @@ import 'package:frontend/pages/profile/profile_page.dart';
 import 'package:frontend/views/offers_view.dart';
 import 'package:frontend/views/wallet_view.dart';
 
+import 'package:frontend/views/news_view.dart';
+
 class HomePage extends StatefulWidget {
   final String userName;
-  const HomePage({super.key, required this.userName});
+  final int initialIndex;
+  final String? initialStartupId;
+
+  const HomePage({
+    super.key,
+    required this.userName,
+    this.initialIndex = 0,
+    this.initialStartupId,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
 
     _pages = [
       HomeView(
         userName: widget.userName,
-        onNavigateToCatalog: () => _onItemTapped(1),
+        onNavigateToCatalog: () => _onItemTapped(2),
       ),
+      NewsView(initialStartupId: widget.initialStartupId),
       const CatalogPage(),
       const OffersView(),
       const WalletView(),
@@ -61,6 +73,11 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Início',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.newspaper_outlined),
+            activeIcon: Icon(Icons.newspaper),
+            label: 'Notícias',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.trending_up),
