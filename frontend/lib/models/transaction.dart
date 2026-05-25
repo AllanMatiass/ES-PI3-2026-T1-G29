@@ -29,19 +29,20 @@ class Transaction {
     required this.createdAt,
   });
 
-  factory Transaction.fromJson(Map<String, dynamic> json) {
+  factory Transaction.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return Transaction(
-      id: json['id'] ?? '',
-      startupId: json['startupId'] ?? '',
-      startupName: json['startupName'] ?? '',
-      buyer: TransactionParticipant.fromJson(json['buyer'] ?? {}),
-      seller: TransactionParticipant.fromJson(json['seller'] ?? {}),
-      participants: List<String>.from(json['participants'] ?? []),
-      qtdTokens: (json['qtdTokens'] as num?)?.toInt() ?? 0,
-      tokenPriceCents: (json['tokenPriceCents'] as num?)?.toDouble() ?? 0.0,
-      totalCents: (json['totalCents'] as num?)?.toDouble() ?? 0.0,
-      transactionType: json['transactionType'] ?? '',
-      createdAt: FirestoreTimestamp.fromJson(json['createdAt'] ?? {}),
+      id: data['id'] ?? '',
+      startupId: data['startupId'] ?? '',
+      startupName: data['startupName'] ?? '',
+      buyer: TransactionParticipant.fromJson(data['buyer'] ?? {}),
+      seller: TransactionParticipant.fromJson(data['seller'] ?? {}),
+      participants: List<String>.from(data['participants'] ?? []),
+      qtdTokens: (data['qtdTokens'] as num?)?.toInt() ?? 0,
+      tokenPriceCents: (data['tokenPriceCents'] as num?)?.toDouble() ?? 0.0,
+      totalCents: (data['totalCents'] as num?)?.toDouble() ?? 0.0,
+      transactionType: data['transactionType'] ?? '',
+      createdAt: FirestoreTimestamp.fromJson(data['createdAt'] ?? {}),
     );
   }
 }
@@ -58,11 +59,12 @@ class TransactionParticipant {
     required this.type,
   });
 
-  factory TransactionParticipant.fromJson(Map<String, dynamic> json) {
+  factory TransactionParticipant.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return TransactionParticipant(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      type: json['type'] ?? '',
+      id: data['id'] ?? '',
+      name: data['name'] ?? '',
+      type: data['type'] ?? '',
     );
   }
 }
@@ -77,12 +79,13 @@ class TransactionListResponse {
     this.lastTransactionId,
   });
 
-  factory TransactionListResponse.fromJson(Map<String, dynamic> json) {
+  factory TransactionListResponse.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return TransactionListResponse(
-      transactions: (json['transactions'] as List? ?? [])
+      transactions: (data['transactions'] as List? ?? [])
           .map((e) => Transaction.fromJson(e))
           .toList(),
-      lastTransactionId: json['lastTransactionId'],
+      lastTransactionId: data['lastTransactionId'],
     );
   }
 }

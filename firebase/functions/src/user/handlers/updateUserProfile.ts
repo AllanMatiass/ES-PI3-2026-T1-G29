@@ -2,13 +2,16 @@ import { onCall, HttpsError } from "firebase-functions/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { requireAuthenticatedUser } from "../../shared/auth";
 import { updateUser, getUserByPhone } from "../repositories/userRepository";
+import { normalizePhone, normalizeString } from "../../shared/validation";
 
 type Req = { phone?: string; email?: string };
 
 export const updateUserProfile = onCall(
   withCallHandler<Req, void>(async (request) => {
     const { uid } = requireAuthenticatedUser(request);
-    const { phone, email } = request.data;
+    const email = normalizeString(request.data.email);
+    const phone = normalizePhone(request.data.email);
+
     const firestoreUpdates: Record<string, string> = {};
     if (phone !== undefined) {
       const d = phone.replace(/\D/g, "");

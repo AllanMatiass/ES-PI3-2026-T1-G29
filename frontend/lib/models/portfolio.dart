@@ -9,10 +9,11 @@ class PortfolioHistoryPoint {
 
   PortfolioHistoryPoint({required this.timestamp, required this.valueCents});
 
-  factory PortfolioHistoryPoint.fromJson(Map<String, dynamic> json) {
+  factory PortfolioHistoryPoint.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return PortfolioHistoryPoint(
-      timestamp: json['timestamp'] as String,
-      valueCents: (json['valueCents'] as num).toDouble(),
+      timestamp: data['timestamp'] as String,
+      valueCents: (data['valueCents'] as num).toDouble(),
     );
   }
 }
@@ -35,15 +36,16 @@ class GetUserTokenValuationsResponse {
     required this.history,
   });
 
-  factory GetUserTokenValuationsResponse.fromJson(Map<String, dynamic> json) {
+  factory GetUserTokenValuationsResponse.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return GetUserTokenValuationsResponse(
-      range: json['range'] as String,
-      currency: json['currency'] as String,
-      totalValueCents: (json['totalValueCents'] as num).toDouble(),
-      variationCents: (json['variationCents'] as num).toDouble(),
-      variationPercent: (json['variationPercent'] as num).toDouble(),
-      history: (json['history'] as List)
-          .map((e) => PortfolioHistoryPoint.fromJson(e as Map<String, dynamic>))
+      range: data['range'] as String,
+      currency: data['currency'] as String,
+      totalValueCents: (data['totalValueCents'] as num).toDouble(),
+      variationCents: (data['variationCents'] as num).toDouble(),
+      variationPercent: (data['variationPercent'] as num).toDouble(),
+      history: (data['history'] as List)
+          .map((e) => PortfolioHistoryPoint.fromJson(e))
           .toList(),
     );
   }

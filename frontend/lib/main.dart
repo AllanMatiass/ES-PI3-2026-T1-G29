@@ -1,6 +1,8 @@
 // Autor: Vinícius Castro & Allan Giovanni Matias Paes
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -27,6 +29,14 @@ void main() async {
 
   // Inicializa o Firebase com as configurações da plataforma atual
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Inicializa o App Check
+  // O token de debug deve ser registrado no Console do Firebase para ambientes de teste.
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
+    webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
+  );
 
   // Inicializa a formatação de data para o locale brasileiro
   await initializeDateFormatting('pt_BR', null);
