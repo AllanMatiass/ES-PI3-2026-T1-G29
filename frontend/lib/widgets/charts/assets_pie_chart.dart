@@ -25,16 +25,7 @@ class AssetsPieChart extends StatefulWidget {
 class _AssetsPieChartState extends State<AssetsPieChart> {
   int? _selectedIndex;
 
-  final List<Color> _chartColors = [
-    const Color(0xFF00A84E), // Verde Mescla
-    const Color(0xFF1E88E5), // Azul
-    const Color(0xFFFFB300), // Amarelo
-    const Color(0xFF8E24AA), // Roxo
-    const Color(0xFFF4511E), // Laranja
-    const Color(0xFF00ACC1), // Ciano
-    const Color(0xFFD81B60), // Rosa
-    const Color(0xFF43A047), // Verde Claro
-  ];
+  final List<Color> _chartColors = AppColors.chartPalette;
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +75,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
         profitCents: 0,
         isUnavailable: true,
         tokensCount: totalUnavailableTokens,
-        color: Colors.grey.shade400,
+        color: AppColors.grey400,
       ));
     }
 
@@ -164,7 +155,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
     if (_selectedIndex == null) {
       return Text(
         'Toque em uma fatia para ver detalhes',
-        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+        style: TextStyle(color: AppColors.grey600, fontSize: 13),
       );
     }
 
@@ -176,20 +167,20 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.05),
+          color: AppColors.grey600.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+          border: Border.all(color: AppColors.grey600.withOpacity(0.1)),
         ),
         child: Column(
           children: [
             Text(
               'Tokens Indisponíveis',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.grey700),
             ),
             const SizedBox(height: 4),
             Text(
               '${slice.tokensCount} tokens bloqueados em ofertas',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: AppColors.grey600),
             ),
           ],
         ),
@@ -215,7 +206,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(width: 8),
-              Text('($percent%)', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+              Text('($percent%)', style: TextStyle(color: AppColors.grey600, fontSize: 12)),
             ],
           ),
           const SizedBox(height: 12),
@@ -226,7 +217,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
               _buildDetailItem(
                 'Lucro/Prej.', 
                 currencyFormat.format(slice.profitCents / 100),
-                color: slice.profitCents >= 0 ? AppColors.primary : Colors.red,
+                color: slice.profitCents >= 0 ? AppColors.primary : AppColors.danger,
               ),
             ],
           ),
@@ -238,7 +229,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
   Widget _buildDetailItem(String label, String value, {Color? color}) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 12, color: AppColors.grey600)),
         const SizedBox(height: 2),
         Text(
           widget.isBalanceVisible ? value : 'R\$ •••••',
@@ -313,7 +304,7 @@ class _PieChartPainter extends CustomPainter {
         
         // Borda no selecionado
         final borderPaint = Paint()
-          ..color = Colors.white
+          ..color = AppColors.white
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2;
         canvas.drawArc(selectedRect, startAngle, sweepAngle, true, borderPaint);
@@ -326,14 +317,14 @@ class _PieChartPainter extends CustomPainter {
 
     // Desenhar círculo central (Donut chart effect)
     final innerRadius = radius * 0.6;
-    final innerPaint = Paint()..color = Colors.white;
+    final innerPaint = Paint()..color = AppColors.white;
     canvas.drawCircle(center, innerRadius, innerPaint);
     
     // Texto central
     final textPainter = TextPainter(
       text: TextSpan(
         text: 'Patrimônio',
-        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+        style: TextStyle(color: AppColors.grey600, fontSize: 12),
       ),
       textDirection: TextDirection.ltr,
     );
@@ -347,7 +338,7 @@ class _PieChartPainter extends CustomPainter {
     final valuePainter = TextPainter(
       text: TextSpan(
         text: totalText,
-        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14),
+        style: TextStyle(color: AppColors.black, fontWeight: FontWeight.bold, fontSize: 14),
       ),
       textDirection: TextDirection.ltr,
     );
