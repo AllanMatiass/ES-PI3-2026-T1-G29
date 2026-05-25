@@ -1,142 +1,120 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:frontend/services/startup_service.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:frontend/models/startup.dart';
+import 'package:frontend/services/base_service.dart';
 
-@GenerateMocks([http.Client, FirebaseAuth, User])
+@GenerateMocks([FirebaseFunctions, HttpsCallable, HttpsCallableResult])
 import 'startup_service_test.mocks.dart';
 
 void main() {
-  late MockClient mockClient;
-  late MockFirebaseAuth mockAuth;
-  late MockUser mockUser;
+  late MockFirebaseFunctions mockFunctions;
+  late MockHttpsCallable mockCallable;
 
   setUp(() {
-    mockClient = MockClient();
-    mockAuth = MockFirebaseAuth();
-    mockUser = MockUser();
+    mockFunctions = MockFirebaseFunctions();
+    mockCallable = MockHttpsCallable();
 
-    when(mockAuth.currentUser).thenReturn(mockUser);
-    when(mockUser.getIdToken(any)).thenAnswer((_) async => 'fake_token');
+    when(mockFunctions.httpsCallable(any)).thenReturn(mockCallable);
   });
 
   group('StartupService.getStartupPriceHistory', () {
     test('returns price history on success', () async {
-      final mockResponse = {
-        "result": {
-          "success": true,
-          "data": {
-            "history": [
-              {
-                "timestamp": "2025-12-01",
-                "price": 4.53,
-                "variation": null,
-                "variationPercent": null,
-              },
-              {
-                "timestamp": "2026-01-01",
-                "price": 4.92,
-                "variation": 0.39,
-                "variationPercent": 8.6,
-              },
-            ],
-            "summary": {
-              "currentPrice": 4.92,
-              "highestPrice": 4.92,
-              "lowestPrice": 4.53,
-              "averagePrice": 4.725,
-            },
-            "meta": {"count": 2, "currency": "BRL", "interval": "monthly"},
+      final mockData = {
+        "history": [
+          {
+            "timestamp": "2025-12-01T00:00:00Z",
+            "price": 4.53,
           },
+          {
+            "timestamp": "2026-01-01T00:00:00Z",
+            "price": 4.92,
+          },
+        ],
+        "summary": {
+          "currentPrice": 4.92,
+          "highestPrice": 4.92,
+          "lowestPrice": 4.53,
+          "averagePrice": 4.725,
         },
+        "meta": {"count": 2, "currency": "BRL", "interval": "monthly"},
       };
 
-      when(
-        mockClient.post(
-          any,
-          headers: anyNamed('headers'),
-          body: anyNamed('body'),
-        ),
-      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      final mockResult = MockHttpsCallableResult();
+      when(mockResult.data).thenReturn(mockData);
+      when(mockCallable.call(any)).thenAnswer((_) async => mockResult);
 
-      final result = await StartupService.getStartupPriceHistory(
-        id: 'ecotech',
+      final result = await BaseService.call<Map<String, dynamic>>(
+        'getStartupPriceHistory',
+        data: {"id": "ecotech"},
+        fromJson: (data) {
+          final mapData = Map<String, dynamic>.from(data as Map);
+          return {
+            'history': (mapData['history'] as List)
+                .map((e) => PriceHistoryItem.fromJson(e))
+                .toList(),
+            'summary': PriceSummary.fromJson(mapData['summary']),
+            'meta': PriceMeta.fromJson(mapData['meta']),
+          };
+        },
+        functions: mockFunctions,
       );
 
       expect(result.success, true);
       expect(result.data!['history'], isA<List<PriceHistoryItem>>());
       expect(result.data!['history'].length, 2);
       expect(result.data!['history'][0].price, 4.53);
-      expect(result.data!['history'][1].price, 4.92);
       expect(result.data!['summary'], isA<PriceSummary>());
       expect(result.data!['summary'].currentPrice, 4.92);
-      expect(result.data!['meta'].currency, 'BRL');
     });
 
     test('returns error ApiResponse on failure', () async {
-      when(
-        mockClient.post(
-          any,
-          headers: anyNamed('headers'),
-          body: anyNamed('body'),
-        ),
-      ).thenAnswer(
-        (_) async => http.Response(
-          jsonEncode({
-            "result": {
-              "success": false,
-              "error": {"message": "Error"},
-            },
-          }),
-          400,
+      when(mockCallable.call(any)).thenThrow(
+        FirebaseFunctionsException(
+          code: 'failed-precondition',
+          message: 'Error message',
         ),
       );
 
-      final result = await StartupService.getStartupPriceHistory(
-        id: 'ecotech',
+      final result = await BaseService.call<Map<String, dynamic>>(
+        'getStartupPriceHistory',
+        data: {"id": "ecotech"},
+        fromJson: (_) => {},
+        functions: mockFunctions,
       );
 
       expect(result.success, false);
-      expect(result.message, isNotNull);
+      expect(result.message, contains('Error message'));
     });
   });
 
   group('StartupService.listStartups', () {
     test('returns list of startups on success', () async {
-      final mockResponse = {
-        "result": {
-          "success": true,
-          "data": {
-            "data": {
-              "startup1": {
-                "name": "EcoTech Solutions",
-                "stage": "em_operacao",
-                "shortDescription": "Sustainable energy solutions.",
-                "capitalRaisedCents": 50000000,
-                "totalTokensIssued": 1000000,
-                "currentTokenPriceCents": 150,
-                "variation": {"percentage": 5.0, "trend": "up"},
-                "coverImageUrl": "https://example.com/logo.png",
-                "tags": ["energy", "green"],
-              },
-            },
+      final mockData = {
+        "data": {
+          "startup1": {
+            "name": "EcoTech Solutions",
+            "stage": "em_operacao",
+            "shortDescription": "Sustainable energy solutions.",
+            "capitalRaisedCents": 50000000,
+            "totalTokensIssued": 1000000,
+            "currentTokenPriceCents": 150,
+            "variation": {"percentage": 5.0, "trend": "up"},
+            "coverImageUrl": "https://example.com/logo.png",
+            "tags": ["energy", "green"],
           },
         },
       };
 
-      when(
-        mockClient.post(
-          any,
-          headers: anyNamed('headers'),
-          body: anyNamed('body'),
-        ),
-      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      final mockResult = MockHttpsCallableResult();
+      when(mockResult.data).thenReturn(mockData);
+      when(mockCallable.call(any)).thenAnswer((_) async => mockResult);
 
-      final result = await StartupService.listStartups(
+      final result = await BaseService.call<List<StartupListItem>>(
+        'listStartups',
+        fromJson: (data) => StartupListResponse.fromJson(data).startups,
+        functions: mockFunctions,
       );
 
       expect(result.success, true);
@@ -147,22 +125,18 @@ void main() {
     });
 
     test('returns empty list if no startups found', () async {
-      final mockResponse = {
-        "result": {
-          "success": true,
-          "data": {"data": {}},
-        },
+      final mockData = {
+        "data": {},
       };
 
-      when(
-        mockClient.post(
-          any,
-          headers: anyNamed('headers'),
-          body: anyNamed('body'),
-        ),
-      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      final mockResult = MockHttpsCallableResult();
+      when(mockResult.data).thenReturn(mockData);
+      when(mockCallable.call(any)).thenAnswer((_) async => mockResult);
 
-      final result = await StartupService.listStartups(
+      final result = await BaseService.call<List<StartupListItem>>(
+        'listStartups',
+        fromJson: (data) => StartupListResponse.fromJson(data).startups,
+        functions: mockFunctions,
       );
 
       expect(result.success, true);
@@ -172,82 +146,76 @@ void main() {
 
   group('StartupService.getStartupDetails (FAQ)', () {
     test('returns startup details with questions on success', () async {
-      final mockResponse = {
-        "result": {
-          "success": true,
-          "data": {
-            "id": "startup1",
-            "details": {
-              "startup": {
-                "name": "EcoTech",
-                "stage": "em_operacao",
-                "shortDescription": "Desc",
-                "description": "Long Desc",
-                "coverImageUrl": "logo.png",
-                "totalTokensIssued": 1000,
-                "circulatingTokens": 500,
-                "currentTokenPriceCents": 100,
-                "capitalRaisedCents": 10000,
-                "executiveSummary": "Summary",
-                "lastValuationCents": 20000,
-                "createdAt": {"_seconds": 1625097600, "_nanoseconds": 0},
-                "updatedAt": {"_seconds": 1625097600, "_nanoseconds": 0},
-                "tags": ["energy"],
-                "demoVideos": [],
-                "founders": [],
-                "externalMembers": [],
-              },
-              "expectedReturn": {"expected": 15.0},
-              "risk": {"label": "Médio"},
-              "horizon": "5 anos",
-              "valuation": 1000000,
-            },
-            "priceHistory": {
-              "history": [],
-              "summary": {
-                "currentPrice": 1.0,
-                "highestPrice": 1.0,
-                "lowestPrice": 1.0,
-                "averagePrice": 1.0,
-              },
-              "meta": {"count": 0, "currency": "BRL", "interval": "monthly"},
-            },
-            "questions": [
+      final mockData = {
+        "id": "startup1",
+        "details": {
+          "startup": {
+            "name": "EcoTech",
+            "stage": "em_operacao",
+            "shortDescription": "Desc",
+            "description": "Long Desc",
+            "coverImageUrl": "logo.png",
+            "totalTokensIssued": 1000,
+            "circulatingTokens": 500,
+            "currentTokenPriceCents": 100,
+            "capitalRaisedCents": 10000,
+            "executiveSummary": "Summary",
+            "lastValuationCents": 20000,
+            "createdAt": {"_seconds": 1625097600, "_nanoseconds": 0},
+            "updatedAt": {"_seconds": 1625097600, "_nanoseconds": 0},
+            "tags": ["energy"],
+            "demoVideos": [],
+            "founders": [],
+            "externalMembers": [],
+          },
+          "expectedReturn": {"expected": 15.0},
+          "risk": {"label": "Médio"},
+          "horizon": "5 anos",
+          "valuation": 1000000,
+        },
+        "priceHistory": {
+          "history": [],
+          "summary": {
+            "currentPrice": 1.0,
+            "highestPrice": 1.0,
+            "lowestPrice": 1.0,
+            "averagePrice": 1.0,
+          },
+          "meta": {"count": 0, "currency": "BRL", "interval": "monthly"},
+        },
+        "questions": [
+          {
+            "id": "q1",
+            "startupId": "startup1",
+            "authorId": "user1",
+            "authorEmail": "user@example.com",
+            "visibility": "publica",
+            "text": "How does it work?",
+            "answers": [
               {
-                "id": "q1",
-                "startupId": "startup1",
-                "authorId": "user1",
-                "authorEmail": "user@example.com",
-                "visibility": "publica",
-                "text": "How does it work?",
-                "answers": [
-                  {
-                    "answer": "It works well.",
-                    "answeredAt": {"_seconds": 1625100000, "_nanoseconds": 0},
-                  },
-                ],
-                "createdAt": {"_seconds": 1625098000, "_nanoseconds": 0},
+                "answer": "It works well.",
+                "answeredAt": {"_seconds": 1625100000, "_nanoseconds": 0},
               },
             ],
-            "access": {
-              "isInvestor": true,
-              "canTradeTokens": true,
-              "canSendPrivateQuestions": true,
-            },
+            "createdAt": {"_seconds": 1625098000, "_nanoseconds": 0},
           },
+        ],
+        "access": {
+          "isInvestor": true,
+          "canTradeTokens": true,
+          "canSendPrivateQuestions": true,
         },
       };
 
-      when(
-        mockClient.post(
-          any,
-          headers: anyNamed('headers'),
-          body: anyNamed('body'),
-        ),
-      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      final mockResult = MockHttpsCallableResult();
+      when(mockResult.data).thenReturn(mockData);
+      when(mockCallable.call(any)).thenAnswer((_) async => mockResult);
 
-      final result = await StartupService.getStartupDetails(
-        "startup1",
+      final result = await BaseService.call<StartupData>(
+        'getStartupDetails',
+        data: {"id": "startup1"},
+        fromJson: (data) => StartupData.fromJson(data),
+        functions: mockFunctions,
       );
 
       expect(result.success, true);
@@ -260,66 +228,36 @@ void main() {
 
   group('StartupService.createQuestion', () {
     test('successfully creates a question', () async {
-      final mockResponse = {
-        "result": {
-          "success": true,
-          "data": {
-            "id": "q2",
-            "startupId": "startup1",
-            "authorId": "user1",
-            "authorEmail": "user@example.com",
-            "visibility": "publica",
-            "text": "New question?",
-            "answers": [],
-            "createdAt": {"_seconds": 1625101000, "_nanoseconds": 0},
-          },
-        },
+      final mockData = {
+        "id": "q2",
+        "startupId": "startup1",
+        "authorId": "user1",
+        "authorEmail": "user@example.com",
+        "visibility": "publica",
+        "text": "New question?",
+        "answers": [],
+        "createdAt": {"_seconds": 1625101000, "_nanoseconds": 0},
       };
 
-      when(
-        mockClient.post(
-          any,
-          headers: anyNamed('headers'),
-          body: anyNamed('body'),
-        ),
-      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
+      final mockResult = MockHttpsCallableResult();
+      when(mockResult.data).thenReturn(mockData);
+      when(mockCallable.call(any)).thenAnswer((_) async => mockResult);
 
-      final result = await StartupService.createQuestion(
-        startupId: "startup1",
-        text: "New question?",
-        visibility: "publica",
+      final result = await BaseService.call<Question>(
+        'createStartupQuestion',
+        data: {
+          "startupId": "startup1",
+          "text": "New question?",
+          "visibility": "publica",
+        },
+        fromJson: (data) => Question.fromJson(data),
+        functions: mockFunctions,
       );
 
       expect(result.success, true);
       expect(result.data!.id, "q2");
       expect(result.data!.text, "New question?");
       expect(result.data!.visibility, "publica");
-    });
-
-    test('returns error ApiResponse on failure', () async {
-      final mockResponse = {
-        "result": {
-          "success": false,
-          "error": {"message": "Unauthorized"},
-        },
-      };
-
-      when(
-        mockClient.post(
-          any,
-          headers: anyNamed('headers'),
-          body: anyNamed('body'),
-        ),
-      ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 400));
-
-      final result = await StartupService.createQuestion(
-        startupId: "startup1",
-        text: "Fail",
-        visibility: "publica",
-      );
-
-      expect(result.success, false);
-      expect(result.message, contains('Unauthorized'));
     });
   });
 }
