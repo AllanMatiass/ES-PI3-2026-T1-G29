@@ -1,10 +1,10 @@
-// Autor: Vinícius Castro & Allan Giovanni Matias Paes
+// Autor: Vinícius Castro & Allan Giovanni Matias Paes & Pedro Vinicius Romanato
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/services/validators.dart';
-import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/pages/auth/login_page.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../../widgets/custom_text_field.dart';
@@ -34,6 +34,19 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
+  // Regras de senha forte
+  bool get _hasMinLength => _passwordController.text.length >= 8;
+  bool get _hasUppercase => _passwordController.text.contains(RegExp(r'[A-Z]'));
+  bool get _hasNumber => _passwordController.text.contains(RegExp(r'[0-9]'));
+  bool get _hasSpecial => _passwordController.text.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-\+=/\\]'));
+  bool get _passwordValid => _hasMinLength && _hasUppercase && _hasNumber && _hasSpecial;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() => setState(() {}));
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -62,30 +75,37 @@ class _RegisterPageState extends State<RegisterPage> {
     if (mounted) {
       if (result.success) {
         try {
-          final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-            email: _emailController.text,
-            password: _passwordController.text,
-          );
-          await credential.user?.sendEmailVerification();
-        } catch (_) {
-        }
+  final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+    email: _emailController.text,
+    password: _passwordController.text,
+  );
+  await credential.user?.sendEmailVerification();
+  await FirebaseAuth.instance.signOut();
+} catch (e) {
+  if (mounted) {
+    FeedbackModal.show(
+      context: context,
+      title: 'Aviso',
+      message: 'Conta criada, mas não foi possível enviar o email de verificação. Tente reenviar no login.',
+      type: FeedbackType.error,
+    );
+  }
+}
 
         FeedbackModal.show(
           context: context,
           title: 'Conta criada!',
           message:
-              'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text} — confirme antes de ativar o 2FA.',
+              'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text}. Confirme seu email antes de fazer login.',
           type: FeedbackType.success,
         );
 
-        // Wait a bit to show success message then navigate
+        
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (context) => HomePage(
-                userName: result.data?['name'] ?? _nameController.text,
-              ),
+              builder: (context) => const LoginPage(),
             ),
             (route) => false,
           );
@@ -99,6 +119,34 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       }
     }
+  }
+
+  Widget _buildPasswordRule(bool satisfied, String label) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(
+            satisfied ? Icons.check_circle : Icons.cancel,
+            size: 16,
+            color: satisfied
+                ? Colors.green
+                : theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: satisfied
+                  ? Colors.green
+                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -211,9 +259,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           obscureText: _obscurePassword,
                           textInputAction: TextInputAction.done,
                           validator: (value) {
-                            if (value == null || value.length < 6) {
-                              return 'A senha deve ter pelo menos 6 caracteres';
-                            }
+                            if (value == null || value.isEmpty) return 'Senha é obrigatória';
+                            if (!_hasMinLength) return 'A senha deve ter pelo menos 8 caracteres';
+                            if (!_hasUppercase) return 'A senha deve ter pelo menos uma letra maiúscula';
+                            if (!_hasNumber) return 'A senha deve ter pelo menos um número';
+                            if (!_hasSpecial) return 'A senha deve ter pelo menos um caractere especial';
                             return null;
                           },
                           suffixIcon: IconButton(
@@ -230,6 +280,40 @@ class _RegisterPageState extends State<RegisterPage> {
                             },
                           ),
                         ),
+                        
+                        if (_passwordController.text.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: _passwordValid
+                                    ? Colors.green.withOpacity(0.4)
+                                    : theme.colorScheme.outline.withOpacity(0.2),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Requisitos da senha:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                _buildPasswordRule(_hasMinLength, 'Mínimo 8 caracteres'),
+                                _buildPasswordRule(_hasUppercase, 'Uma letra maiúscula'),
+                                _buildPasswordRule(_hasNumber, 'Um número'),
+                                _buildPasswordRule(_hasSpecial, 'Um caractere especial (!@#\$%...)'),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 32),
                         SizedBox(
                           width: double.infinity,
