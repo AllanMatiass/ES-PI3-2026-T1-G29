@@ -42,8 +42,8 @@ class UserProfile {
   }
 
   // Converte dados do JSON para uma instância de UserProfile.
-  factory UserProfile.fromJson(Map<String, dynamic> json) {
-    final data = json;
+  factory UserProfile.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
 
     return UserProfile(
       uid: data['uid'] ?? '',
@@ -85,13 +85,14 @@ class Wallet {
     );
   }
 
-  factory Wallet.fromJson(Map<String, dynamic> json) {
+  factory Wallet.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return Wallet(
-      balanceInCents: (json['balanceInCents'] as num?)?.toDouble() ?? 0.0,
+      balanceInCents: (data['balanceInCents'] as num?)?.toDouble() ?? 0.0,
       totalInvestedCents:
-          (json['totalInvestedCents'] as num?)?.toDouble() ?? 0.0,
-      updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
-      positions: (json['positions'] as List? ?? [])
+          (data['totalInvestedCents'] as num?)?.toDouble() ?? 0.0,
+      updatedAt: FirestoreTimestamp.fromJson(data['updatedAt']),
+      positions: (data['positions'] as List? ?? [])
           .map((e) => WalletTokenPosition.fromJson(e))
           .toList(),
     );
@@ -118,15 +119,16 @@ class WalletTokenPosition {
     required this.updatedAt,
   });
 
-  factory WalletTokenPosition.fromJson(Map<String, dynamic> json) {
+  factory WalletTokenPosition.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return WalletTokenPosition(
-      startupId: json['startupId'] ?? '',
-      startupName: json['startupName'] ?? '',
-      qtdTokens: (json['qtdTokens'] as num?)?.toInt() ?? 0,
-      lockedTokens: (json['lockedTokens'] as num?)?.toInt() ?? 0,
-      averagePriceCents: (json['averagePriceCents'] as num?)?.toDouble() ?? 0.0,
-      investedCents: (json['investedCents'] as num?)?.toDouble() ?? 0.0,
-      updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
+      startupId: data['startupId'] ?? '',
+      startupName: data['startupName'] ?? '',
+      qtdTokens: (data['qtdTokens'] as num?)?.toInt() ?? 0,
+      lockedTokens: (data['lockedTokens'] as num?)?.toInt() ?? 0,
+      averagePriceCents: (data['averagePriceCents'] as num?)?.toDouble() ?? 0.0,
+      investedCents: (data['investedCents'] as num?)?.toDouble() ?? 0.0,
+      updatedAt: FirestoreTimestamp.fromJson(data['updatedAt']),
     );
   }
 }
@@ -148,18 +150,19 @@ class WalletTokenPositionDTO extends WalletTokenPosition {
     required this.currentValueCents,
   });
 
-  factory WalletTokenPositionDTO.fromJson(Map<String, dynamic> json) {
+  factory WalletTokenPositionDTO.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return WalletTokenPositionDTO(
-      startupId: json['startupId'] ?? '',
-      startupName: json['startupName'] ?? '',
-      qtdTokens: (json['qtdTokens'] as num?)?.toInt() ?? 0,
-      lockedTokens: (json['lockedTokens'] as num?)?.toInt() ?? 0,
-      averagePriceCents: (json['averagePriceCents'] as num?)?.toDouble() ?? 0.0,
-      investedCents: (json['investedCents'] as num?)?.toDouble() ?? 0.0,
-      updatedAt: FirestoreTimestamp.fromJson(json['updatedAt']),
+      startupId: data['startupId'] ?? '',
+      startupName: data['startupName'] ?? '',
+      qtdTokens: (data['qtdTokens'] as num?)?.toInt() ?? 0,
+      lockedTokens: (data['lockedTokens'] as num?)?.toInt() ?? 0,
+      averagePriceCents: (data['averagePriceCents'] as num?)?.toDouble() ?? 0.0,
+      investedCents: (data['investedCents'] as num?)?.toDouble() ?? 0.0,
+      updatedAt: FirestoreTimestamp.fromJson(data['updatedAt']),
       currentTokenPriceCents:
-          (json['currentTokenPriceCents'] as num?)?.toDouble() ?? 0.0,
-      currentValueCents: (json['currentValueCents'] as num?)?.toDouble() ?? 0.0,
+          (data['currentTokenPriceCents'] as num?)?.toDouble() ?? 0.0,
+      currentValueCents: (data['currentValueCents'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
@@ -174,12 +177,13 @@ class PaginatedInvestmentsResponseDTO {
     this.lastStartupId,
   });
 
-  factory PaginatedInvestmentsResponseDTO.fromJson(Map<String, dynamic> json) {
+  factory PaginatedInvestmentsResponseDTO.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return PaginatedInvestmentsResponseDTO(
-      investments: (json['investments'] as List? ?? [])
+      investments: (data['investments'] as List? ?? [])
           .map((e) => WalletTokenPositionDTO.fromJson(e))
           .toList(),
-      lastStartupId: json['lastStartupId'],
+      lastStartupId: data['lastStartupId'],
     );
   }
 }

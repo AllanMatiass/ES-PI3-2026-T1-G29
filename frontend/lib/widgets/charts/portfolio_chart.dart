@@ -185,29 +185,37 @@ class PortfolioChartState extends State<PortfolioChart> {
   }
 
   Widget _buildFilters() {
-    final ranges = ['1D', '1W', '1M', '1Y', 'YTD'];
+    final ranges = {
+      '1D': '1 dia',
+      '1W': '7 dias',
+      '1M': '30 dias',
+      '1Y': '1 ano',
+      'YTD': 'Esse ano',
+    };
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: ranges.map((r) => _buildFilterButton(r)).toList(),
+      children: ranges.entries
+          .map((e) => _buildFilterButton(e.key, e.value))
+          .toList(),
     );
   }
 
-  Widget _buildFilterButton(String range) {
+  Widget _buildFilterButton(String range, String label) {
     final isSelected = _selectedRange == range;
     return GestureDetector(
       onTap: () => _handleRangeChange(range),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          range,
+          label,
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.grey,
             fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontSize: 11,
           ),
         ),
       ),
