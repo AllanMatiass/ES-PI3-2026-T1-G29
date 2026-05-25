@@ -15,35 +15,28 @@ abstract class BaseService {
     final firebaseFunctions = functions ?? FirebaseFunctions.instance;
 
     try {
-      print('🚀 Calling Firebase Function: $functionName with data: $data');
+      print('[INFO] Calling Firebase Function: $functionName with data: $data');
       final HttpsCallable callable =
           firebaseFunctions.httpsCallable(functionName);
       final HttpsCallableResult result = await callable.call(data);
 
-      print('✅ Firebase Function ($functionName) Response Data: ${result.data}');
-
-      // Se result.data for nulo, algo deu muito errado na resposta
-      if (result.data == null) {
-        return ApiResponse.error('Resposta nula do servidor');
-      }
+      print('[SUCCESS] Firebase Function ($functionName) Response Data: ${result.data}');
 
       final responseMap = result.data as Map;
 
-      // O seu backend pode retornar os dados diretamente, dentro de 'result' ou dentro de 'data'.
       dynamic payload = responseMap;
       if (responseMap.containsKey('result')) {
         payload = responseMap['result'];
       } else if (responseMap.containsKey('data')) {
-        // Extraímos a chave 'data' se ela for o único wrapper ou se o objetivo for 
-        // atingir o payload real em funções que retornam { data: { ... } }
         payload = responseMap['data'];
       }
 
-      print('📦 Payload extracted: $payload');
+      print('[INFO] Payload extracted: $payload');
+
       final transformedData = fromJson(payload);
       return ApiResponse.success(transformedData);
     } on FirebaseFunctionsException catch (e) {
-      print('❌ FirebaseFunctionsException in $functionName:');
+      print('[ERROR] FirebaseFunctionsException in $functionName:');
       print('   Code: ${e.code}');
       print('   Message: ${e.message}');
       print('   Details: ${e.details}');
@@ -60,7 +53,7 @@ abstract class BaseService {
         errorCode: errorCode,
       );
     } catch (e) {
-      print('❌ Unexpected error in $functionName: $e');
+      print('[ERROR] Unexpected error in $functionName: $e');
       return ApiResponse.error('Falha na chamada: $e');
     }
   }
