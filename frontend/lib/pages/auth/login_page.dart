@@ -47,8 +47,6 @@ class _LoginPageState extends State<LoginPage> {
       if (result.success) {
         final user = FirebaseAuth.instance.currentUser;
         if (user != null && !user.emailVerified) {
-          await FirebaseAuth.instance.signOut();
-
           if (!mounted) return;
 
           _showEmailNotVerifiedDialog();
@@ -103,7 +101,10 @@ class _LoginPageState extends State<LoginPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    if (ctx.mounted) Navigator.of(ctx).pop();
+                  },
                   child: const Text('Fechar'),
                 ),
                 ElevatedButton(
@@ -119,25 +120,19 @@ class _LoginPageState extends State<LoginPage> {
                       : () async {
                           setDialogState(() => isSending = true);
                           try {
-                            final credential = await FirebaseAuth.instance
-                                .signInWithEmailAndPassword(
-                              email: _emailController.text,
-                              password: _passwordController.text,
-                            );
-                            await credential.user?.sendEmailVerification();
-                            await FirebaseAuth.instance.signOut();
-
-                            if (ctx.mounted) {
-                              Navigator.of(ctx).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Email de verificação reenviado!'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user != null) {
+                              await user.sendEmailVerification();
+                              if (ctx.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Email de verificação reenviado!'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
                             }
-                          } catch (_) {
-                            setDialogState(() => isSending = false);
+                          } catch (e) {
                             if (ctx.mounted) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
                                 const SnackBar(
@@ -146,6 +141,10 @@ class _LoginPageState extends State<LoginPage> {
                                   backgroundColor: Colors.red,
                                 ),
                               );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setDialogState(() => isSending = false);
                             }
                           }
                         },
