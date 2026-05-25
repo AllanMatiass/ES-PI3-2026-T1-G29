@@ -32,6 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    UserState.refreshUser();
     _authSubscription = FirebaseAuth.instance.userChanges().listen((
       user,
     ) async {
