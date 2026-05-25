@@ -1,8 +1,10 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:frontend/widgets/charts/price_chart.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
+import 'package:frontend/widgets/modals/confirmation_modal.dart';
 import 'package:intl/intl.dart';
 import '../../models/user.dart';
 import '../../models/startup.dart';
@@ -157,6 +159,34 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
         '',
       );
       final int priceCents = int.parse(priceText);
+      final totalCents = qtd * priceCents;
+
+      final confirmed = await ConfirmationModal.show(
+        context: context,
+        title: 'Confirmar Venda',
+        description: 'Você está criando uma oferta para vender tokens da ${_selectedPosition!.startupName}.',
+        rows: [
+          ConfirmationRowData(
+            label: 'Quantidade:',
+            value: '$qtd tokens',
+          ),
+          ConfirmationRowData(
+            label: 'Preço unitário:',
+            value: _formatCurrency(priceCents.toDouble()),
+          ),
+          ConfirmationRowData(
+            label: 'Total a receber:',
+            value: _formatCurrency(totalCents.toDouble()),
+            isTotal: true,
+          ),
+        ],
+        note: 'Nota: Os tokens ficarão bloqueados até que a oferta seja aceita ou cancelada.',
+      );
+
+      if (confirmed != true) {
+        setState(() => _isSubmitting = false);
+        return;
+      }
 
       final result = await OfferService.createOffer(
         startupId: _selectedPosition!.startupId,
@@ -199,7 +229,10 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     }
   }
 
-  // Remove the old _showSuccessDialog method entirely
+  String _formatCurrency(double cents) {
+    final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    return formatter.format(cents / 100);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -428,7 +461,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   data: isDark
                                       ? ThemeData.dark().copyWith(
                                           colorScheme: ColorScheme.dark(
-                                            primary: const Color(0xFF00A84E),
+                                            primary: AppColors.primary,
                                             onPrimary: Colors.white,
                                             surface: theme.colorScheme.surface,
                                             onSurface:
@@ -488,7 +521,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                         ElevatedButton(
                           onPressed: _isSubmitting ? null : _submit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00A84E),
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(
@@ -541,7 +574,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
         child: const Center(
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: Color(0xFF00A84E),
+            color: AppColors.primary,
           ),
         ),
       );
