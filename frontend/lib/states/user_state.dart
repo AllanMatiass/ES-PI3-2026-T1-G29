@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/user_service.dart';
 
+import '../widgets/modals/feedback_modal.dart';
+import '../services/auth.dart';
+
 // Classe responsável por gerenciar o estado global do usuário de forma reativa.
 class UserState {
   // Notificadores para mudanças no perfil do usuário e no estado de carregamento.
@@ -15,7 +18,7 @@ class UserState {
   static UserProfile? get user => userNotifier.value;
 
   // Busca novamente os dados do usuário no servidor e atualiza o estado global.
-  static Future<void> refreshUser() async {
+  static Future<void> refreshUser([BuildContext? context]) async {
     // Se já estiver carregando, evita chamadas duplicadas.
     if (isLoadingNotifier.value) return;
 
@@ -25,6 +28,18 @@ class UserState {
       if (result.success && result.data != null) {
         userNotifier.value = result.data;
         await _fetchProfilePicture(result.data!.uid);
+      } else if (result.errorCode == 'user-not-found' && context != null) {
+        // Se o usuário não existir no Firestore, exibe erro e desloga.
+        if (context.mounted) {
+          await FeedbackModal.show(
+            context: context,
+            title: 'Conta não encontrada',
+            message: result.message ?? 'Sua conta não foi encontrada no sistema.',
+            type: FeedbackType.error,
+            buttonText: 'Sair',
+            onConfirm: () async => await AuthService.signOut(context),
+          );
+        }
       }
     } catch (e) {
       debugPrint('Erro ao atualizar usuário: $e');

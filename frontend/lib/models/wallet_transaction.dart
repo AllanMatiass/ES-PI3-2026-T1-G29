@@ -17,10 +17,11 @@ class WalletTransactionResponse {
 
   WalletTransactionResponse({required this.userId, required this.newBalance});
 
-  factory WalletTransactionResponse.fromJson(Map<String, dynamic> json) {
+  factory WalletTransactionResponse.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return WalletTransactionResponse(
-      userId: json['userId'] ?? '',
-      newBalance: json['newBalance'] ?? 0,
+      userId: data['userId'] ?? '',
+      newBalance: data['newBalance'] ?? 0,
     );
   }
 }
@@ -37,11 +38,12 @@ class Movement {
     required this.createdAt,
   });
 
-  factory Movement.fromJson(Map<String, dynamic> json) {
+  factory Movement.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return Movement(
-      type: json['type'] ?? '',
-      amountInCents: (json['amountInCents'] as num?)?.toInt() ?? 0,
-      createdAt: FirestoreTimestamp.fromJson(json['createdAt']),
+      type: data['type'] ?? '',
+      amountInCents: (data['amountInCents'] as num?)?.toInt() ?? 0,
+      createdAt: FirestoreTimestamp.fromJson(data['createdAt']),
     );
   }
 }
@@ -53,12 +55,13 @@ class PaginatedMovementsResponse {
 
   PaginatedMovementsResponse({required this.movements, this.lastMovementId});
 
-  factory PaginatedMovementsResponse.fromJson(Map<String, dynamic> json) {
+  factory PaginatedMovementsResponse.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return PaginatedMovementsResponse(
-      movements: (json['movements'] as List? ?? [])
+      movements: (data['movements'] as List? ?? [])
           .map((e) => Movement.fromJson(e))
           .toList(),
-      lastMovementId: json['lastMovementId'],
+      lastMovementId: data['lastMovementId'],
     );
   }
 }

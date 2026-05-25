@@ -65,8 +65,6 @@ void main() {
 
       final result = await StartupService.getStartupPriceHistory(
         id: 'ecotech',
-        client: mockClient,
-        auth: mockAuth,
       );
 
       expect(result.success, true);
@@ -100,8 +98,6 @@ void main() {
 
       final result = await StartupService.getStartupPriceHistory(
         id: 'ecotech',
-        client: mockClient,
-        auth: mockAuth,
       );
 
       expect(result.success, false);
@@ -141,8 +137,6 @@ void main() {
       ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
 
       final result = await StartupService.listStartups(
-        client: mockClient,
-        auth: mockAuth,
       );
 
       expect(result.success, true);
@@ -169,8 +163,6 @@ void main() {
       ).thenAnswer((_) async => http.Response(jsonEncode(mockResponse), 200));
 
       final result = await StartupService.listStartups(
-        client: mockClient,
-        auth: mockAuth,
       );
 
       expect(result.success, true);
@@ -256,8 +248,6 @@ void main() {
 
       final result = await StartupService.getStartupDetails(
         "startup1",
-        client: mockClient,
-        auth: mockAuth,
       );
 
       expect(result.success, true);
@@ -298,8 +288,6 @@ void main() {
         startupId: "startup1",
         text: "New question?",
         visibility: "publica",
-        client: mockClient,
-        auth: mockAuth,
       );
 
       expect(result.success, true);
@@ -328,8 +316,6 @@ void main() {
         startupId: "startup1",
         text: "Fail",
         visibility: "publica",
-        client: mockClient,
-        auth: mockAuth,
       );
 
       expect(result.success, false);

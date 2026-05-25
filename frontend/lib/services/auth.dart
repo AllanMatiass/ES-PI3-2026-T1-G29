@@ -1,17 +1,13 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../models/api_response.dart';
 import 'base_service.dart';
 import 'user_service.dart';
 import '../states/user_state.dart';
 
 class AuthService {
-  static const String _signUpUrl = 'https://signup-obpz3whteq-uc.a.run.app';
-  static const String _updateProfileUrl =
-      'https://updateuserprofile-obpz3whteq-uc.a.run.app';
-static Future<ApiResponse<Map<String, dynamic>>> login(
+  static Future<ApiResponse<Map<String, dynamic>>> login(
     String email,
     String password,
   ) async {
@@ -54,27 +50,25 @@ static Future<ApiResponse<Map<String, dynamic>>> login(
 
       final authEmail = user.email;
       if (authEmail != null && authEmail != profile.email) {
-        await BaseService.post<void>(
-          _updateProfileUrl,
+        await BaseService.call<void>(
+          'updateUserProfile',
           data: {'email': authEmail},
           fromJson: (_) {},
         );
         UserState.setUser(profile.copyWith(email: authEmail));
       }
-    } catch (_) {
-    }
+    } catch (_) {}
   }
-static Future<ApiResponse<Map<String, dynamic>>> signUp({
+
+  static Future<ApiResponse<Map<String, dynamic>>> signUp({
     required String cpf,
     required String name,
     required String email,
     required String phone,
     required String password,
-    http.Client? client,
   }) async {
-    return BaseService.post<Map<String, dynamic>>(
-      _signUpUrl,
-      requiresAuth: false,
+    return BaseService.call<Map<String, dynamic>>(
+      'signup',
       data: {
         "cpf": cpf,
         "name": name,
@@ -82,8 +76,7 @@ static Future<ApiResponse<Map<String, dynamic>>> signUp({
         "phone": phone.replaceAll(RegExp(r'\D'), ''),
         "password": password,
       },
-      fromJson: (data) => data as Map<String, dynamic>,
-      client: client,
+      fromJson: (data) => Map<String, dynamic>.from(data as Map),
     );
   }
 

@@ -50,16 +50,17 @@ class Event {
 
   NewsSentiment get sentiment => NewsSentiment.fromDelta(delta);
 
-  factory Event.fromJson(Map<String, dynamic> json) {
+  factory Event.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return Event(
-      id: json['id'] ?? '',
-      startupId: json['startupId'] ?? '',
-      delta: (json['delta'] ?? 0.0).toDouble(),
-      title: json['title'] ?? '',
-      summary: json['summary'] ?? '',
-      content: json['content'] ?? '',
-      tags: List<String>.from(json['tags'] ?? []),
-      createdAt: FirestoreTimestamp.fromJson(json['createdAt']).toDateTime(),
+      id: data['id'] ?? '',
+      startupId: data['startupId'] ?? '',
+      delta: (data['delta'] ?? 0.0).toDouble(),
+      title: data['title'] ?? '',
+      summary: data['summary'] ?? '',
+      content: data['content'] ?? '',
+      tags: List<String>.from(data['tags'] ?? []),
+      createdAt: FirestoreTimestamp.fromJson(data['createdAt']).toDateTime(),
     );
   }
 }
@@ -70,12 +71,13 @@ class EventPaginatedResponse {
 
   EventPaginatedResponse({required this.events, this.lastEventId});
 
-  factory EventPaginatedResponse.fromJson(Map<String, dynamic> json) {
+  factory EventPaginatedResponse.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return EventPaginatedResponse(
-      events: (json['events'] as List? ?? [])
-          .map((e) => Event.fromJson(e as Map<String, dynamic>))
+      events: (data['events'] as List? ?? [])
+          .map((e) => Event.fromJson(e))
           .toList(),
-      lastEventId: json['lastEventId'],
+      lastEventId: data['lastEventId'],
     );
   }
 }

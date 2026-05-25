@@ -78,8 +78,8 @@ class _OffersViewState extends State<OffersView> {
 
     if (mounted) {
       if (result.success) {
-        final List<OfferWithId> newOffers = result.data!['offers'];
-        final String? lastId = result.data!['lastOfferId'];
+        final List<OfferWithId> newOffers = result.data?.offers ?? [];
+        final String? lastId = result.data?.lastOfferId;
 
         setState(() {
           _offers.addAll(newOffers);

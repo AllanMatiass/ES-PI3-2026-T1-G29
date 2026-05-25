@@ -1,51 +1,24 @@
 // Autor: Allan Giovanni Matias Paes
-import 'package:http/http.dart' as http;
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/startup.dart';
 import '../models/api_response.dart';
 import 'base_service.dart';
 
 // Serviço responsável pela consulta e interação com os dados das startups.
 class StartupService {
-  static const String _listUrl = 'https://liststartups-obpz3whteq-uc.a.run.app/';
-  static const String _detailsUrl = 'https://getstartupdetails-obpz3whteq-uc.a.run.app';
-  static const String _priceHistoryUrl = 'https://getstartuppricehistory-obpz3whteq-uc.a.run.app';
-  static const String _createQuestionUrl = 'https://createstartupquestion-obpz3whteq-uc.a.run.app';
-  static const String _buyTokensUrl = 'https://buytokensfromstartup-obpz3whteq-uc.a.run.app';
-
   // Lista todas as startups cadastradas no sistema.
-  static Future<ApiResponse<List<StartupListItem>>> listStartups({
-    http.Client? client,
-    FirebaseAuth? auth,
-  }) async {
-    return BaseService.post<List<StartupListItem>>(
-      _listUrl,
-      fromJson: (data) {
-        final Map<String, dynamic> responseData = data['data'];
-        return responseData.entries.map((entry) {
-          return StartupListItem.fromJson(
-            entry.key,
-            entry.value as Map<String, dynamic>,
-          );
-        }).toList();
-      },
-      client: client,
-      auth: auth,
+  static Future<ApiResponse<List<StartupListItem>>> listStartups() async {
+    return BaseService.call<List<StartupListItem>>(
+      'listStartups',
+      fromJson: (data) => StartupListResponse.fromJson(data).startups,
     );
   }
 
   // Obtém informações detalhadas de uma startup específica pelo seu ID.
-  static Future<ApiResponse<StartupData>> getStartupDetails(
-    String id, {
-    http.Client? client,
-    FirebaseAuth? auth,
-  }) async {
-    return BaseService.post<StartupData>(
-      _detailsUrl,
+  static Future<ApiResponse<StartupData>> getStartupDetails(String id) async {
+    return BaseService.call<StartupData>(
+      'getStartupDetails',
       data: {"id": id},
-      fromJson: (data) => StartupData.fromJson(data as Map<String, dynamic>),
-      client: client,
-      auth: auth,
+      fromJson: (data) => StartupData.fromJson(data),
     );
   }
 
@@ -55,8 +28,6 @@ class StartupService {
     String historyInterval = 'monthly',
     Map<String, String>? historyRange,
     int? historyLimit,
-    http.Client? client,
-    FirebaseAuth? auth,
   }) async {
     final Map<String, dynamic> requestData = {
       "id": id,
@@ -71,20 +42,19 @@ class StartupService {
       requestData["limit"] = historyLimit;
     }
 
-    return BaseService.post<Map<String, dynamic>>(
-      _priceHistoryUrl,
+    return BaseService.call<Map<String, dynamic>>(
+      'getStartupPriceHistory',
       data: requestData,
       fromJson: (data) {
+        final mapData = Map<String, dynamic>.from(data as Map);
         return {
-          'history': (data['history'] as List? ?? [])
+          'history': (mapData['history'] as List? ?? [])
               .map((e) => PriceHistoryItem.fromJson(e))
               .toList(),
-          'summary': PriceSummary.fromJson(data['summary']),
-          'meta': PriceMeta.fromJson(data['meta']),
+          'summary': PriceSummary.fromJson(mapData['summary']),
+          'meta': PriceMeta.fromJson(mapData['meta']),
         };
       },
-      client: client,
-      auth: auth,
     );
   }
 
@@ -93,19 +63,15 @@ class StartupService {
     required String startupId,
     required String text,
     required String visibility,
-    http.Client? client,
-    FirebaseAuth? auth,
   }) async {
-    return BaseService.post<Question>(
-      _createQuestionUrl,
+    return BaseService.call<Question>(
+      'createStartupQuestion',
       data: {
         "startupId": startupId,
         "text": text,
         "visibility": visibility,
       },
-      fromJson: (data) => Question.fromJson(data as Map<String, dynamic>),
-      client: client,
-      auth: auth,
+      fromJson: (data) => Question.fromJson(data),
     );
   }
 
@@ -113,18 +79,14 @@ class StartupService {
   static Future<ApiResponse<void>> buyTokensFromStartup({
     required String startupId,
     required int qtdTokens,
-    http.Client? client,
-    FirebaseAuth? auth,
   }) async {
-    return BaseService.post<void>(
-      _buyTokensUrl,
+    return BaseService.call<void>(
+      'buyTokensFromStartup',
       data: {
         "startupId": startupId,
         "qtdTokens": qtdTokens,
       },
       fromJson: (_) => null,
-      client: client,
-      auth: auth,
     );
   }
 }
