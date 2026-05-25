@@ -75,14 +75,22 @@ class _RegisterPageState extends State<RegisterPage> {
     if (mounted) {
       if (result.success) {
         try {
-          final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-            email: _emailController.text,
-            password: _passwordController.text,
-          );
-          await credential.user?.sendEmailVerification();
-          await FirebaseAuth.instance.signOut();
-        } catch (_) {
-        }
+  final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+    email: _emailController.text,
+    password: _passwordController.text,
+  );
+  await credential.user?.sendEmailVerification();
+  await FirebaseAuth.instance.signOut();
+} catch (e) {
+  if (mounted) {
+    FeedbackModal.show(
+      context: context,
+      title: 'Aviso',
+      message: 'Conta criada, mas não foi possível enviar o email de verificação. Tente reenviar no login.',
+      type: FeedbackType.error,
+    );
+  }
+}
 
         FeedbackModal.show(
           context: context,
