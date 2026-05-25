@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/models/startup.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/states/user_state.dart';
@@ -382,9 +383,10 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
   Widget _buildPurchaseSelector() {
     final theme = Theme.of(context);
     // Para startups, vamos assumir um limite alto se não soubermos o disponível exato
-    final int availableTokens = (_startupData != null)
-        ? (_startupData!.totalTokens - _startupData!.circulatingTokens)
-        : 1000;
+    final int availableTokens = (
+        _startupData!.totalTokens - _startupData!.circulatingTokens
+    );
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +440,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: Color(0xFF00A84E),
+                          color: AppColors.primary,
                           width: 2,
                         ),
                       ),
@@ -497,7 +499,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
           border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: const Color(0xFF00A84E)),
+        child: Icon(icon, color: AppColors.primary),
       ),
     );
   }
@@ -552,7 +554,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
                 fontWeight: FontWeight.bold,
                 color: isInsufficient
                     ? const Color(0xFFEF4444)
-                    : const Color(0xFF00A84E),
+                    : AppColors.primary,
               ),
             ),
           ],
@@ -567,7 +569,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: isInsufficient
                   ? theme.disabledColor
-                  : const Color(0xFF00A84E),
+                  : AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -605,7 +607,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(color: Color(0xFF00A84E)),
+          const CircularProgressIndicator(color: AppColors.primary),
           const SizedBox(height: 16),
           Text(
             'Carregando dados da ${widget.startupName}...',
