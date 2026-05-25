@@ -32,6 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    UserState.refreshUser();
     _authSubscription = FirebaseAuth.instance.userChanges().listen((
       user,
     ) async {
@@ -605,65 +606,86 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 28),
                   Center(
-                    child: Stack(
-                      alignment: Alignment.center,
+                    child: Column(
                       children: [
-                        InkWell(
-                          onTap: _isUploadingPicture
-                              ? null
-                              : _changeProfilePicture,
-                          borderRadius: BorderRadius.circular(44),
-                          child: ValueListenableBuilder<String?>(
-                            valueListenable:
-                                UserState.profilePictureUrlNotifier,
-                            builder: (context, profileUrl, _) {
-                              return CircleAvatar(
-                                radius: 44,
-                                backgroundColor: AppColors.primary.withOpacity(
-                                  0.15,
-                                ),
-                                backgroundImage: profileUrl != null
-                                    ? NetworkImage(profileUrl)
-                                    : null,
-                                child: profileUrl == null
-                                    ? Text(
-                                        initials,
-                                        style: const TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                      )
-                                    : null,
-                              );
-                            },
-                          ),
-                        ),
-                        if (_isUploadingPicture)
-                          const Positioned.fill(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: theme.scaffoldBackgroundColor,
-                                width: 2,
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            InkWell(
+                              onTap: _isUploadingPicture
+                                  ? null
+                                  : _changeProfilePicture,
+                              borderRadius: BorderRadius.circular(44),
+                              child: ValueListenableBuilder<String?>(
+                                valueListenable:
+                                    UserState.profilePictureUrlNotifier,
+                                builder: (context, profileUrl, _) {
+                                  return CircleAvatar(
+                                    radius: 44,
+                                    backgroundColor: AppColors.primary.withOpacity(
+                                      0.15,
+                                    ),
+                                    backgroundImage: profileUrl != null
+                                        ? NetworkImage(profileUrl)
+                                        : null,
+                                    child: profileUrl == null
+                                        ? Text(
+                                            initials,
+                                            style: const TextStyle(
+                                              fontSize: 30,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.primary,
+                                            ),
+                                          )
+                                        : null,
+                                  );
+                                },
                               ),
                             ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 14,
-                              color: Colors.white,
+                            if (_isUploadingPicture)
+                              const Positioned.fill(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: theme.scaffoldBackgroundColor,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          email,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -756,6 +778,16 @@ class _ProfilePageState extends State<ProfilePage> {
                   _sectionTitle('Dados pessoais', theme),
                   const SizedBox(height: 12),
                   _infoCard(theme, [
+                    _infoRow(
+                      theme,
+                      icon: Icons.person_outline,
+                      label: 'Nome',
+                      value: name,
+                    ),
+                    Divider(
+                      height: 1,
+                      color: theme.dividerColor.withOpacity(0.15),
+                    ),
                     if (cpf.isNotEmpty)
                       _infoRow(
                         theme,
