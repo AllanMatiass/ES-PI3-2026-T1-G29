@@ -1,6 +1,7 @@
 // Autor: Allan Giovanni Matias Paes
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/offer.dart';
 import 'package:frontend/models/startup.dart';
 import 'package:frontend/models/user.dart';
@@ -328,8 +329,8 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
             _formatCurrency(offerPrice),
             Icons.local_offer_outlined,
             valueColor: offerPrice <= marketPrice
-                ? const Color(0xFF00A84E)
-                : const Color(0xFFEF4444),
+                ?  AppColors.primary
+                : AppColors.danger,
           ),
           Divider(height: 32, color: theme.dividerColor.withOpacity(0.1)),
           Row(
@@ -346,7 +347,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: discount > 0
-                      ? const Color(0xFF00A84E)
+                      ?  AppColors.primary
                       : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -466,7 +467,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                          color: Color(0xFF00A84E),
+                          color: AppColors.primary,
                           width: 2,
                         ),
                       ),
@@ -521,7 +522,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
           border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: const Color(0xFF00A84E)),
+        child: Icon(icon, color: AppColors.primary),
       ),
     );
   }
@@ -553,7 +554,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: isInsufficient
-                        ? const Color(0xFFEF4444)
+                        ? AppColors.danger
                         : theme.colorScheme.onSurface,
                   ),
                 ),
@@ -576,8 +577,8 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: isInsufficient
-                    ? const Color(0xFFEF4444)
-                    : const Color(0xFF00A84E),
+                    ? AppColors.danger
+                    :  AppColors.primary,
               ),
             ),
           ],
@@ -592,7 +593,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: isInsufficient
                   ? theme.disabledColor
-                  : const Color(0xFF00A84E),
+                  :  AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -629,7 +630,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(color: Color(0xFF00A84E)),
+          const CircularProgressIndicator(color: AppColors.primary),
           const SizedBox(height: 16),
           Text(
             'Carregando dados da ${widget.offer.startupName}...',

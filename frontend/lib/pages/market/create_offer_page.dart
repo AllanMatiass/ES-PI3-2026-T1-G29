@@ -234,6 +234,32 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     return formatter.format(cents / 100);
   }
 
+  Widget _buildQuickPriceButton(String label, double cents) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _priceController.text = _formatCurrency(cents);
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -259,7 +285,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: Color(0xFF00A84E)),
+                  CircularProgressIndicator(color: AppColors.primary),
                   SizedBox(height: 16),
                   Text('Carregando seus tokens...'),
                 ],
@@ -351,6 +377,13 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   labelStyle: TextStyle(
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
+                                  hintText: _selectedPosition != null
+                                      ? '${_selectedPosition!.qtdTokens - _selectedPosition!.lockedTokens}'
+                                      : '0',
+                                  hintStyle: TextStyle(
+                                    color: theme.colorScheme.onSurfaceVariant
+                                        .withOpacity(0.5),
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -402,6 +435,16 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   labelStyle: TextStyle(
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
+                                  hintText: _selectedStartupData != null
+                                      ? _formatCurrency(
+                                          _selectedStartupData!
+                                              .summary.averagePrice * 100,
+                                        )
+                                      : 'R\$ 0,00',
+                                  hintStyle: TextStyle(
+                                    color: theme.colorScheme.onSurfaceVariant
+                                        .withOpacity(0.5),
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -437,6 +480,23 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                             ),
                           ],
                         ),
+                        if (_selectedStartupData != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Spacer(),
+                              _buildQuickPriceButton(
+                                'Usar valor de mercado',
+                                _selectedStartupData!.summary.currentPrice * 100,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildQuickPriceButton(
+                                'Usar valor médio',
+                                _selectedStartupData!.summary.averagePrice * 100,
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 24),
                         InkWell(
                           onTap: () async {
@@ -545,6 +605,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
+
                                   ),
                                 ),
                         ),
