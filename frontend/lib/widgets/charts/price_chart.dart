@@ -332,21 +332,35 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   Widget _buildCustomRangeButton() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final bool isSelected = selectedFilter == 'Custom';
+    final bool isSelected = selectedFilter == 'Custom' || selectedFilter == 'Personalizado';
     return GestureDetector(
       onTap: _selectCustomRange,
       child: Container(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected 
               ? const Color(0xFF00A84E) 
               : (isDark ? theme.colorScheme.surfaceVariant.withOpacity(0.2) : theme.colorScheme.surfaceVariant.withOpacity(0.3)),
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Icon(
-          Icons.calendar_today_outlined,
-          size: 16,
-          color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.calendar_today_outlined,
+              size: 14,
+              color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Personalizado',
+              style: TextStyle(
+                color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
       ),
     );
