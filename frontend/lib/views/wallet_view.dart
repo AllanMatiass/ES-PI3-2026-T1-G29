@@ -12,12 +12,11 @@ import '../services/startup_service.dart';
 import '../services/transaction_service.dart';
 import '../widgets/cards/wallet_balance_card.dart';
 import '../widgets/tiles/transaction_list_tile.dart';
-import '../widgets/cards/investment_card.dart';
 import '../widgets/shimmer_placeholder.dart';
 import '../models/api_response.dart';
 import '../pages/wallet/transaction_history_page.dart';
 import '../pages/wallet/all_assets_page.dart';
-
+import '../widgets/charts/assets_pie_chart.dart';
 import '../widgets/headers/home_header.dart';
 
 class WalletView extends StatefulWidget {
@@ -260,15 +259,9 @@ class _WalletViewState extends State<WalletView> {
 
   Widget _buildInvestmentsSection(UserProfile? userData, bool isLoading) {
     if (isLoading || userData == null) {
-      return Column(
-        children: List.generate(
-          2,
-          (_) => const ShimmerPlaceholder(
-            height: 160,
-            borderRadius: 20,
-            margin: EdgeInsets.only(bottom: 12),
-          ),
-        ),
+      return const ShimmerPlaceholder(
+        height: 250,
+        borderRadius: 20,
       );
     }
 
@@ -280,18 +273,10 @@ class _WalletViewState extends State<WalletView> {
       );
     }
 
-    final positions = userData.wallet.positions.take(2).toList();
-
-    return Column(
-      children: positions
-          .map(
-            (p) => InvestmentCard(
-              position: p,
-              startup: _startupsMap[p.startupId],
-              isBalanceVisible: _isVisible,
-            ),
-          )
-          .toList(),
+    return AssetsPieChart(
+      positions: userData.wallet.positions,
+      startupsMap: _startupsMap,
+      isBalanceVisible: _isVisible,
     );
   }
 

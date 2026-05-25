@@ -23,7 +23,7 @@ class PriceHistoryChart extends StatefulWidget {
 
 class _PriceHistoryChartState extends State<PriceHistoryChart> {
   late List<PriceHistoryItem> history;
-  String selectedFilter = 'YTD';
+  String selectedFilter = 'Esse ano';
   bool isLoading = false;
   DateTimeRange? customRange;
   String customInterval = 'monthly';
@@ -33,9 +33,9 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
   void initState() {
     super.initState();
     history = widget.initialHistory;
-    // Carrega o filtro inicial YTD (Year To Date)
+    // Carrega o filtro inicial "Esse ano"
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateFilter('YTD');
+      _updateFilter('Esse ano');
     });
   }
 
@@ -46,7 +46,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
     if (oldWidget.initialHistory != widget.initialHistory) {
       setState(() {
         history = widget.initialHistory;
-        selectedFilter = 'YTD';
+        selectedFilter = 'Esse ano';
         customRange = null;
         selectedIndex = null;
       });
@@ -92,13 +92,14 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
       final toDateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
       // Define o intervalo de tempo retroativo com base no filtro
-      if (filter == '1D') {
-        interval = 'daily';
-        final from = now.subtract(const Duration(days: 1));
+      if (filter == '3 meses') {
+        interval = 'monthly';
+        final from = DateTime(now.year, now.month - 3, now.day);
         range = {
           "from": "${from.year}-${from.month.toString().padLeft(2, '0')}-${from.day.toString().padLeft(2, '0')}",
           "to": toDateStr
         };
+        limit = 3;
       } else if (filter == 'Semestre') {
         interval = 'monthly';
         final from = DateTime(now.year, now.month - 6, now.day);
@@ -115,7 +116,7 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
           "to": toDateStr
         };
         limit = 12;
-      } else if (filter == 'YTD') {
+      } else if (filter == 'Esse ano') {
         interval = 'ytd';
       } else if (filter == 'Custom' && customRange != null) {
         interval = customInterval;
@@ -233,13 +234,13 @@ class _PriceHistoryChartState extends State<PriceHistoryChart> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterButton('1D'),
+                  _buildFilterButton('3 meses'),
                   const SizedBox(width: 8),
                   _buildFilterButton('Semestre'),
                   const SizedBox(width: 8),
                   _buildFilterButton('1 ano'),
                   const SizedBox(width: 8),
-                  _buildFilterButton('YTD'),
+                  _buildFilterButton('Esse ano'),
                   const SizedBox(width: 8),
                   _buildCustomRangeButton(),
                 ],

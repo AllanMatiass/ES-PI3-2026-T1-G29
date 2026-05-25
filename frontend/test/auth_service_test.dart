@@ -47,7 +47,6 @@ void main() {
         email: "matias3@22e.com",
         phone: "11930541768",
         password: "123456",
-        client: mockClient,
       );
 
       expect(result.success, true);
@@ -81,7 +80,6 @@ void main() {
         email: "matias3@22e.com",
         phone: "11930541768",
         password: "123456",
-        client: mockClient,
       );
 
       expect(result.success, false);
@@ -104,7 +102,6 @@ void main() {
         email: "matias3@22e.com",
         phone: "11930541768",
         password: "123456",
-        client: mockClient,
       );
 
       expect(result.success, false);

@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 import '../../services/offer_service.dart';
 import '../modals/feedback_modal.dart';
 
+import 'package:frontend/models/offer.dart';
+
 class MyOfferCard extends StatelessWidget {
-  final Map<String, dynamic> offer;
+  final OfferWithId offer;
   final VoidCallback? onCancelled;
 
   MyOfferCard({super.key, required this.offer, this.onCancelled});
@@ -15,7 +17,7 @@ class MyOfferCard extends StatelessWidget {
     symbol: 'R\$',
   );
 
-  String _formatCurrency(int cents) {
+  String _formatCurrency(double cents) {
     return _currencyFormat.format(cents / 100);
   }
 
@@ -38,8 +40,8 @@ class MyOfferCard extends StatelessWidget {
           children: [
             Text(
               'Deseja cancelar sua oferta de venda de '
-              '${offer['remainingQtdTokens'] ?? 0} tokens de '
-              '${offer['startupName'] ?? 'startup'}?',
+              '${offer.remainingQtdTokens ?? 0} tokens de '
+              '${offer.startupName}?',
             ),
             const SizedBox(height: 12),
             Container(
@@ -92,7 +94,7 @@ class MyOfferCard extends StatelessWidget {
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    final result = await OfferService.cancelOffer(offerId: offer['id']);
+    final result = await OfferService.cancelOffer(offerId: offer.id);
 
     if (!context.mounted) return;
     Navigator.of(context).pop();
@@ -118,11 +120,11 @@ class MyOfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final status = offer['status'] ?? 'OPEN';
-    final remaining = offer['remainingQtdTokens'] ?? 0;
-    final initial = offer['initialQtdTokens'] ?? 0;
-    final sold = offer['soldQtdTokens'] ?? 0;
-    final isOpen = status.toString().toUpperCase() == 'OPEN';
+    final status = offer.status;
+    final remaining = offer.remainingQtdTokens ?? 0;
+    final initial = offer.initialQtdTokens ?? 0;
+    final sold = offer.soldQtdTokens ?? 0;
+    final isOpen = status == OfferStatus.open;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -147,7 +149,7 @@ class MyOfferCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  offer['startupName'] ?? 'Startup',
+                  offer.startupName,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -173,7 +175,7 @@ class MyOfferCard extends StatelessWidget {
               _buildInfoItem(
                 context,
                 Icons.monetization_on_outlined,
-                _formatCurrency(offer['tokenPriceCents'] ?? 0),
+                _formatCurrency(offer.tokenPriceCents),
                 label: 'cada',
               ),
             ],
@@ -193,7 +195,7 @@ class MyOfferCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    _formatCurrency(offer['totalEarnedCents'] ?? 0),
+                    _formatCurrency(offer.totalEarnedCents ?? 0),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -283,26 +285,22 @@ class MyOfferCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(OfferStatus status) {
     Color color = Colors.grey;
-    String text = status;
+    String text = status.toDisplayString();
 
-    switch (status.toUpperCase()) {
-      case 'OPEN':
+    switch (status) {
+      case OfferStatus.open:
         color = Colors.green;
-        text = 'Aberta';
         break;
-      case 'ACCEPTED':
+      case OfferStatus.accepted:
         color = Colors.blue;
-        text = 'Finalizada';
         break;
-      case 'CANCELLED':
+      case OfferStatus.cancelled:
         color = Colors.red;
-        text = 'Cancelada';
         break;
-      case 'EXPIRED':
+      case OfferStatus.expired:
         color = Colors.orange;
-        text = 'Expirada';
         break;
     }
 

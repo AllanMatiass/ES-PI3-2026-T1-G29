@@ -1,13 +1,4 @@
 // Autor: Allan Giovanni Matias Paes
-export type ApiResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: {
-    code: string;
-    message: string;
-    status: number;
-  };
-};
 
 export type FunctionResponse = {
   count: number;
