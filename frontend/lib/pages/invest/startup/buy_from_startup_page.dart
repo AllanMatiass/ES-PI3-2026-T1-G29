@@ -6,6 +6,7 @@ import 'package:frontend/models/user.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/states/user_state.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
+import 'package:frontend/widgets/modals/confirmation_modal.dart';
 import 'package:intl/intl.dart';
 
 import '../../../widgets/charts/price_chart.dart';
@@ -137,6 +138,29 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       );
       return;
     }
+
+    final confirmed = await ConfirmationModal.show(
+      context: context,
+      title: 'Confirmar Investimento',
+      description: 'Você está prestes a investir na ${widget.startupName}.',
+      rows: [
+        ConfirmationRowData(
+          label: 'Quantidade:',
+          value: '$_selectedTokens tokens',
+        ),
+        ConfirmationRowData(
+          label: 'Preço unitário:',
+          value: _formatCurrency(widget.tokenPriceCents),
+        ),
+        ConfirmationRowData(
+          label: 'Total a pagar:',
+          value: _formatCurrency(totalCents),
+          isTotal: true,
+        ),
+      ],
+    );
+
+    if (confirmed != true) return;
 
     setState(() => _isPurchasing = true);
     final result = await StartupService.buyTokensFromStartup(
