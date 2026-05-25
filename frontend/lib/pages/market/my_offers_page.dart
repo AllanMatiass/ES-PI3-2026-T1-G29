@@ -5,6 +5,8 @@ import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../widgets/cards/my_offer_card.dart';
 
+import 'package:frontend/models/offer.dart';
+
 class MyOffersView extends StatefulWidget {
   const MyOffersView({super.key});
 
@@ -13,7 +15,7 @@ class MyOffersView extends StatefulWidget {
 }
 
 class _MyOffersViewState extends State<MyOffersView> {
-  List<Map<String, dynamic>> _myOffers = [];
+  List<OfferWithId> _myOffers = [];
   bool _isLoading = true;
   String _selectedStatus = 'ALL';
 
@@ -23,12 +25,11 @@ class _MyOffersViewState extends State<MyOffersView> {
     _loadMyOffers();
   }
 
-  List<Map<String, dynamic>> get _filteredOffers {
+  List<OfferWithId> get _filteredOffers {
     if (_selectedStatus == 'ALL') return _myOffers;
     return _myOffers
         .where((offer) =>
-            (offer['status'] ?? 'OPEN').toString().toUpperCase() ==
-            _selectedStatus)
+            offer.status.name.toUpperCase() == _selectedStatus)
         .toList();
   }
 

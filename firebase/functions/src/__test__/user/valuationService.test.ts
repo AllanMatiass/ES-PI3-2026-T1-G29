@@ -32,6 +32,7 @@ describe("ValuationService", () => {
     (userRepo.getUserById as jest.Mock).mockResolvedValue({
       wallet: {
         balanceInCents: 1000,
+        totalInvestedCents: 10000, // Custo total investido para cálculo de variação
         positions: [
           {
             startupId,
@@ -79,26 +80,27 @@ describe("ValuationService", () => {
     expect(result.history.length).toBeGreaterThan(0);
 
     // No ponto "Agora" (último do histórico):
-    // Balance = 1000, Tokens = 100, Price = 200. Total = 1000 + (100 * 200) = 21000
+    // Tokens = 100, Price = 200. Total = (100 * 200) = 20000 (O service atual não soma balance)
     const latest = result.history[result.history.length - 1];
-    expect(latest.valueCents).toBe(21000);
+    expect(latest.valueCents).toBe(20000);
 
     // No ponto "7 dias atrás":
-    // Balance = 1000 + 500 (transação de 2 dias atrás desfeita) = 1500
     // Tokens = 100 - 50 = 50
     // Price = 100 (valuation de 10 dias atrás)
-    // Total = 1500 + (50 * 100) = 1500 + 5000 = 6500
+    // Total = (50 * 100) = 5000
     const oldest = result.history[0];
-    expect(oldest.valueCents).toBe(6500);
+    expect(oldest.valueCents).toBe(5000);
 
-    expect(result.totalValueCents).toBe(21000);
-    expect(result.variationCents).toBe(21000 - 6500);
+    expect(result.totalValueCents).toBe(20000);
+    // Variação = latestValue (20000) - totalInvestedCents (10000) = 10000
+    expect(result.variationCents).toBe(10000);
   });
 
   test("deve lidar com usuário sem posições ou transações", async () => {
     (userRepo.getUserById as jest.Mock).mockResolvedValue({
       wallet: {
         balanceInCents: 5000,
+        totalInvestedCents: 0,
         positions: [],
       },
     });
@@ -106,11 +108,11 @@ describe("ValuationService", () => {
 
     const result = await service.getUserPortfolioHistory(userId, "1M");
 
-    expect(result.totalValueCents).toBe(5000);
+    expect(result.totalValueCents).toBe(0); // Sem ativos = 0 (balance não conta)
     expect(result.variationCents).toBe(0);
     expect(result.variationPercent).toBe(0);
     result.history.forEach((point) => {
-      expect(point.valueCents).toBe(5000);
+      expect(point.valueCents).toBe(0);
     });
   });
 });

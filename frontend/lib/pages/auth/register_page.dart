@@ -81,45 +81,43 @@ class _RegisterPageState extends State<RegisterPage> {
   );
   await credential.user?.sendEmailVerification();
   await FirebaseAuth.instance.signOut();
-} catch (e) {
-  if (mounted) {
+  } catch (e) {
+    if (mounted) {
+      FeedbackModal.show(
+        context: context,
+        title: 'Aviso',
+        message: 'Conta criada, mas não foi possível enviar o email de verificação. Tente reenviar no login.',
+        type: FeedbackType.error,
+      );
+    }
+  }
+
+  FeedbackModal.show(
+    context: context,
+    title: 'Conta criada!',
+    message:
+        'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text}. Confirme seu email antes de fazer login.',
+    type: FeedbackType.success,
+  );
+
+        
+    await Future.delayed(const Duration(seconds: 6));
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const LoginPage(),
+        ),
+            (route) => false,
+      );
+    }} else {
     FeedbackModal.show(
       context: context,
-      title: 'Aviso',
-      message: 'Conta criada, mas não foi possível enviar o email de verificação. Tente reenviar no login.',
+      title: 'Erro no cadastro',
+      message: result.message ?? 'Erro ao criar conta',
       type: FeedbackType.error,
     );
   }
-}
-
-        FeedbackModal.show(
-          context: context,
-          title: 'Conta criada!',
-          message:
-              'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text}. Confirme seu email antes de fazer login.',
-          type: FeedbackType.success,
-        );
-
-        
-        await Future.delayed(const Duration(seconds: 2));
-        if (mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => const LoginPage(),
-            ),
-            (route) => false,
-          );
-        }
-      } else {
-        FeedbackModal.show(
-          context: context,
-          title: 'Erro no cadastro',
-          message: result.message ?? 'Erro ao criar conta',
-          type: FeedbackType.error,
-        );
-      }
-    }
-  }
+  }}
 
   Widget _buildPasswordRule(bool satisfied, String label) {
     final theme = Theme.of(context);
