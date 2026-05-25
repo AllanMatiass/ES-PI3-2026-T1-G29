@@ -78,10 +78,11 @@ class TransactionAgent {
 
   TransactionAgent({required this.id, required this.name});
 
-  factory TransactionAgent.fromJson(Map<String, dynamic> json) {
+  factory TransactionAgent.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return TransactionAgent(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
+      id: data['id'] ?? '',
+      name: data['name'] ?? '',
     );
   }
 }
@@ -94,11 +95,12 @@ class TransactionSeller {
 
   TransactionSeller({this.id, required this.name, required this.type});
 
-  factory TransactionSeller.fromJson(Map<String, dynamic> json) {
+  factory TransactionSeller.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return TransactionSeller(
-      id: json['id'],
-      name: json['name'] ?? '',
-      type: json['type'] ?? 'USER',
+      id: data['id'],
+      name: data['name'] ?? '',
+      type: data['type'] ?? 'USER',
     );
   }
 }
@@ -110,8 +112,12 @@ class OfferWithId {
   final String startupName;
   final TransactionSeller seller;
   final int qtdTokens;
+  final int? remainingQtdTokens;
+  final int? initialQtdTokens;
+  final int? soldQtdTokens;
   final double tokenPriceCents;
   final double totalCents;
+  final double? totalEarnedCents;
   final TransactionType transactionType;
   final FirestoreTimestamp createdAt;
   
@@ -127,8 +133,12 @@ class OfferWithId {
     required this.startupName,
     required this.seller,
     required this.qtdTokens,
+    this.remainingQtdTokens,
+    this.initialQtdTokens,
+    this.soldQtdTokens,
     required this.tokenPriceCents,
     required this.totalCents,
+    this.totalEarnedCents,
     required this.transactionType,
     required this.createdAt,
     this.buyer,
@@ -139,24 +149,46 @@ class OfferWithId {
   });
 
   // Converte dados do JSON para uma instância de OfferWithId.
-  factory OfferWithId.fromJson(Map<String, dynamic> json) {
+  factory OfferWithId.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return OfferWithId(
-      id: json['id'] ?? '',
-      startupId: json['startupId'] ?? '',
-      startupName: json['startupName'] ?? '',
-      seller: TransactionSeller.fromJson(json['seller'] ?? {}),
-      qtdTokens: (json['qtdTokens'] as num?)?.toInt() ?? 0,
-      tokenPriceCents: (json['tokenPriceCents'] as num?)?.toDouble() ?? 0.0,
-      totalCents: (json['totalCents'] as num?)?.toDouble() ?? 0.0,
-      transactionType: TransactionType.fromString(json['transactionType'] ?? ''),
-      createdAt: json['createdAt'] != null
-          ? FirestoreTimestamp.fromJson(json['createdAt'])
+      id: data['id'] ?? '',
+      startupId: data['startupId'] ?? '',
+      startupName: data['startupName'] ?? '',
+      seller: TransactionSeller.fromJson(data['seller'] ?? {}),
+      qtdTokens: (data['qtdTokens'] as num?)?.toInt() ?? 0,
+      remainingQtdTokens: (data['remainingQtdTokens'] as num?)?.toInt(),
+      initialQtdTokens: (data['initialQtdTokens'] as num?)?.toInt(),
+      soldQtdTokens: (data['soldQtdTokens'] as num?)?.toInt(),
+      tokenPriceCents: (data['tokenPriceCents'] as num?)?.toDouble() ?? 0.0,
+      totalCents: (data['totalCents'] as num?)?.toDouble() ?? 0.0,
+      totalEarnedCents: (data['totalEarnedCents'] as num?)?.toDouble(),
+      transactionType: TransactionType.fromString(data['transactionType'] ?? ''),
+      createdAt: data['createdAt'] != null
+          ? FirestoreTimestamp.fromJson(data['createdAt'])
           : FirestoreTimestamp(seconds: 0, nanoseconds: 0),
-      buyer: json['buyer'] != null ? TransactionAgent.fromJson(json['buyer']) : null,
-      expiresAt: json['expiresAt'] != null ? FirestoreTimestamp.fromJson(json['expiresAt']) : null,
-      status: OfferStatus.fromString(json['status'] ?? 'OPEN'),
-      acceptedAt: json['acceptedAt'] != null ? FirestoreTimestamp.fromJson(json['acceptedAt']) : null,
-      cancelledAt: json['cancelledAt'] != null ? FirestoreTimestamp.fromJson(json['cancelledAt']) : null,
+      buyer: data['buyer'] != null ? TransactionAgent.fromJson(data['buyer']) : null,
+      expiresAt: data['expiresAt'] != null ? FirestoreTimestamp.fromJson(data['expiresAt']) : null,
+      status: OfferStatus.fromString(data['status'] ?? 'OPEN'),
+      acceptedAt: data['acceptedAt'] != null ? FirestoreTimestamp.fromJson(data['acceptedAt']) : null,
+      cancelledAt: data['cancelledAt'] != null ? FirestoreTimestamp.fromJson(data['cancelledAt']) : null,
+    );
+  }
+}
+
+// Resposta da API de listagem de ofertas.
+class OfferListResponse {
+  final List<OfferWithId> offers;
+  final String? lastOfferId;
+
+  OfferListResponse({required this.offers, this.lastOfferId});
+
+  factory OfferListResponse.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
+    final List<dynamic> offersJson = data['offers'] ?? [];
+    return OfferListResponse(
+      offers: offersJson.map((e) => OfferWithId.fromJson(e)).toList(),
+      lastOfferId: data['lastOfferId'],
     );
   }
 }

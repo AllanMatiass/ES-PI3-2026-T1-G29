@@ -39,8 +39,8 @@ class _ProfilePageState extends State<ProfilePage> {
       final current = UserState.userNotifier.value;
       if (current == null || current.email == user.email) return;
       try {
-        await BaseService.post<void>(
-          'https://updateuserprofile-obpz3whteq-uc.a.run.app',
+        await BaseService.call<void>(
+          'updateUserProfile',
           data: {'email': user.email},
           fromJson: (_) {},
         );
@@ -420,7 +420,26 @@ class _ProfilePageState extends State<ProfilePage> {
     ThemeData theme,
     String currentPhone,
   ) {
-    final controller = TextEditingController(text: currentPhone);
+    // Prepara o texto inicial removendo o +55 se existir para o formatador aplicar novamente
+    String initialDigits = currentPhone.replaceAll(RegExp(r'\D'), '');
+    if (initialDigits.startsWith('55')) {
+      initialDigits = initialDigits.substring(2);
+    }
+
+    // Aplica a formatação inicial manualmente
+    final buffer = StringBuffer();
+    if (initialDigits.isNotEmpty) {
+      buffer.write('+55 ');
+      for (int i = 0; i < initialDigits.length; i++) {
+        if (i == 0) buffer.write('(');
+        if (i == 2) buffer.write(') ');
+        if (initialDigits.length == 11 && i == 7) buffer.write('-');
+        if (initialDigits.length == 10 && i == 6) buffer.write('-');
+        buffer.write(initialDigits[i]);
+      }
+    }
+
+    final controller = TextEditingController(text: buffer.toString());
     final formKey = GlobalKey<FormState>();
     bool saving = false;
 
@@ -467,14 +486,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       controller: controller,
                       keyboardType: TextInputType.phone,
                       inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(11),
                         _PhoneMaskFormatter(),
                       ],
                       style: TextStyle(color: theme.colorScheme.onSurface),
                       decoration: InputDecoration(
                         labelText: 'Telefone',
-                        hintText: '(11) 91234-5678',
+                        hintText: '+55 (11) 91234-5678',
                         prefixIcon: const Icon(Icons.phone_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -484,7 +501,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         if (v == null || v.trim().isEmpty)
                           return 'Informe o telefone';
                         final digits = v.replaceAll(RegExp(r'\D'), '');
-                        if (digits.length < 10 || digits.length > 11) {
+                        // Remove o 55 do país para validar o DDD + Número
+                        final cleanDigits = digits.startsWith('55') ? digits.substring(2) : digits;
+                        if (cleanDigits.length < 10 || cleanDigits.length > 11) {
                           return 'Telefone deve ter 10 ou 11 dígitos';
                         }
                         return null;
@@ -500,22 +519,29 @@ class _ProfilePageState extends State<ProfilePage> {
                                 if (!formKey.currentState!.validate()) return;
                                 setModalState(() => saving = true);
 
-                                final digits = controller.text.replaceAll(
+                                // Extrai apenas os dígitos e remove o 55 do país antes de enviar
+                                String digits = controller.text.replaceAll(
                                   RegExp(r'\D'),
                                   '',
                                 );
-                                final res = await BaseService.post<void>(
-                                  'https://updateuserprofile-obpz3whteq-uc.a.run.app',
+                                if (digits.startsWith('55')) {
+                                  digits = digits.substring(2);
+                                }
+
+                                final res = await BaseService.call<void>(
+                                  'updateUserProfile',
                                   data: {'phone': digits},
                                   fromJson: (_) {},
                                 );
-
                                 if (!ctx.mounted) return;
                                 setModalState(() => saving = false);
 
                                 if (res.success) {
                                   final current = UserState.userNotifier.value;
                                   if (current != null) {
+                                    // Salva com o 55 para manter o padrão do back se necessário, 
+                                    // ou apenas os dígitos conforme instrução. 
+                                    // O backend vai tratar e salvar com +55.
                                     UserState.userNotifier.value = current
                                         .copyWith(phone: digits);
                                   }
@@ -593,286 +619,304 @@ class _ProfilePageState extends State<ProfilePage> {
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppHeader(
-                    title: 'Perfil',
-                    userData: userData,
-                    isDark: isDark,
-                  ),
-                  const SizedBox(height: 28),
-                  Center(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        InkWell(
-                          onTap: _isUploadingPicture
-                              ? null
-                              : _changeProfilePicture,
-                          borderRadius: BorderRadius.circular(44),
-                          child: ValueListenableBuilder<String?>(
-                            valueListenable:
-                                UserState.profilePictureUrlNotifier,
-                            builder: (context, profileUrl, _) {
-                              return CircleAvatar(
-                                radius: 44,
-                                backgroundColor: AppColors.primary.withOpacity(
-                                  0.15,
-                                ),
-                                backgroundImage: profileUrl != null
-                                    ? NetworkImage(profileUrl)
-                                    : null,
-                                child: profileUrl == null
-                                    ? Text(
-                                        initials,
-                                        style: const TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                      )
-                                    : null,
-                              );
-                            },
-                          ),
-                        ),
-                        if (_isUploadingPicture)
-                          const Positioned.fill(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: theme.scaffoldBackgroundColor,
-                                width: 2,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
+            child: RefreshIndicator(
+              onRefresh: () => UserState.refreshUser(context),
+              color: AppColors.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppHeader(
+                      title: 'Perfil',
+                      userData: userData,
+                      isDark: isDark,
                     ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  if (!emailVerified) ...[
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.orange.withOpacity(0.4),
-                        ),
-                      ),
+                    const SizedBox(height: 28),
+                    Center(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Stack(
+                            alignment: Alignment.center,
                             children: [
-                              Icon(
-                                Icons.mark_email_unread_outlined,
-                                color: Colors.orange,
-                                size: 20,
+                              InkWell(
+                                onTap: _isUploadingPicture
+                                    ? null
+                                    : _changeProfilePicture,
+                                borderRadius: BorderRadius.circular(44),
+                                child: ValueListenableBuilder<String?>(
+                                  valueListenable:
+                                      UserState.profilePictureUrlNotifier,
+                                  builder: (context, profileUrl, _) {
+                                    return CircleAvatar(
+                                      radius: 44,
+                                      backgroundColor: AppColors.primary.withOpacity(
+                                        0.15,
+                                      ),
+                                      backgroundImage: profileUrl != null
+                                          ? NetworkImage(profileUrl)
+                                          : null,
+                                      child: profileUrl == null
+                                          ? Text(
+                                              initials,
+                                              style: const TextStyle(
+                                                fontSize: 30,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.primary,
+                                              ),
+                                            )
+                                          : null,
+                                    );
+                                  },
+                                ),
                               ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Email não verificado',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange,
-                                    fontSize: 14,
+                              if (_isUploadingPicture)
+                                const Positioned.fill(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: theme.scaffoldBackgroundColor,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    size: 14,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 16),
                           Text(
-                            'Confirme seu email para poder ativar o 2FA e proteger sua conta.',
+                            name,
                             style: TextStyle(
-                              fontSize: 13,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: _isSendingVerification
-                                  ? null
-                                  : _sendVerificationEmail,
-                              icon: _isSendingVerification
-                                  ? const SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.orange,
-                                      ),
-                                    )
-                                  : const Icon(Icons.send_outlined, size: 16),
-                              label: Text(
-                                _isSendingVerification
-                                    ? 'Enviando...'
-                                    : 'Reenviar email de verificação',
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.orange,
-                                side: const BorderSide(color: Colors.orange),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 24),
-                  ],
 
-                  _sectionTitle('Dados pessoais', theme),
-                  const SizedBox(height: 12),
-                  _infoCard(theme, [
-                    if (cpf.isNotEmpty)
-                      _infoRow(
-                        theme,
-                        icon: Icons.badge_outlined,
-                        label: 'CPF',
-                        value: _maskCpf(cpf),
+                    if (!emailVerified) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.orange.withOpacity(0.4),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.mark_email_unread_outlined,
+                                  color: Colors.orange,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Email não verificado',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Confirme seu email para poder ativar o 2FA e proteger sua conta.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: _isSendingVerification
+                                    ? null
+                                    : _sendVerificationEmail,
+                                icon: _isSendingVerification
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.orange,
+                                        ),
+                                      )
+                                    : const Icon(Icons.send_outlined, size: 16),
+                                label: Text(
+                                  _isSendingVerification
+                                      ? 'Enviando...'
+                                      : 'Reenviar email de verificação',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.orange,
+                                  side: const BorderSide(color: Colors.orange),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    if (cpf.isNotEmpty)
+                      const SizedBox(height: 24),
+                    ],
+
+                    _sectionTitle('Dados pessoais', theme),
+                    const SizedBox(height: 12),
+                    _infoCard(theme, [
+                      if (cpf.isNotEmpty)
+                        _infoRow(
+                          theme,
+                          icon: Icons.badge_outlined,
+                          label: 'CPF',
+                          value: _maskCpf(cpf),
+                        ),
+                      if (cpf.isNotEmpty)
+                        Divider(
+                          height: 1,
+                          color: theme.dividerColor.withOpacity(0.15),
+                        ),
+
+                      _editableRow(
+                        theme,
+                        icon: Icons.email_outlined,
+                        label: 'Email',
+                        value: email,
+                        onEdit: () => _showEditEmailSheet(context, theme, email),
+                      ),
                       Divider(
                         height: 1,
                         color: theme.dividerColor.withOpacity(0.15),
                       ),
 
-                    _editableRow(
+                      _editableRow(
+                        theme,
+                        icon: Icons.phone_outlined,
+                        label: 'Telefone',
+                        value: phone.isNotEmpty
+                            ? _maskPhone(phone)
+                            : 'Não informado',
+                        onEdit: () => _showEditPhoneSheet(context, theme, phone),
+                      ),
+                    ]),
+                    const SizedBox(height: 28),
+
+                    _sectionTitle('Segurança', theme),
+                    const SizedBox(height: 12),
+
+                    _actionCard(
                       theme,
-                      icon: Icons.email_outlined,
-                      label: 'Email',
-                      value: email,
-                      onEdit: () => _showEditEmailSheet(context, theme, email),
+                      icon: Icons.lock_outline,
+                      title: 'Alterar senha',
+                      subtitle: 'Enviaremos um link para redefinir sua senha',
+                      isLoading: _isSendingPasswordReset,
+                      onTap: _isSendingPasswordReset
+                          ? null
+                          : _sendPasswordResetEmail,
                     ),
-                    Divider(
-                      height: 1,
-                      color: theme.dividerColor.withOpacity(0.15),
-                    ),
+                    const SizedBox(height: 8),
 
-                    _editableRow(
+                    _actionCard(
                       theme,
-                      icon: Icons.phone_outlined,
-                      label: 'Telefone',
-                      value: phone.isNotEmpty
-                          ? _maskPhone(phone)
-                          : 'Não informado',
-                      onEdit: () => _showEditPhoneSheet(context, theme, phone),
+                      icon: Icons.security_outlined,
+                      title: 'Autenticação em 2 Fatores',
+                      subtitle: 'Configure o 2FA para proteger sua conta',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MfaSetupPage()),
+                      ),
                     ),
-                  ]),
-                  const SizedBox(height: 28),
+                    const SizedBox(height: 28),
 
-                  _sectionTitle('Segurança', theme),
-                  const SizedBox(height: 12),
-
-                  _actionCard(
-                    theme,
-                    icon: Icons.lock_outline,
-                    title: 'Alterar senha',
-                    subtitle: 'Enviaremos um link para redefinir sua senha',
-                    isLoading: _isSendingPasswordReset,
-                    onTap: _isSendingPasswordReset
-                        ? null
-                        : _sendPasswordResetEmail,
-                  ),
-                  const SizedBox(height: 8),
-
-                  _actionCard(
-                    theme,
-                    icon: Icons.security_outlined,
-                    title: 'Autenticação em 2 Fatores',
-                    subtitle: 'Configure o 2FA para proteger sua conta',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MfaSetupPage()),
+                    _sectionTitle('Preferências', theme),
+                    const SizedBox(height: 12),
+                    ValueListenableBuilder<ThemeMode>(
+                      valueListenable: themeNotifier,
+                      builder: (context, currentMode, _) {
+                        final isDark = currentMode == ThemeMode.dark;
+                        return _infoCard(theme, [
+                          _infoRow(
+                            theme,
+                            icon: isDark
+                                ? Icons.dark_mode_outlined
+                                : Icons.light_mode_outlined,
+                            label: 'Tema escuro',
+                            value: '',
+                            trailing: Switch(
+                              value: isDark,
+                              activeColor: AppColors.primary,
+                              onChanged: (_) {
+                                themeNotifier.value = isDark
+                                    ? ThemeMode.light
+                                    : ThemeMode.dark;
+                              },
+                            ),
+                          ),
+                        ]);
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 28),
+                    const SizedBox(height: 28),
 
-                  _sectionTitle('Preferências', theme),
-                  const SizedBox(height: 12),
-                  ValueListenableBuilder<ThemeMode>(
-                    valueListenable: themeNotifier,
-                    builder: (context, currentMode, _) {
-                      final isDark = currentMode == ThemeMode.dark;
-                      return _infoCard(theme, [
-                        _infoRow(
-                          theme,
-                          icon: isDark
-                              ? Icons.dark_mode_outlined
-                              : Icons.light_mode_outlined,
-                          label: 'Tema escuro',
-                          value: '',
-                          trailing: Switch(
-                            value: isDark,
-                            activeColor: AppColors.primary,
-                            onChanged: (_) {
-                              themeNotifier.value = isDark
-                                  ? ThemeMode.light
-                                  : ThemeMode.dark;
-                            },
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _confirmLogout(context),
+                        icon: const Icon(Icons.logout),
+                        label: const Text(
+                          'Sair da conta',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ]);
-                    },
-                  ),
-                  const SizedBox(height: 28),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _confirmLogout(context),
-                      icon: const Icon(Icons.logout),
-                      label: const Text(
-                        'Sair da conta',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.danger,
-                        side: const BorderSide(color: AppColors.danger),
-                        minimumSize: const Size(double.infinity, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.danger,
+                          side: const BorderSide(color: AppColors.danger),
+                          minimumSize: const Size(double.infinity, 52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
           ),
@@ -899,8 +943,17 @@ class _ProfilePageState extends State<ProfilePage> {
 
   String _maskPhone(String phone) {
     final digits = phone.replaceAll(RegExp(r'\D'), '');
-    if (digits.length == 11) {
-      return '(${digits.substring(0, 2)}) *****-${digits.substring(7)}';
+    String purePhone = digits;
+
+    // Remove o prefixo 55 se ele estiver presente no início e o número tiver 12 ou 13 dígitos total
+    if (digits.startsWith('55') && (digits.length == 13 || digits.length == 12)) {
+      purePhone = digits.substring(2);
+    }
+
+    if (purePhone.length == 11) {
+      return '+55 (${purePhone.substring(0, 2)}) *****-${purePhone.substring(7)}';
+    } else if (purePhone.length == 10) {
+      return '+55 (${purePhone.substring(0, 2)}) ****-${purePhone.substring(6)}';
     }
     return phone;
   }
@@ -1122,8 +1175,33 @@ class _PhoneMaskFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (newValue.text.isEmpty) return newValue;
+
+    String digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+
+    // Se o usuário está apagando e sobrou apenas o prefixo "55", limpamos tudo para permitir apagar completamente
+    if (newValue.text.length < oldValue.text.length && digits == '55') {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    // Se os dígitos começam com 55 e o campo já tinha o prefixo ou é um número longo (paste), 
+    // removemos os 55 iniciais para não duplicar o prefixo visual.
+    if (digits.startsWith('55') && (oldValue.text.contains('+55') || digits.length > 11)) {
+      digits = digits.substring(2);
+    }
+
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
     final buffer = StringBuffer();
+    buffer.write('+55 ');
 
     for (int i = 0; i < digits.length; i++) {
       if (i == 0) buffer.write('(');
@@ -1131,10 +1209,11 @@ class _PhoneMaskFormatter extends TextInputFormatter {
       if (digits.length == 11 && i == 7) buffer.write('-');
       if (digits.length == 10 && i == 6) buffer.write('-');
       buffer.write(digits[i]);
+      if (i >= 10) break; // Limite de 11 dígitos
     }
 
     final formatted = buffer.toString();
-    return newValue.copyWith(
+    return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
     );

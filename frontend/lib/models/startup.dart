@@ -63,22 +63,50 @@ class StartupListItem {
   });
 
   // Converte dados do JSON para uma instância de StartupListItem.
-  factory StartupListItem.fromJson(String id, Map<String, dynamic> json) {
+  factory StartupListItem.fromJson(String id, dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return StartupListItem(
       id: id,
-      name: json['name'] as String,
-      stage: StartupStage.fromString(json['stage'] as String),
-      shortDescription: json['shortDescription'] as String,
-      capitalRaisedCents: (json['capitalRaisedCents'] as num?)?.toInt() ?? 0,
-      totalTokensIssued: (json['totalTokensIssued'] as num?)?.toInt() ?? 0,
-      currentTokenPriceCents: (json['currentTokenPriceCents'] as num?)?.toInt() ?? 0,
-      priceVariation: (json['variation']['percentage'] as num?)?.toDouble(),
-      priceVariationTrend: json['variation']['trend'],
-      coverImageUrl: json['coverImageUrl'] as String?,
-      tags: List<String>.from(json['tags'] as List),
+      name: data['name'] as String,
+      stage: StartupStage.fromString(data['stage'] as String),
+      shortDescription: data['shortDescription'] as String,
+      capitalRaisedCents: (data['capitalRaisedCents'] as num?)?.toInt() ?? 0,
+      totalTokensIssued: (data['totalTokensIssued'] as num?)?.toInt() ?? 0,
+      currentTokenPriceCents: (data['currentTokenPriceCents'] as num?)?.toInt() ?? 0,
+      priceVariation: (data['variation']['percentage'] as num?)?.toDouble(),
+      priceVariationTrend: data['variation']['trend'],
+      coverImageUrl: data['coverImageUrl'] as String?,
+      tags: List<String>.from(data['tags'] as List),
     );
   }
+}
 
+// Resposta da API de listagem de startups.
+class StartupListResponse {
+  final List<StartupListItem> startups;
+
+  StartupListResponse({required this.startups});
+
+  factory StartupListResponse.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
+    // Se a API retornar uma lista direta em vez de um mapa de IDs
+    if (data.containsKey('startups') && data['startups'] is List) {
+      return StartupListResponse(
+        startups: (data['startups'] as List)
+            .map((e) => StartupListItem.fromJson(e['id'] ?? '', e))
+            .toList(),
+      );
+    }
+    // Caso atual: Mapa de ID -> Dados
+    return StartupListResponse(
+      startups: data.entries.map((entry) {
+        return StartupListItem.fromJson(
+          entry.key,
+          entry.value,
+        );
+      }).toList(),
+    );
+  }
 }
 
 // Representa um fundador da startup com suas informações básicas.
@@ -95,12 +123,13 @@ class Founder {
     required this.bio,
   });
 
-  factory Founder.fromJson(Map<String, dynamic> json) {
+  factory Founder.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return Founder(
-      name: json['name'] ?? '',
-      role: json['role'] ?? '',
-      equityPercent: (json['equityPercent'] as num?)?.toInt() ?? 0,
-      bio: json['bio'] ?? '',
+      name: data['name'] ?? '',
+      role: data['role'] ?? '',
+      equityPercent: (data['equityPercent'] as num?)?.toInt() ?? 0,
+      bio: data['bio'] ?? '',
     );
   }
 }
@@ -119,12 +148,13 @@ class PriceHistoryItem {
     this.variationPercent,
   });
 
-  factory PriceHistoryItem.fromJson(Map<String, dynamic> json) {
+  factory PriceHistoryItem.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return PriceHistoryItem(
-      timestamp: json['timestamp'],
-      price: (json['price'] as num).toDouble(),
-      variation: (json['variation'] as num?)?.toDouble(),
-      variationPercent: (json['variationPercent'] as num?)?.toDouble(),
+      timestamp: data['timestamp'],
+      price: (data['price'] as num).toDouble(),
+      variation: (data['variation'] as num?)?.toDouble(),
+      variationPercent: (data['variationPercent'] as num?)?.toDouble(),
     );
   }
 }
@@ -143,12 +173,13 @@ class PriceSummary {
     required this.averagePrice,
   });
 
-  factory PriceSummary.fromJson(Map<String, dynamic> json) {
+  factory PriceSummary.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return PriceSummary(
-      currentPrice: (json['currentPrice'] as num).toDouble(),
-      highestPrice: (json['highestPrice'] as num).toDouble(),
-      lowestPrice: (json['lowestPrice'] as num).toDouble(),
-      averagePrice: (json['averagePrice'] as num).toDouble(),
+      currentPrice: (data['currentPrice'] as num).toDouble(),
+      highestPrice: (data['highestPrice'] as num).toDouble(),
+      lowestPrice: (data['lowestPrice'] as num).toDouble(),
+      averagePrice: (data['averagePrice'] as num).toDouble(),
     );
   }
 }
@@ -165,11 +196,12 @@ class PriceMeta {
     required this.interval,
   });
 
-  factory PriceMeta.fromJson(Map<String, dynamic> json) {
+  factory PriceMeta.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return PriceMeta(
-      count: json['count'],
-      currency: json['currency'],
-      interval: json['interval'],
+      count: data['count'],
+      currency: data['currency'],
+      interval: data['interval'],
     );
   }
 }
@@ -186,11 +218,12 @@ class ExternalMember {
     required this.organization,
   });
 
-  factory ExternalMember.fromJson(Map<String, dynamic> json) {
+  factory ExternalMember.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return ExternalMember(
-      name: json['name'] ?? '',
-      role: json['role'] ?? '',
-      organization: json['organization'] ?? '',
+      name: data['name'] ?? '',
+      role: data['role'] ?? '',
+      organization: data['organization'] ?? '',
     );
   }
 }
@@ -205,10 +238,11 @@ class Answer {
     required this.answeredAt,
   });
 
-  factory Answer.fromJson(Map<String, dynamic> json) {
+  factory Answer.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return Answer(
-      answer: json['answer'] ?? '',
-      answeredAt: FirestoreTimestamp.fromJson(json['answeredAt']),
+      answer: data['answer'] ?? '',
+      answeredAt: FirestoreTimestamp.fromJson(data['answeredAt']),
     );
   }
 }
@@ -235,18 +269,19 @@ class Question {
     required this.visibility
   });
 
-  factory Question.fromJson(Map<String, dynamic> json) {
+  factory Question.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return Question(
-      id: json['id'],
-      text: json['text'],
-      startupId: json['startupId'],
-      authorEmail: json['authorEmail'],
-      authorId: json['authorId'],
-      visibility: json['visibility'],
-      answers: (json['answers'] as List? ?? [])
+      id: data['id'],
+      text: data['text'],
+      startupId: data['startupId'],
+      authorEmail: data['authorEmail'],
+      authorId: data['authorId'],
+      visibility: data['visibility'],
+      answers: (data['answers'] as List? ?? [])
           .map((e) => Answer.fromJson(e))
           .toList(),
-      createdAt: FirestoreTimestamp.fromJson(json['createdAt']),
+      createdAt: FirestoreTimestamp.fromJson(data['createdAt']),
     );
   }
 }
@@ -263,11 +298,12 @@ class Access {
     required this.canSendPrivateQuestions,
   });
 
-  factory Access.fromJson(Map<String, dynamic> json) {
+  factory Access.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
     return Access(
-      isInvestor: json['isInvestor'] ?? false,
-      canTradeTokens: json['canTradeTokens'] ?? false,
-      canSendPrivateQuestions: json['canSendPrivateQuestions'] ?? false,
+      isInvestor: data['isInvestor'] ?? false,
+      canTradeTokens: data['canTradeTokens'] ?? false,
+      canSendPrivateQuestions: data['canSendPrivateQuestions'] ?? false,
     );
   }
 }
@@ -357,11 +393,11 @@ class StartupData {
   });
 
   // Converte a estrutura complexa do JSON para o modelo StartupData.
-  factory StartupData.fromJson(Map<String, dynamic> json) {
-    final data = json;
-    final details = data['details'];
-    final startup = details['startup'];
-    final priceHistory = data['priceHistory'];
+  factory StartupData.fromJson(dynamic json) {
+    final data = Map<String, dynamic>.from(json as Map);
+    final details = Map<String, dynamic>.from(data['details'] as Map);
+    final startup = Map<String, dynamic>.from(details['startup'] as Map);
+    final priceHistory = Map<String, dynamic>.from(data['priceHistory'] as Map);
 
     return StartupData(
       id: data['id'],
