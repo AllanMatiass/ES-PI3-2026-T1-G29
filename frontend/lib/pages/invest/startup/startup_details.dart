@@ -301,7 +301,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface)),
                       const SizedBox(height: 15),
-                      _buildMarketMetric('Valuation Atual',
+                      _buildMarketMetric('Valor de Mercado',
                           _formatCurrency(data.valuation / 100)),
                       Divider(height: 30, color: theme.dividerColor.withOpacity(0.1)),
                       Row(
@@ -461,7 +461,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                     );
                   },
                   icon: const Icon(Icons.question_answer_outlined),
-                  label: const Text('FAQ da Startup',
+                  label: const Text('Perguntas Frequentes',
                       style: TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
                   style: OutlinedButton.styleFrom(
