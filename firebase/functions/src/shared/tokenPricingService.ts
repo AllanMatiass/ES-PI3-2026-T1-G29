@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { FieldValue } from "firebase-admin/firestore";
 import { db } from "./firebase";
 import { MarketType, StartupDocument } from "../startups/types";
@@ -148,7 +148,7 @@ export class TokenPricingService {
 
     let newPriceCents = currentPriceCents;
 
-    // 1. Calcular novo preço usando o motor matemático puro
+    // 1. Calcular novo preço usando o pricingEngine
     switch (type) {
       case "primary":
         if (!params.quantity) {
@@ -195,7 +195,6 @@ export class TokenPricingService {
     const newValuationCents = newPriceCents * totalTokens;
 
     // 2. Atualizar o documento da Startup
-    // Mudança para Janela de Tempo (24h):
     // Só atualizamos o lastValuationCents se for a primeira transação do dia.
     // Isso permite que a variação (%) no card da startup acumule durante o dia
     // em vez de "zerar" a cada nova pequena mudança de preço.

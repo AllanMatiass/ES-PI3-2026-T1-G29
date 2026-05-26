@@ -1,6 +1,6 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 /**
- * Este arquivo contém apenas lógica matemática pura, sem efeitos colaterais.
+ * Este arquivo contém apenas lógica matemática pura.
  */
 
 import { PRICING_CONFIG } from "../exchange/shared/constants";

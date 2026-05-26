@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes e Murilo Rigoni
+// Autor: Allan Giovanni Matias Paes - 25008211 e Murilo Rigoni
 
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
