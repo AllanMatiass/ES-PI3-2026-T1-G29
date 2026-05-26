@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import * as logger from "firebase-functions/logger";
 import { HttpsError, CallableRequest } from "firebase-functions/v2/https";
 

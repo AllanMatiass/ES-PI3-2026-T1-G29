@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { allowedStages } from "../shared/constants";
 import { requireAuthenticatedUser } from "../../shared/auth";
@@ -6,8 +6,7 @@ import { listStartupItems } from "../repositories/startupRepository";
 import { normalizeString } from "../../shared/validation";
 import { StartupListItem, StartupStage } from "../types";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-import { ListStartupsRequest } from "../types/dtos";
-import { RecordFunctionResponse } from "../../shared/types";
+import { ListStartupsRequest, StartupListingResponse } from "../types/dtos";
 import { logger } from "firebase-functions";
 
 /**
@@ -26,7 +25,7 @@ import { logger } from "firebase-functions";
  * - `data`: lista resumida de startups para uso em telas de catalogo.
  */
 export const listStartups = onCall(
-  withCallHandler<ListStartupsRequest, RecordFunctionResponse<StartupListItem>>(
+  withCallHandler<ListStartupsRequest, StartupListingResponse<StartupListItem>>(
     async (request) => {
       requireAuthenticatedUser(request);
 
