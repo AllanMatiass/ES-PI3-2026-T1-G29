@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { onCall } from "firebase-functions/v2/https";
 import { EventService } from "../shared/eventService";
 import { EventRequestDTO, EventResponseDTO } from "../types/dtos/dtos";
