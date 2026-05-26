@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import {
   QuestionVisibility,
@@ -91,6 +91,16 @@ export type StartupDetails = {
   
 DTOs DE RESPOSTA (API)
 ===================================================== */
+
+export type StartupListingResponse<T> = {
+  count: number;
+  filters: {
+    availableStages: string[];
+    stage: string | null;
+    search: string | null;
+  };
+  data: Record<string, T>;
+};
 
 export type AnswerViewDTO = {
   answer: string;
