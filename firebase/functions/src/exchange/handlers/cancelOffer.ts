@@ -1,4 +1,4 @@
-// Autor: Pedro Vinicius Romanato
+// Autor: Pedro Vinícius Romanato - 25004075
 import { onCall } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { requireAuthenticatedUser } from "../../shared/auth";

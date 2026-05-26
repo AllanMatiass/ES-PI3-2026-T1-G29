@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { db } from "../../shared/firebase";
 import { Timestamp } from "firebase-admin/firestore";
 import { StartupInvestor } from "../types";
@@ -27,8 +27,9 @@ export async function upsertStartupInvestor(
   const investedCents = params.qtdTokens * params.tokenPriceCents;
 
   // =========================
-  // FIRST INVESTMENT
+  // PRIMEIRO INVESTIMENTO
   // =========================
+  // seta nos investidores daquela startup
   if (!snap.exists) {
     tx.set(ref, {
       userId: params.userId,
@@ -50,10 +51,11 @@ export async function upsertStartupInvestor(
   }
 
   // =========================
-  // UPDATE INVESTOR
+  // Caso ele já exista, atualiza as informações dele como investidor
   // =========================
   const data = snap.data() as StartupInvestor;
 
+  // calcula o novo total investido, preço médio e o total de tokens
   const currentTokens = Number(data.totalTokens) || 0;
   const currentInvested = Number(data.totalInvestedCents) || 0;
 
