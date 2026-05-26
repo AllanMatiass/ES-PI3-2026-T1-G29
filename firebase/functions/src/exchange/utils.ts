@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { HttpsError } from "firebase-functions/v2/https";
 import { getStartupById } from "../startups/repositories/startupRepository";
 import { UserService } from "../user/shared/userService";
@@ -39,10 +39,13 @@ export async function validateTransactionData({
     throw new HttpsError("invalid-argument", "Preço do token inválido.");
   }
 
+  // busca o comprador, a startup e o vendedor de forma paralela
   const getUserById = userService.get;
   const [buyerUser, startup, sellerUser] = await Promise.all([
+    // caso não tenha buyerId, preenche com "nada"
     buyerId ? getUserById(buyerId) : Promise.resolve(undefined),
     getStartupById(startupId),
+    // mesma lógica pro vendedor
     sellerId ? getUserById(sellerId) : Promise.resolve(undefined),
   ]);
 

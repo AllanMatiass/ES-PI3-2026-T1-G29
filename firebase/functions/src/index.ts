@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { setGlobalOptions } from "firebase-functions/v2";
 
 setGlobalOptions({ maxInstances: 10 });
