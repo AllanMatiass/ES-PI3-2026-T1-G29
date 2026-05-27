@@ -59,8 +59,7 @@ describe("EventService - Testes Unitários do Backend", () => {
   });
 
   // ------------------------------------------------------------------------
-  // 1. teste de validacao de parametros obrigatorios (guard clause)
-  // ------------------------------------------------------------------------
+  // teste de validacao de parametros obrigatorios (guard clause)
   test("add - deve lancar httpserror failed-precondition se dados estruturais do roberto vierem incompletos", async () => {
     const invalidRequest: any = {
       title: "lançamento do app do roberto",
@@ -81,8 +80,7 @@ describe("EventService - Testes Unitários do Backend", () => {
   });
 
   // ------------------------------------------------------------------------
-  // 2. teste de fluxo completo de sucesso
-  // ------------------------------------------------------------------------
+  //  teste de fluxo completo de sucesso
   test("add - deve normalizar textos, criar o evento e revalorizar o token com sucesso", async () => {
     const validRequest = {
       title: "   parceria tecnologica do roberto   ", // string com espaços para testar normalizeString
@@ -152,8 +150,7 @@ describe("EventService - Testes Unitários do Backend", () => {
   });
 
   // ------------------------------------------------------------------------
-  // 3. teste de consistência e segurança (startup inexistente)
-  // ------------------------------------------------------------------------
+  // teste de consistência e segurança (startup inexistente)
   test("add - deve interromper a execucao e lancar erro se a startup informada nao existir", async () => {
     const validRequest = {
       title: "evento fantasma",
