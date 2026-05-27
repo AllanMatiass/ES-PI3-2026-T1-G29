@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+// Autor: Murilo Rigoni - 25006049
 import { UserService } from "../../user/shared/userService";
 import { HttpsError } from "firebase-functions/https";
 import { getUserById } from "../../user/repositories/userRepository";
