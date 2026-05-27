@@ -1,4 +1,4 @@
-// Autor: Pedro Vinicius Romanato
+// Autor: Pedro Vinicius Romanato - 25004075
 import 'dart:async';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';

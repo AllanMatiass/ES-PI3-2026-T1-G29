@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 // Classe genérica para representar a resposta da API.
 class ApiResponse<T> {
   final bool success;

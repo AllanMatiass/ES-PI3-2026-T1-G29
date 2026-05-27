@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes & Pedro
+// Autor: Pedro Vinícius Romanato - 25004075
 
 import 'dart:developer';
 
@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 
-// Utilizamos StatefulWidget porque precisamos gerenciar o estado do campo de texto (o TextEditingController)
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
 

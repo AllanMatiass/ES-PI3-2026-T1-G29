@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 
 /// Classe utilitária para validação de campos de formulário.
 class Validators {

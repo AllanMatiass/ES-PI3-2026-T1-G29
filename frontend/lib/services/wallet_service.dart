@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import '../models/api_response.dart';
 import '../models/portfolio.dart';
 import '../models/wallet_transaction.dart';
