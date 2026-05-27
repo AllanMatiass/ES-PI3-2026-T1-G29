@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+// Autor: Murilo Rigoni - 25006049
 import { TransactionService } from "../../exchange/shared/transactionService";
 import { HttpsError } from "firebase-functions/v2/https";
 import * as transactionRepository from "../../exchange/repositories/transactionRepository";
