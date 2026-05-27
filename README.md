@@ -98,23 +98,6 @@ O risco de cada startup (0-10) é calculado com base em pesos:
 
 ---
 
-## 🛡️ Tratamento de Erros e Segurança
-
-### `withCallHandler`
-
-Todas as funções são envolvidas por este wrapper, que garante:
-
-1. **Logs centralizados**: Erros são registrados no Firebase Logger com contexto (UID, dados).
-2. **Resposta Padronizada**: A resposta segue sempre o modelo:
-   ```json
-   {
-     "success": boolean,
-     "data": T,
-     "error": { "code": string, "message": string, "status": number }
-   }
-   ```
-3. **Mapeamento Automático**: Converte `HttpsError` para status codes HTTP correspondentes (400, 401, 403, 404, etc).
-
 ### Por que usar Transactions?
 
 As **Transactions do Firestore** são cruciais no MesclaInvest para evitar **Race Conditions**:
@@ -143,7 +126,8 @@ As **Transactions do Firestore** são cruciais no MesclaInvest para evitar **Rac
 1. `flutter pub get`
 2. Crie o arquivo `.env` com as chaves do Firebase.
 3. Coloque o arquivo `google-services.json` em `frontend/android/app`
-4. `flutter run`
+4. rode `flutter pub run build_runner build`
+5. `flutter run`
 
 ---
 

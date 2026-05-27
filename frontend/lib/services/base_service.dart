@@ -2,17 +2,20 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import '../models/api_response.dart';
 
+
 // Classe abstrata que fornece funcionalidades base para chamadas de API.
 abstract class BaseService {
   // Realiza uma chamada para uma Firebase Cloud Function (HTTPS Callable).
   // Gerencia o retorno e converte a resposta para o modelo desejado.
+  static FirebaseFunctions? testFunctionsInstance; 
+
   static Future<ApiResponse<T>> call<T>(
     String functionName, {
     Map<String, dynamic>? data,
     required T Function(dynamic) fromJson,
     FirebaseFunctions? functions,
   }) async {
-    final firebaseFunctions = functions ?? FirebaseFunctions.instance;
+    final firebaseFunctions = functions ?? testFunctionsInstance ?? FirebaseFunctions.instance;
 
     try {
       print('[INFO] Calling Firebase Function: $functionName with data: $data');
