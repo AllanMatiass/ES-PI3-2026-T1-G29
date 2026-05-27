@@ -1,4 +1,6 @@
-// Autor: Vinícius Castro & Allan Giovanni Matias Paes & Pedro Vinicius Romanato
+// Autores:
+// Vinícius Castro - 25002026
+// Pedro Vinícius Romanato - 25004075
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:frontend/constants/colors.dart';
