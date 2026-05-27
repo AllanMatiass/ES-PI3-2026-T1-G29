@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 
 type Collection = FirebaseFirestore.CollectionReference<
   FirebaseFirestore.DocumentData,
@@ -25,6 +25,7 @@ export async function listPaginated<T>(
     query = query.where("startupId", "==", startupId);
   }
 
+  // Se conter lastDocId, a query vai começar depois do ultimo documento.
   if (lastDocId) {
     const lastDoc = await collection.doc(lastDocId).get();
     if (lastDoc.exists) {
@@ -33,11 +34,13 @@ export async function listPaginated<T>(
   }
 
   const snapshot = await query.limit(limit).get();
+  // transforma numa lista de objetos do tipo generico T.
   const document = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...(doc.data() as T),
   }));
 
+  // pega o ultimo ID
   const lastId =
     document.length > 0 && document.length === limit
       ? document[document.length - 1].id

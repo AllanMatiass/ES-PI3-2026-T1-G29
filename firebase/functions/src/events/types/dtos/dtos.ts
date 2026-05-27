@@ -1,4 +1,7 @@
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { EventDocument, EventWithId } from "..";
+
+// DTOs usados nas requisições
 
 export type EventRequestDTO = Omit<EventDocument, "createdAt">;
 

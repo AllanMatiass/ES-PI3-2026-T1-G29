@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { TransactionService } from "../shared/transactionService";

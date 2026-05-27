@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { onCall } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { ExpireOfferDTO, ExpireOfferResponseDTO } from "../types/dtos";

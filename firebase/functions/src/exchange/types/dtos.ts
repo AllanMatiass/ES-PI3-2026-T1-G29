@@ -1,15 +1,5 @@
-// Autor: Allan Giovanni Matias Paes e Pedro Vinicius Romanato
+// Autor: Allan Giovanni Matias Paes - 25008211 e Pedro Vinícius Romanato - 25004075
 import { OfferWithId, TransactionParticipant, TransactionWithId } from ".";
-
-export const DASHBOARD_PERIODS = [
-  "daily",
-  "weekly",
-  "monthly",
-  "6months",
-  "ytd",
-] as const;
-
-export type DashboardPeriod = (typeof DASHBOARD_PERIODS)[number];
 
 export type IdDTO = {
   id: string;
@@ -23,14 +13,13 @@ export type RegisterTransactionRequestDTO = {
   tokenPriceCents: number;
 };
 
+export type OfferIdDTO = IdDTO;
 export type TransactionIdDTO = IdDTO;
 
-export type AcceptOfferResponseDTO = {
+export type BuyTokensResponseDTO = {
   transactionId: string;
   remainingTokens: number;
 };
-
-export type OfferIdDTO = IdDTO;
 
 export type GetStartupTransactionsRequestDTO = {
   startupId: string;
@@ -44,7 +33,7 @@ export type CreateOfferRequestDTO = {
   expiresAt?: string | null;
 };
 
-export type AcceptOfferRequestDTO = {
+export type BuyTokensRequestDTO = {
   offerId: string;
   qtdTokens: number;
 };
@@ -62,22 +51,6 @@ export type GetOffersRequestDTO = {
   startupId?: string;
   limit?: number;
   lastOfferId?: string;
-};
-
-export type GetInvestorDashboardRequestDTO = {
-  period?: DashboardPeriod;
-};
-
-export type DashboardDataPoint = {
-  timestamp: string;
-  totalValueCents: number;
-};
-
-export type GetInvestorDashboardResponseDTO = {
-  points: DashboardDataPoint[];
-  currentTotalValueCents: number;
-  variationCents: number;
-  variationPercent: number;
 };
 
 export type PaginatedOffersResponseDTO = {

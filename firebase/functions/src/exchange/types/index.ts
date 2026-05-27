@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { Timestamp } from "firebase-admin/firestore";
 
 export type ParticipantType = "USER" | "STARTUP";
@@ -43,5 +43,3 @@ export type Offer = Omit<Transaction, "buyer" | "participants"> & {
 export type OfferWithId = Offer & {
   id: string;
 };
-
-export type TransactionAgent = TransactionParticipant;
