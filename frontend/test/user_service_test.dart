@@ -10,15 +10,18 @@ import 'package:frontend/services/user_service.dart';
 import 'package:frontend/services/base_service.dart';
 
 // Gera os mocks robustos com tratamento de Null Safety para o Firebase
-@GenerateMocks([], customMocks: [
-  MockSpec<FirebaseAuth>(onMissingStub: OnMissingStub.returnDefault),
-  MockSpec<User>(onMissingStub: OnMissingStub.returnDefault),
-  MockSpec<FirebaseFunctions>(onMissingStub: OnMissingStub.returnDefault),
-  MockSpec<HttpsCallable>(onMissingStub: OnMissingStub.returnDefault),
-  MockSpec<HttpsCallableResult>(onMissingStub: OnMissingStub.returnDefault),
-])
+@GenerateMocks(
+  [],
+  customMocks: [
+    MockSpec<FirebaseAuth>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<User>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<FirebaseFunctions>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<HttpsCallable>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<HttpsCallableResult>(onMissingStub: OnMissingStub.returnDefault),
+  ],
+)
 // Altere o nome deste import caso o seu arquivo de teste não se chame 'user_service_test.dart'
-import 'user_service_test.mocks.dart'; 
+import 'user_service_test.mocks.dart';
 
 void main() {
   late MockFirebaseAuth mockAuth;
@@ -31,7 +34,8 @@ void main() {
     mockAuth = MockFirebaseAuth();
     mockUser = MockUser();
     mockFunctions = MockFirebaseFunctions();
-    mockCallable = MockMockHttpsCallable(); // O mock customizado herda com prefixo MockMock caso necessário, ou apenas MockHttpsCallable dependendo da geração. O gerador do MockSpec cria como MockHttpsCallable.
+    mockCallable =
+        MockHttpsCallable(); // O mock customizado herda com prefixo MockMock caso necessário, ou apenas MockHttpsCallable dependendo da geração. O gerador do MockSpec cria como MockHttpsCallable.
     mockCallableResult = MockHttpsCallableResult();
 
     // Injeta o mock globalmente dentro do BaseService antes de cada teste
@@ -63,10 +67,10 @@ void main() {
             'balanceInCents': 0.0,
             'totalInvestedCents': 0.0,
             'updatedAt': {'_seconds': 0, '_nanoseconds': 0},
-            'positions': []
+            'positions': [],
           },
-          'createdAt': {'_seconds': 0, '_nanoseconds': 0}
-        }
+          'createdAt': {'_seconds': 0, '_nanoseconds': 0},
+        },
       });
 
       // Act
@@ -75,7 +79,7 @@ void main() {
       // Assert
       expect(result.success, true);
       // CORREÇÃO: Ajustado para validar o nome que veio do Mock (Roberto Carlos)
-      expect(result.data!.name, 'Roberto Carlos'); 
+      expect(result.data!.name, 'Roberto Carlos');
     });
   });
 }
