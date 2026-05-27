@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+// Autor: Murilo Rigoni - 25006049
 import { EventService } from "../../events/shared/eventService";
 import { HttpsError } from "firebase-functions/https";
 import { db } from "../../firebase";
@@ -114,8 +114,10 @@ describe("EventService - Testes Unitários do Backend", () => {
     // configurando stubs para responderem os dados mockados dentro da transacao
     mockTx.get.mockResolvedValue(mockStartupSnap);
     (createEventTx as jest.Mock).mockReturnValue(mockEventRepoResult);
-    
-    (TokenPricingService.prototype.revalueFromEventTx as jest.Mock).mockResolvedValue(mockPricingEngineResult);
+
+    (
+      TokenPricingService.prototype.revalueFromEventTx as jest.Mock
+    ).mockResolvedValue(mockPricingEngineResult);
 
     // act
     const result = await eventService.add(validRequest);
