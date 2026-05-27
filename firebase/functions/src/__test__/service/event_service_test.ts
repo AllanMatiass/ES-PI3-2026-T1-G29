@@ -1,7 +1,7 @@
-import { EventService } from "./eventService";
+import { EventService } from "../../events/shared/eventService";
 import { HttpsError } from "firebase-functions/https";
 import { db } from "../../firebase";
-import { createEventTx } from "../repositories/eventRepository";
+import { createEventTx } from "../../events/repositories/eventRepository";
 import { startupsCollection } from "../../startups/repositories/startupRepository";
 import { TokenPricingService } from "../../shared/tokenPricingService";
 
