@@ -1,4 +1,4 @@
-// Autor: Pedro Romanato
+// Autor: Pedro Romanato - 25004075
 import 'package:flutter/material.dart';
 
 class SocioRow extends StatelessWidget {

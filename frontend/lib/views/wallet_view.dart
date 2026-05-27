@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/wallet/movement_history_page.dart';
 import 'package:frontend/widgets/charts/portfolio_chart.dart';

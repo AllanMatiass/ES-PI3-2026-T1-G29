@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import 'package:flutter/material.dart';
 
 /// Widget que anima a transição de um número inteiro de 0 até o valor final.
