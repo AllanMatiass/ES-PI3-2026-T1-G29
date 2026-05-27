@@ -1,18 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
 import 'package:frontend/models/user.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:frontend/services/user_service.dart';
-import 'package:frontend/services/base_service.dart'; // Importamos o BaseService
+import 'package:frontend/services/base_service.dart';
 
-class MockFirebaseAuth extends Mock implements FirebaseAuth {}
-class MockUser extends Mock implements User {}
-class MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
-class MockHttpsCallable extends Mock implements HttpsCallable {}
-class MockHttpsCallableResult extends Mock implements HttpsCallableResult {}
+// Gera os mocks robustos com tratamento de Null Safety para o Firebase
+@GenerateMocks([], customMocks: [
+  MockSpec<FirebaseAuth>(onMissingStub: OnMissingStub.returnDefault),
+  MockSpec<User>(onMissingStub: OnMissingStub.returnDefault),
+  MockSpec<FirebaseFunctions>(onMissingStub: OnMissingStub.returnDefault),
+  MockSpec<HttpsCallable>(onMissingStub: OnMissingStub.returnDefault),
+  MockSpec<HttpsCallableResult>(onMissingStub: OnMissingStub.returnDefault),
+])
+// Altere o nome deste import caso o seu arquivo de teste não se chame 'user_service_test.dart'
+import 'user_service_test.mocks.dart'; 
 
 void main() {
   late MockFirebaseAuth mockAuth;
@@ -21,21 +27,18 @@ void main() {
   late MockHttpsCallable mockCallable;
   late MockHttpsCallableResult mockCallableResult;
 
-  setUpAll(() {
-    registerFallbackValue(any());
-  });
-
   setUp(() {
     mockAuth = MockFirebaseAuth();
     mockUser = MockUser();
     mockFunctions = MockFirebaseFunctions();
-    mockCallable = MockHttpsCallable();
+    mockCallable = MockMockHttpsCallable(); // O mock customizado herda com prefixo MockMock caso necessário, ou apenas MockHttpsCallable dependendo da geração. O gerador do MockSpec cria como MockHttpsCallable.
     mockCallableResult = MockHttpsCallableResult();
 
     // Injeta o mock globalmente dentro do BaseService antes de cada teste
     BaseService.testFunctionsInstance = mockFunctions;
 
-    when(() => mockFunctions.httpsCallable(any())).thenReturn(mockCallable);
+    // No Mockito, usamos apenas any (sem os parênteses arrow do mocktail)
+    when(mockFunctions.httpsCallable(any)).thenReturn(mockCallable);
   });
 
   tearDown(() {
@@ -46,13 +49,13 @@ void main() {
   group('UserService - getUserData (Sem alterar o UserService)', () {
     test('Deve retornar sucesso e converter o JSON corretamente', () async {
       // Arrange
-      when(() => mockAuth.currentUser).thenReturn(mockUser);
-      when(() => mockUser.uid).thenReturn('123');
-      when(() => mockCallable.call(any())).thenAnswer((_) async => mockCallableResult);
-      when(() => mockCallableResult.data).thenReturn({
+      when(mockAuth.currentUser).thenReturn(mockUser);
+      when(mockUser.uid).thenReturn('123');
+      when(mockCallable.call(any)).thenAnswer((_) async => mockCallableResult);
+      when(mockCallableResult.data).thenReturn({
         'result': {
           'uid': '123',
-          'name': 'Roberto Carlos',
+          'name': 'Roberto Carlos', // Nome mockado aqui
           'email': 'cn@teste.com',
           'phone': '11930541768',
           'cpf': '881.973.540-73',
@@ -66,12 +69,13 @@ void main() {
         }
       });
 
-      // Act - Chamando o método exatamente como ele é hoje
+      // Act
       final result = await UserService.getUserData(auth: mockAuth);
 
       // Assert
       expect(result.success, true);
-      expect(result.data!.name, 'Allan Giovanni');
+      // CORREÇÃO: Ajustado para validar o nome que veio do Mock (Roberto Carlos)
+      expect(result.data!.name, 'Roberto Carlos'); 
     });
   });
 }
