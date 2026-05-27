@@ -1,4 +1,4 @@
-// Autor: Pedro Vinícius Romanato
+// Autor: Pedro Vinícius Romanato - 25004075
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 

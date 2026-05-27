@@ -1,3 +1,4 @@
+// Autor: Murilo Rigoni - 25006049 - 25006049
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -23,14 +24,8 @@ void main() {
     test('returns price history on success', () async {
       final mockData = {
         "history": [
-          {
-            "timestamp": "2025-12-01T00:00:00Z",
-            "price": 4.53,
-          },
-          {
-            "timestamp": "2026-01-01T00:00:00Z",
-            "price": 4.92,
-          },
+          {"timestamp": "2025-12-01T00:00:00Z", "price": 4.53},
+          {"timestamp": "2026-01-01T00:00:00Z", "price": 4.92},
         ],
         "summary": {
           "currentPrice": 4.92,
@@ -125,9 +120,7 @@ void main() {
     });
 
     test('returns empty list if no startups found', () async {
-      final mockData = {
-        "data": {},
-      };
+      final mockData = {"data": {}};
 
       final mockResult = MockHttpsCallableResult();
       when(mockResult.data).thenReturn(mockData);

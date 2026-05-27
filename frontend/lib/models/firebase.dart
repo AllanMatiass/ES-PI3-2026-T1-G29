@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 // Classe que representa um timestamp do Firestore com segundos e nanosegundos.
 class FirestoreTimestamp {
   final int seconds;
