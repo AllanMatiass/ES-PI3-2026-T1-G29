@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+// Autor: Murilo Rigoni - 25006049
 import { BuyFromStartupService } from "../../exchange/shared/buyFromStartupService";
 import { getStartupById } from "../../startups/repositories/startupRepository";
 import { upsertStartupInvestor } from "../../startups/shared/upsertInvestor";
