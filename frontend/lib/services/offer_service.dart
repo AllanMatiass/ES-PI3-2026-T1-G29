@@ -1,4 +1,6 @@
-// Autor: Allan Giovanni Matias Paes e Pedro Romanato
+// Autores:
+// Allan Giovanni Matias Paes - 25008211
+// Pedro Romanato - 25004075
 import '../models/offer.dart';
 import '../models/api_response.dart';
 import 'base_service.dart';
@@ -79,6 +81,7 @@ class OfferService {
     );
   }
 
+  // Cancela uma oferta
   static Future<ApiResponse<bool>> cancelOffer({
     required String offerId,
   }) async {
