@@ -1,13 +1,19 @@
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { UserService } from "../../user/shared/userService";
 import { HttpsError } from "firebase-functions/https";
 import { getUserById } from "../../user/repositories/userRepository";
 import { auth } from "../../shared/firebase";
 
 // realizando o acoplamento de dubles globais nos modulos externos e repositorios
-jest.mock("../repositories/userRepository");
+jest.mock("../../user/repositories/userRepository");
 jest.mock("../../shared/firebase", () => ({
   auth: {
     deleteUser: jest.fn(),
+  },
+  db: {
+    collection: jest.fn(() => ({
+      doc: jest.fn(),
+    })),
   },
 }));
 

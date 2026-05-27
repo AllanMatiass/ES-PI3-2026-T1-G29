@@ -1,14 +1,15 @@
-import { TransactionService } from "../../exchange/shared/transactionService"
+// Autor: Allan Giovanni Matias Paes - 25008211
+import { TransactionService } from "../../exchange/shared/transactionService";
 import { HttpsError } from "firebase-functions/v2/https";
 import * as transactionRepository from "../../exchange/repositories/transactionRepository";
 import { getStartupById } from "../../startups/repositories/startupRepository";
 import { validateTransactionData } from "../../exchange/utils";
-import { db } from "../../shared/firebase";
+import { ParticipantType } from "../../exchange/types";
 
 // realizando o acoplamento de dubles globais nos modulos externos e repositorios
-jest.mock("../repositories/transactionRepository");
+jest.mock("../../exchange/repositories/transactionRepository");
 jest.mock("../../startups/repositories/startupRepository");
-jest.mock("../utils");
+jest.mock("../../exchange/utils");
 jest.mock("../../shared/firebase", () => ({
   db: {
     collection: jest.fn(() => ({
@@ -35,12 +36,18 @@ describe("TransactionService - Testes Unitários do Backend", () => {
   test("registerTransaction - deve lancar httpserror invalid-argument se faltarem dados essenciais do roberto", async () => {
     const invalidData: any = {
       startupId: "   ", // string vazia apos normalizacao
-      buyer: { id: "user_roberto_123", name: "Roberto" },
+      buyer: {
+        id: "user_roberto_123",
+        name: "Roberto",
+        type: "USER" as ParticipantType,
+      },
       qtdTokens: 10,
       tokenPriceCents: 100,
     };
 
-    await expect(transactionService.registerTransaction(invalidData)).rejects.toThrow(
+    await expect(
+      transactionService.registerTransaction(invalidData),
+    ).rejects.toThrow(
       new HttpsError("invalid-argument", "Missing required transaction fields"),
     );
   });
@@ -49,8 +56,16 @@ describe("TransactionService - Testes Unitários do Backend", () => {
   test("registerTransaction - deve bloquear o registro se o roberto tentar comprar de si mesmo", async () => {
     const tradeData = {
       startupId: "startup_quantum_123",
-      buyer: { id: "user_roberto_123", name: "Roberto" },
-      seller: { id: "user_roberto_123", name: "Roberto" },
+      buyer: {
+        id: "user_roberto_123",
+        name: "Roberto",
+        type: "USER" as ParticipantType,
+      },
+      seller: {
+        id: "user_roberto_123",
+        name: "Roberto",
+        type: "USER" as ParticipantType,
+      },
       qtdTokens: 50,
       tokenPriceCents: 200,
     };
@@ -59,8 +74,13 @@ describe("TransactionService - Testes Unitários do Backend", () => {
       startup: { name: "Quantum Code" },
     });
 
-    await expect(transactionService.registerTransaction(tradeData)).rejects.toThrow(
-      new HttpsError("invalid-argument", "Comprador e vendedor não podem ser iguais."),
+    await expect(
+      transactionService.registerTransaction(tradeData),
+    ).rejects.toThrow(
+      new HttpsError(
+        "invalid-argument",
+        "Comprador e vendedor não podem ser iguais.",
+      ),
     );
   });
 
@@ -68,7 +88,11 @@ describe("TransactionService - Testes Unitários do Backend", () => {
   test("registerTransaction - deve registrar transacao do tipo buy_from_startup se nao houver vendedor secundario", async () => {
     const primaryPurchaseData = {
       startupId: "startup_quantum_123",
-      buyer: { id: "user_roberto_123", name: "Roberto" },
+      buyer: {
+        id: "user_roberto_123",
+        name: "Roberto",
+        type: "USER" as ParticipantType,
+      },
       qtdTokens: 100,
       tokenPriceCents: 500,
     };
@@ -76,9 +100,12 @@ describe("TransactionService - Testes Unitários do Backend", () => {
     (validateTransactionData as jest.Mock).mockResolvedValue({
       startup: { name: "Quantum Code" },
     });
-    (transactionRepository.createTransaction as jest.Mock).mockResolvedValue("id_transacao_primaria");
+    (transactionRepository.createTransaction as jest.Mock).mockResolvedValue(
+      "id_transacao_primaria",
+    );
 
-    const result = await transactionService.registerTransaction(primaryPurchaseData);
+    const result =
+      await transactionService.registerTransaction(primaryPurchaseData);
 
     expect(transactionRepository.createTransaction).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -94,11 +121,15 @@ describe("TransactionService - Testes Unitários do Backend", () => {
 
   // teste do buscador por id da startup validando limites numericos invalidos
   test("getStartupTransactions - deve rejeitar a busca se o limite fornecido pelo roberto quebrar a regra de negocios", async () => {
-    await expect(transactionService.getStartupTransactions("startup_id", 0)).rejects.toThrow(
+    await expect(
+      transactionService.getStartupTransactions("startup_id", 0),
+    ).rejects.toThrow(
       new HttpsError("invalid-argument", "Limit deve ser entre 1 e 50."),
     );
 
-    await expect(transactionService.getStartupTransactions("startup_id", 51)).rejects.toThrow(
+    await expect(
+      transactionService.getStartupTransactions("startup_id", 51),
+    ).rejects.toThrow(
       new HttpsError("invalid-argument", "Limit deve ser entre 1 e 50."),
     );
   });
@@ -107,9 +138,9 @@ describe("TransactionService - Testes Unitários do Backend", () => {
   test("getStartupTransactions - deve falhar se o documento da startup informada nao constar no repositorio", async () => {
     (getStartupById as jest.Mock).mockResolvedValue(null);
 
-    await expect(transactionService.getStartupTransactions("startup_fantasma", 20)).rejects.toThrow(
-      new HttpsError("not-found", "Startup não encontrada."),
-    );
+    await expect(
+      transactionService.getStartupTransactions("startup_fantasma", 20),
+    ).rejects.toThrow(new HttpsError("not-found", "Startup não encontrada."));
   });
 
   // teste de listagem paginada para o historico do roberto
@@ -117,9 +148,14 @@ describe("TransactionService - Testes Unitários do Backend", () => {
     const requestData = { limit: 99, lastTransactionId: "tx_anterior" }; // limite invalido que deve ser normalizado para o default de 20
     const mockRepoResponse = { transactions: [], lastTransactionId: null };
 
-    (transactionRepository.listTransactionsByUserId as jest.Mock).mockResolvedValue(mockRepoResponse);
+    (
+      transactionRepository.listTransactionsByUserId as jest.Mock
+    ).mockResolvedValue(mockRepoResponse);
 
-    const result = await transactionService.getUserTransactions("user_roberto_123", requestData);
+    const result = await transactionService.getUserTransactions(
+      "user_roberto_123",
+      requestData,
+    );
 
     expect(transactionRepository.listTransactionsByUserId).toHaveBeenCalledWith(
       "user_roberto_123",
@@ -134,12 +170,19 @@ describe("TransactionService - Testes Unitários do Backend", () => {
     const txData = {
       startupId: "startup_quantum_123",
       startupName: "Quantum Code",
-      buyer: { id: "user_roberto_123", name: "Roberto" },
+      buyer: {
+        id: "user_roberto_123",
+        name: "Roberto",
+        type: "USER" as ParticipantType,
+      },
       qtdTokens: 10,
       tokenPriceCents: 150,
     };
 
-    const result = await transactionService.registerTransactionTx(mockTx, txData);
+    const result = await transactionService.registerTransactionTx(
+      mockTx,
+      txData,
+    );
 
     expect(mockTx.set).toHaveBeenCalledWith(
       expect.anything(),
