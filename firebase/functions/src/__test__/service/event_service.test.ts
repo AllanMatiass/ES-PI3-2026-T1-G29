@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { EventService } from "../../events/shared/eventService";
 import { HttpsError } from "firebase-functions/https";
 import { db } from "../../firebase";
@@ -12,7 +13,7 @@ jest.mock("../../firebase", () => ({
   },
 }));
 
-jest.mock("../repositories/eventRepository", () => ({
+jest.mock("../../events/repositories/eventRepository", () => ({
   createEventTx: jest.fn(),
 }));
 
@@ -53,8 +54,10 @@ describe("EventService - Testes Unitários do Backend", () => {
       })),
     };
 
-    // força o dublê da transação a executar nossa lógica callback imediatamente
-    (db.runTransaction as jest.Mock).mockImplementation((callback) => callback(mockTx));
+    // mock transação a executar nossa lógica callback imediatamente
+    (db.runTransaction as jest.Mock).mockImplementation((callback) =>
+      callback(mockTx),
+    );
     (startupsCollection.doc as jest.Mock).mockReturnValue(mockStartupRef);
   });
 
@@ -111,7 +114,8 @@ describe("EventService - Testes Unitários do Backend", () => {
     // configurando stubs para responderem os dados mockados dentro da transacao
     mockTx.get.mockResolvedValue(mockStartupSnap);
     (createEventTx as jest.Mock).mockReturnValue(mockEventRepoResult);
-    TokenPricingService.prototype.revalueFromEventTx = jest.fn().mockResolvedValue(mockPricingEngineResult);
+    
+    (TokenPricingService.prototype.revalueFromEventTx as jest.Mock).mockResolvedValue(mockPricingEngineResult);
 
     // act
     const result = await eventService.add(validRequest);
@@ -121,19 +125,21 @@ describe("EventService - Testes Unitários do Backend", () => {
     expect(db.runTransaction).toHaveBeenCalled();
     expect(startupsCollection.doc).toHaveBeenCalledWith("startup_roberto_123");
     expect(mockTx.get).toHaveBeenCalledWith(mockStartupRef);
-    
+
     // garante que o repositorio recebeu a string ja normalizada
     expect(createEventTx).toHaveBeenCalledWith(
       mockTx,
-      expect.objectContaining({ title: "parceria tecnologica do roberto" })
+      expect.objectContaining({ title: "parceria tecnologica do roberto" }),
     );
 
     // valida o repasse correto do snapshot data para o calculo matematico
-    expect(TokenPricingService.prototype.revalueFromEventTx).toHaveBeenCalledWith(
+    expect(
+      TokenPricingService.prototype.revalueFromEventTx,
+    ).toHaveBeenCalledWith(
       mockTx,
       "startup_roberto_123",
       0.15,
-      expect.objectContaining({ name: "Startup do Roberto" })
+      expect.objectContaining({ name: "Startup do Roberto" }),
     );
 
     // valida a uniao correta das propriedades no EventResponseDTO final
@@ -172,6 +178,8 @@ describe("EventService - Testes Unitários do Backend", () => {
 
     // garante que o motor de precificacao e a criacao de evento nunca foram chamados
     expect(createEventTx).not.toHaveBeenCalled();
-    expect(TokenPricingService.prototype.revalueFromEventTx).not.toHaveBeenCalled();
+    expect(
+      TokenPricingService.prototype.revalueFromEventTx,
+    ).not.toHaveBeenCalled();
   });
 });
