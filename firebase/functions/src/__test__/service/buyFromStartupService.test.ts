@@ -1,10 +1,8 @@
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { BuyFromStartupService } from "../../exchange/shared/buyFromStartupService";
-import { db } from "../../shared/firebase";
 import { getStartupById } from "../../startups/repositories/startupRepository";
 import { upsertStartupInvestor } from "../../startups/shared/upsertInvestor";
 import { HttpsError } from "firebase-functions/v2/https";
-import { Timestamp } from "firebase-admin/firestore";
-
 
 // Mock do Firebase/Firestore
 const mockTransaction = {
@@ -25,33 +23,13 @@ jest.mock("../../shared/firebase", () => ({
 // Mock das classes e funções de serviços externos
 jest.mock("../../startups/repositories/startupRepository");
 jest.mock("../../startups/shared/upsertInvestor");
+jest.mock("../../exchange/shared/transactionService");
+jest.mock("../../user/shared/userService");
+jest.mock("../../shared/tokenPricingService");
 
-const mockRegisterTransactionTx = jest.fn().mockResolvedValue({ id: "tx_history_123" });
-jest.mock("./transactionService", () => {
-  return {
-    TransactionService: jest.fn().mockImplementation(() => ({
-      registerTransactionTx: mockRegisterTransactionTx,
-    })),
-  };
-});
-
-const mockUserGet = jest.fn();
-jest.mock("../../user/shared/userService", () => {
-  return {
-    UserService: jest.fn().mockImplementation(() => ({
-      get: mockUserGet,
-    })),
-  };
-});
-
-const mockRevalueFromPrimaryTradeTx = jest.fn().mockResolvedValue(undefined);
-jest.mock("../../shared/tokenPricingService", () => {
-  return {
-    TokenPricingService: jest.fn().mockImplementation(() => ({
-      revalueFromPrimaryTradeTx: mockRevalueFromPrimaryTradeTx,
-    })),
-  };
-});
+import { TransactionService } from "../../exchange/shared/transactionService";
+import { UserService } from "../../user/shared/userService";
+import { TokenPricingService } from "../../shared/tokenPricingService";
 
 describe("BuyFromStartupService - Testes Unitários", () => {
   let service: BuyFromStartupService;
@@ -61,27 +39,57 @@ describe("BuyFromStartupService - Testes Unitários", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     service = new BuyFromStartupService();
+
+    // Configuração padrão dos mocks de protótipo
+    (
+      TransactionService.prototype.registerTransactionTx as jest.Mock
+    ).mockResolvedValue({ id: "tx_history_123" });
+    (UserService.prototype.get as jest.Mock).mockResolvedValue({
+      wallet: { balanceInCents: 10000 },
+    });
+    (
+      TokenPricingService.prototype.revalueFromPrimaryTradeTx as jest.Mock
+    ).mockResolvedValue(undefined);
   });
 
   // ------------------------------------------------------------------------
   // Validações de Payload Primárias
   describe("Validações de Payload", () => {
     test("Deve falhar se o data for nulo ou inválido", async () => {
-      await expect(service.buyTokens(buyerId, null as any))
-        .rejects.toThrow(new HttpsError("invalid-argument", "Dados da requisição inválidos."));
+      await expect(service.buyTokens(buyerId, null as any)).rejects.toThrow(
+        new HttpsError("invalid-argument", "Dados da requisição inválidos."),
+      );
     });
 
     test("Deve falhar se startupId for inválido ou vazio", async () => {
-      await expect(service.buyTokens(buyerId, { startupId: "", qtdTokens: 10 }))
-        .rejects.toThrow(new HttpsError("invalid-argument", "startupId é obrigatório e deve ser uma string não vazia."));
+      await expect(
+        service.buyTokens(buyerId, { startupId: "", qtdTokens: 10 }),
+      ).rejects.toThrow(
+        new HttpsError(
+          "invalid-argument",
+          "startupId é obrigatório e deve ser uma string não vazia.",
+        ),
+      );
     });
 
     test("Deve falhar se qtdTokens for menor ou igual a zero ou não for inteiro", async () => {
-      await expect(service.buyTokens(buyerId, { startupId, qtdTokens: -5 }))
-        .rejects.toThrow(new HttpsError("invalid-argument", "qtdTokens deve ser um inteiro maior que zero."));
-      
-      await expect(service.buyTokens(buyerId, { startupId, qtdTokens: 10.5 }))
-        .rejects.toThrow(new HttpsError("invalid-argument", "qtdTokens deve ser um inteiro maior que zero."));
+      await expect(
+        service.buyTokens(buyerId, { startupId, qtdTokens: -5 }),
+      ).rejects.toThrow(
+        new HttpsError(
+          "invalid-argument",
+          "qtdTokens deve ser um inteiro maior que zero.",
+        ),
+      );
+
+      await expect(
+        service.buyTokens(buyerId, { startupId, qtdTokens: 10.5 }),
+      ).rejects.toThrow(
+        new HttpsError(
+          "invalid-argument",
+          "qtdTokens deve ser um inteiro maior que zero.",
+        ),
+      );
     });
   });
 
@@ -90,18 +98,34 @@ describe("BuyFromStartupService - Testes Unitários", () => {
   describe("Validações de Negócio Antecipadas", () => {
     test("Deve falhar se a Startup não for encontrada no repositório", async () => {
       (getStartupById as jest.Mock).mockResolvedValue(undefined);
-      mockUserGet.mockResolvedValue({ wallet: { balanceInCents: 1000 } });
+      (UserService.prototype.get as jest.Mock).mockResolvedValue({
+        wallet: { balanceInCents: 1000 },
+      });
 
-      await expect(service.buyTokens(buyerId, { startupId, qtdTokens: 10 }))
-        .rejects.toThrow(new HttpsError("not-found", `Startup '${startupId}' não encontrada.`));
+      await expect(
+        service.buyTokens(buyerId, { startupId, qtdTokens: 10 }),
+      ).rejects.toThrow(
+        new HttpsError("not-found", `Startup '${startupId}' não encontrada.`),
+      );
     });
 
     test("Deve falhar se a Startup não tiver preço por token definido ou menor/igual a zero", async () => {
-      (getStartupById as jest.Mock).mockResolvedValue({ currentTokenPriceCents: 0, totalTokensIssued: 1000 });
-      mockUserGet.mockResolvedValue({ wallet: { balanceInCents: 1000 } });
+      (getStartupById as jest.Mock).mockResolvedValue({
+        currentTokenPriceCents: 0,
+        totalTokensIssued: 1000,
+      });
+      (UserService.prototype.get as jest.Mock).mockResolvedValue({
+        wallet: { balanceInCents: 1000 },
+      });
 
-      await expect(service.buyTokens(buyerId, { startupId, qtdTokens: 10 }))
-        .rejects.toThrow(new HttpsError("failed-precondition", "Startup sem preço de token definido. Compra indisponível."));
+      await expect(
+        service.buyTokens(buyerId, { startupId, qtdTokens: 10 }),
+      ).rejects.toThrow(
+        new HttpsError(
+          "failed-precondition",
+          "Startup sem preço de token definido. Compra indisponível.",
+        ),
+      );
     });
 
     test("Deve falhar se a quantidade de tokens solicitada ultrapassar o disponível circulante", async () => {
@@ -110,10 +134,18 @@ describe("BuyFromStartupService - Testes Unitários", () => {
         totalTokensIssued: 100,
         circulatingTokens: 95, // Sobram apenas 5 tokens disponíveis
       });
-      mockUserGet.mockResolvedValue({ wallet: { balanceInCents: 10000 } });
+      (UserService.prototype.get as jest.Mock).mockResolvedValue({
+        wallet: { balanceInCents: 10000 },
+      });
 
-      await expect(service.buyTokens(buyerId, { startupId, qtdTokens: 10 }))
-        .rejects.toThrow(new HttpsError("failed-precondition", "Tokens insuficientes. Disponível: 5, Solicitado: 10."));
+      await expect(
+        service.buyTokens(buyerId, { startupId, qtdTokens: 10 }),
+      ).rejects.toThrow(
+        new HttpsError(
+          "failed-precondition",
+          "Tokens insuficientes. Disponível: 5, Solicitado: 10.",
+        ),
+      );
     });
 
     test("Deve falhar se o saldo inicial do usuário for menor que o custo total antes de abrir a transação", async () => {
@@ -122,13 +154,19 @@ describe("BuyFromStartupService - Testes Unitários", () => {
         totalTokensIssued: 1000,
         circulatingTokens: 0,
       });
-      mockUserGet.mockResolvedValue({
+      (UserService.prototype.get as jest.Mock).mockResolvedValue({
         wallet: { balanceInCents: 4000 }, // Tem apenas R$ 40,00
       });
 
       // Compra custará 10 * 500 = 5000 cents (R$ 50,00)
-      await expect(service.buyTokens(buyerId, { startupId, qtdTokens: 10 }))
-        .rejects.toThrow(new HttpsError("failed-precondition", "Saldo insuficiente. Necessário: R$50.00, Disponível: R$40.00."));
+      await expect(
+        service.buyTokens(buyerId, { startupId, qtdTokens: 10 }),
+      ).rejects.toThrow(
+        new HttpsError(
+          "failed-precondition",
+          "Saldo insuficiente. Necessário: R$50.00, Disponível: R$40.00.",
+        ),
+      );
     });
   });
 
@@ -155,7 +193,7 @@ describe("BuyFromStartupService - Testes Unitários", () => {
       };
 
       (getStartupById as jest.Mock).mockResolvedValue(mockStartupData);
-      mockUserGet.mockResolvedValue(mockUserData);
+      (UserService.prototype.get as jest.Mock).mockResolvedValue(mockUserData);
     });
 
     test("Deve abortar se na re-leitura dentro da transação os tokens tiverem esgotado por concorrência", async () => {
@@ -175,8 +213,14 @@ describe("BuyFromStartupService - Testes Unitários", () => {
         .mockResolvedValueOnce(startupSnapConcorrente)
         .mockResolvedValueOnce(investorSnap);
 
-      await expect(service.buyTokens(buyerId, { startupId, qtdTokens: 10 }))
-        .rejects.toThrow(new HttpsError("aborted", "Tokens reservados por outro comprador. Disponível: 5. Tente novamente."));
+      await expect(
+        service.buyTokens(buyerId, { startupId, qtdTokens: 10 }),
+      ).rejects.toThrow(
+        new HttpsError(
+          "aborted",
+          "Tokens reservados por outro comprador. Disponível: 5. Tente novamente.",
+        ),
+      );
     });
 
     test("Deve executar o fluxo feliz com push de nova posição na carteira e chamadas de escrita atômica", async () => {
@@ -209,22 +253,19 @@ describe("BuyFromStartupService - Testes Unitários", () => {
           userId: buyerId,
           qtdTokens: 10,
         }),
-        investorSnap
+        investorSnap,
       );
 
       // Verifica atualizações no Firestore
       expect(mockTransaction.update).toHaveBeenCalledWith(
         expect.any(Object), // startupRef
-        expect.objectContaining({ circulatingTokens: 110 })
+        expect.objectContaining({ circulatingTokens: 110 }),
       );
 
       // Verifica se invocou o cálculo de revalorização ao final do trade primário
-      expect(mockRevalueFromPrimaryTradeTx).toHaveBeenCalledWith(
-        mockTransaction,
-        startupId,
-        10,
-        mockStartupData
-      );
+      expect(
+        TokenPricingService.prototype.revalueFromPrimaryTradeTx,
+      ).toHaveBeenCalledWith(mockTransaction, startupId, 10, mockStartupData);
     });
 
     test("Deve recalcular preço médio corretamente se já possuir posição prévia daquela startup", async () => {
@@ -235,7 +276,7 @@ describe("BuyFromStartupService - Testes Unitários", () => {
           qtdTokens: 10,
           investedCents: 1000,
           averagePriceCents: 100,
-        }
+        },
       ];
 
       const buyerSnap = { exists: true, data: () => mockUserData };
@@ -262,10 +303,10 @@ describe("BuyFromStartupService - Testes Unitários", () => {
                 qtdTokens: 20,
                 investedCents: 3000,
                 averagePriceCents: 150,
-              })
+              }),
             ]),
-          })
-        })
+          }),
+        }),
       );
     });
   });

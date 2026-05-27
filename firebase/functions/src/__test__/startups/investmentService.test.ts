@@ -1,4 +1,4 @@
-// __tests__/InvestmentMetricService.test.ts
+// Autor: Allan Giovanni Matias Paes - 25008211
 
 import { InvestmentMetricService } from "../../startups/shared/investmentMetricService";
 import * as repo from "../../startups/repositories/startupRepository";

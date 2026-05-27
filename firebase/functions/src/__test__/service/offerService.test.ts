@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { OfferService } from "../../exchange/shared/offerService";
 import { HttpsError } from "firebase-functions/v2/https";
 import { db } from "../../shared/firebase";
@@ -10,35 +11,36 @@ import {
 import { upsertStartupInvestor } from "../../startups/shared/upsertInvestor";
 import { validateTransactionData } from "../../exchange/utils";
 
-// 1. Criação de variáveis de escopo para interceptar instâncias globais/locais
-const mockUserServiceGet = jest.fn();
-const mockTransactionServiceRegister = jest.fn();
-const mockTokenPricingRevalue = jest.fn();
-
 // 2. Acoplamento de dublês com mapeamento de caminhos correto
-jest.mock("../../shared/firebase", () => ({
-  db: {
-    runTransaction: jest.fn(),
-    collection: jest.fn(() => ({
-      doc: jest.fn((id) => ({ id, path: `mock/${id}` })), // O path ajuda a mapear os gets dinâmicos
-    })),
-  },
-}));
+jest.mock("../../shared/firebase", () => {
+  const mockDoc = (id: string): any => ({
+    id,
+    path: `mock/${id}`,
+    collection: jest.fn(() => mockCollection()),
+  });
+  const mockCollection = (): any => ({
+    doc: jest.fn((id) => mockDoc(id)),
+  });
+  return {
+    db: {
+      runTransaction: jest.fn(),
+      collection: jest.fn(() => mockCollection()),
+    },
+  };
+});
 
 jest.mock("../../exchange/repositories/offerRepository");
 jest.mock("../../startups/shared/upsertInvestor");
-jest.mock("../utils");
+jest.mock("../../exchange/utils");
 
 // Mocks de classes para evitar problemas com instanciações fora ou dentro do escopo da classe
-jest.mock("../../user/shared/userService", () => {
-  return { UserService: jest.fn().mockImplementation(() => ({ get: mockUserServiceGet })) };
-});
-jest.mock("./transactionService", () => {
-  return { TransactionService: jest.fn().mockImplementation(() => ({ registerTransactionTx: mockTransactionServiceRegister })) };
-});
-jest.mock("../../shared/tokenPricingService", () => {
-  return { TokenPricingService: jest.fn().mockImplementation(() => ({ revalueFromSecondaryTradeTx: mockTokenPricingRevalue })) };
-});
+jest.mock("../../user/shared/userService");
+jest.mock("../../exchange/shared/transactionService");
+jest.mock("../../shared/tokenPricingService");
+
+import { UserService } from "../../user/shared/userService";
+import { TransactionService } from "../../exchange/shared/transactionService";
+import { TokenPricingService } from "../../shared/tokenPricingService";
 
 describe("OfferService - Testes Unitários do Backend", () => {
   let offerService: OfferService;
@@ -55,7 +57,14 @@ describe("OfferService - Testes Unitários do Backend", () => {
     };
 
     // força a execução imediata da função de transação do firestore
-    (db.runTransaction as jest.Mock).mockImplementation((callback) => callback(mockTx));
+    (db.runTransaction as jest.Mock).mockImplementation((callback) =>
+      callback(mockTx),
+    );
+
+    // Configuração padrão dos mocks de protótipo
+    (UserService.prototype.get as jest.Mock).mockResolvedValue({ name: "Roberto Comprador", wallet: { balanceInCents: 10000, positions: [] } });
+    (TransactionService.prototype.registerTransactionTx as jest.Mock).mockResolvedValue({ id: "tx_roberto_sec" });
+    (TokenPricingService.prototype.revalueFromSecondaryTradeTx as jest.Mock).mockResolvedValue({});
   });
 
   // teste do método createOffer com dados insuficientes
@@ -66,8 +75,13 @@ describe("OfferService - Testes Unitários do Backend", () => {
       tokenPriceCents: 0,
     };
 
-    await expect(offerService.createOffer("user_roberto_123", invalidData)).rejects.toThrow(
-      new HttpsError("invalid-argument", "Dados insuficientes (startupId, qtdTokens, tokenPriceCents)."),
+    await expect(
+      offerService.createOffer("user_roberto_123", invalidData),
+    ).rejects.toThrow(
+      new HttpsError(
+        "invalid-argument",
+        "Dados insuficientes (startupId, qtdTokens, tokenPriceCents).",
+      ),
     );
   });
 
@@ -84,10 +98,17 @@ describe("OfferService - Testes Unitários do Backend", () => {
       startup: { name: "Quantum", currentTokenPriceCents: 1000 },
     };
 
-    (validateTransactionData as jest.Mock).mockResolvedValue(mockValidationResult);
+    (validateTransactionData as jest.Mock).mockResolvedValue(
+      mockValidationResult,
+    );
 
-    await expect(offerService.createOffer("user_roberto_123", validData)).rejects.toThrow(
-      new HttpsError("invalid-argument", "Preço fora da banda permitida de mercado."),
+    await expect(
+      offerService.createOffer("user_roberto_123", validData),
+    ).rejects.toThrow(
+      new HttpsError(
+        "invalid-argument",
+        "Preço fora da banda permitida de mercado.",
+      ),
     );
   });
 
@@ -104,7 +125,9 @@ describe("OfferService - Testes Unitários do Backend", () => {
       sellerUser: {
         name: "Roberto",
         wallet: {
-          positions: [{ startupId: "startup_quantum_99", averagePriceCents: 800 }],
+          positions: [
+            { startupId: "startup_quantum_99", averagePriceCents: 800 },
+          ],
         },
       },
       startup: { name: "Quantum", currentTokenPriceCents: 1000 },
@@ -120,11 +143,18 @@ describe("OfferService - Testes Unitários do Backend", () => {
       status: "OPEN",
     };
 
-    (validateTransactionData as jest.Mock).mockResolvedValue(mockValidationResult);
-    (createOfferInTransaction as jest.Mock).mockResolvedValue("offer_roberto_abc");
+    (validateTransactionData as jest.Mock).mockResolvedValue(
+      mockValidationResult,
+    );
+    (createOfferInTransaction as jest.Mock).mockResolvedValue(
+      "offer_roberto_abc",
+    );
     (getOfferById as jest.Mock).mockResolvedValue(mockCreatedOffer);
 
-    const result = await offerService.createOffer("user_roberto_123", validData);
+    const result = await offerService.createOffer(
+      "user_roberto_123",
+      validData,
+    );
 
     expect(createOfferInTransaction).toHaveBeenCalled();
     expect(result).toEqual(mockCreatedOffer);
@@ -142,7 +172,12 @@ describe("OfferService - Testes Unitários do Backend", () => {
 
     await expect(
       offerService.cancelOffer("user_invasor_999", { id: "offer_roberto_abc" }),
-    ).rejects.toThrow(new HttpsError("permission-denied", "Apenas o vendedor pode cancelar a própria oferta."));
+    ).rejects.toThrow(
+      new HttpsError(
+        "permission-denied",
+        "Apenas o vendedor pode cancelar a própria oferta.",
+      ),
+    );
   });
 
   // teste de fluxo principal do acceptOffer com transferência financeira
@@ -164,7 +199,7 @@ describe("OfferService - Testes Unitários do Backend", () => {
     const mockBuyerUserData = { name: "Roberto Comprador" };
 
     (getOfferById as jest.Mock).mockResolvedValue(mockOfferData);
-    mockUserServiceGet.mockResolvedValue(mockBuyerUserData);
+    (UserService.prototype.get as jest.Mock).mockResolvedValue(mockBuyerUserData);
 
     // Mapeamento dinâmico baseado no ID do documento para evitar quebras de ordem paralela (Promise.all)
     mockTx.get.mockImplementation(async (ref: any) => {
@@ -173,7 +208,14 @@ describe("OfferService - Testes Unitários do Backend", () => {
           exists: true,
           data: () => ({
             wallet: {
-              positions: [{ startupId: "startup_quantum_99", qtdTokens: 100, lockedTokens: 100, averagePriceCents: 800 }],
+              positions: [
+                {
+                  startupId: "startup_quantum_99",
+                  qtdTokens: 100,
+                  lockedTokens: 100,
+                  averagePriceCents: 800,
+                },
+              ],
               balanceInCents: 5000,
             },
           }),
@@ -193,7 +235,11 @@ describe("OfferService - Testes Unitários do Backend", () => {
       if (ref.path.includes("offer_roberto_abc")) {
         return {
           exists: true,
-          data: () => ({ qtdTokens: 100, tokenPriceCents: 100, status: "OPEN" }),
+          data: () => ({
+            qtdTokens: 100,
+            tokenPriceCents: 100,
+            status: "OPEN",
+          }),
         };
       }
       if (ref.path.includes("startup_quantum_99")) {
@@ -205,10 +251,10 @@ describe("OfferService - Testes Unitários do Backend", () => {
       return { exists: true }; // Fallback para subcoleções (Ex: investors)
     });
 
-    mockTransactionServiceRegister.mockResolvedValue({ id: "tx_roberto_sec" });
-    mockTokenPricingRevalue.mockResolvedValue({});
-
-    const result = await offerService.acceptOffer("user_comprador_roberto", acceptRequest);
+    const result = await offerService.buyTokens(
+      "user_comprador_roberto",
+      acceptRequest,
+    );
 
     expect(mockTx.update).toHaveBeenCalled();
     expect(upsertStartupInvestor).toHaveBeenCalled();
@@ -245,8 +291,8 @@ describe("OfferService - Testes Unitários do Backend", () => {
         startupName: "Quantum",
         status: "OPEN",
         initialQtdTokens: 200,
-        qtdTokens: 150, 
-        tokenPriceCents: 10, 
+        qtdTokens: 150,
+        tokenPriceCents: 10,
         createdAt: { toDate: () => new Date() },
         expiresAt: null,
       },
