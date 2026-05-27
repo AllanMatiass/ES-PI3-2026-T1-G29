@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+// Autor: Vinícius Castro - 25002026
 import { Timestamp } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
