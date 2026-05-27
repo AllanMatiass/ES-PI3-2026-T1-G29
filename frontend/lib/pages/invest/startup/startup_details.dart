@@ -1,4 +1,6 @@
-//Autor: Pedro Vinicius Romanato & Allan Giovanni Matias Paes
+//Autores:
+// Pedro Vinicius Romanato - 25004075
+// Allan Giovanni Matias Paes - 25008211 (gráfico e notícias)
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

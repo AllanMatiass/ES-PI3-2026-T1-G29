@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 import './firebase.dart';
 
 enum NewsSentiment {

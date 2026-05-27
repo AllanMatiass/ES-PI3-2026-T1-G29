@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes
+// Autor: Allan Giovanni Matias Paes - 25008211
 
 typedef PortfolioRange = String; // "1D" | "1W" | "1M" | "1Y" | "YTD"
 
