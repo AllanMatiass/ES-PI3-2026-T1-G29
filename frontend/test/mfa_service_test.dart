@@ -3,8 +3,6 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:frontend/services/mfa_service.dart';
-
 @GenerateMocks(
   [],
   customMocks: [

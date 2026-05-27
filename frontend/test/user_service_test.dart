@@ -4,8 +4,6 @@ import 'package:mockito/mockito.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
-import 'package:frontend/models/user.dart';
-import 'package:frontend/models/api_response.dart';
 import 'package:frontend/services/user_service.dart';
 import 'package:frontend/services/base_service.dart';
 
