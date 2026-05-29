@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+// Autor: Murilo Rigoni - 25006049
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -8,10 +8,13 @@ import '../../constants/colors.dart';
 import '../../services/wallet_service.dart';
 import '../../widgets/modals/feedback_modal.dart';
 
+/// Define o tipo da transação que está sendo realizada na carteira (Depósito ou Saque)
 enum WalletTransactionType { deposit, withdraw }
 
+/// Página de formulário e confirmação para adicionar (Depositar) ou remover (Sacar) 
+/// fundos da carteira digital do usuário no sistema.
 class WalletTransactionPage extends StatefulWidget {
-  final WalletTransactionType type;
+  final WalletTransactionType type; // Tipo da operação definida ao navegar para a tela
 
   const WalletTransactionPage({super.key, required this.type});
 
@@ -20,16 +23,19 @@ class WalletTransactionPage extends StatefulWidget {
 }
 
 class _WalletTransactionPageState extends State<WalletTransactionPage> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _amountController = TextEditingController();
+  
+  // Formatador padronizado para moeda Real Brasileiro
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'pt_BR',
     symbol: 'R\$',
   );
 
-  String? _selectedMethod;
-  bool _isLoading = false;
+  String? _selectedMethod; // Método de pagamento escolhido (ex: 'pix', 'boleto')
+  bool _isLoading = false; // Estado de processamento durante a chamada à API
 
+  // Helper para verificar rapidamente se o fluxo atual é de depósito
   bool get isDeposit => widget.type == WalletTransactionType.deposit;
 
   @override
@@ -38,13 +44,17 @@ class _WalletTransactionPageState extends State<WalletTransactionPage> {
     super.dispose();
   }
 
+  /// Atalho de UI: Preenche o campo de valor com uma quantia pré-definida (Chips)
   void _onQuickAmountSelected(double amount) {
     setState(() {
       _amountController.text = _currencyFormat.format(amount);
-      _formKey.currentState?.validate();
+      _formKey.currentState?.validate(); // Valida o formulário automaticamente
     });
   }
 
+  /// Validação de regras de negócio antes de liberar o botão de envio:
+  /// - Valor mínimo de R$ 10,00 (1000 centavos)
+  /// - Em caso de depósito, um método de pagamento deve estar selecionado
   bool _isFormValid() {
     final cleanText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final amountInCents = int.tryParse(cleanText) ?? 0;
@@ -53,6 +63,7 @@ class _WalletTransactionPageState extends State<WalletTransactionPage> {
         (isDeposit ? _selectedMethod != null : true);
   }
 
+  /// Processa a transação na API e atualiza o estado global da carteira do usuário
   Future<void> _handleTransaction() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -61,6 +72,7 @@ class _WalletTransactionPageState extends State<WalletTransactionPage> {
     final cleanText = _amountController.text.replaceAll(RegExp(r'[^0-9]'), '');
     final amountInCents = int.tryParse(cleanText) ?? 0;
 
+    // Dispara a chamada ao serviço correspondente
     final response = isDeposit
         ? await WalletService.deposit(amountInCents / 100.0)
         : await WalletService.withdraw(amountInCents / 100.0);
@@ -69,17 +81,18 @@ class _WalletTransactionPageState extends State<WalletTransactionPage> {
       setState(() => _isLoading = false);
       final data = response.data;
       if (response.success && data != null) {
+        // Se sucesso, atualiza o saldo de forma global e imediata no estado da aplicação
         final currentUser = UserState.user;
         if (currentUser != null) {
-          // Update user state using copyWith and the new balance from API
           final updatedUser = currentUser.copyWith(
             wallet: currentUser.wallet.copyWith(
-              balanceInCents: data.newBalance.toDouble(),
+              balanceInCents: data.newBalance.toDouble(), // Reflete o novo saldo do backend
             ),
           );
           UserState.updateUser(updatedUser);
         }
 
+        // Exibe modal de sucesso e fecha a página
         FeedbackModal.show(
           context: context,
           title: isDeposit ? 'Depósito Realizado' : 'Saque Realizado',
@@ -89,6 +102,7 @@ class _WalletTransactionPageState extends State<WalletTransactionPage> {
           onConfirm: () => Navigator.pop(context),
         );
       } else {
+        // Tratamento de falhas (ex: problemas no gateway de pagamento)
         FeedbackModal.show(
           context: context,
           title: 'Erro na Transação',

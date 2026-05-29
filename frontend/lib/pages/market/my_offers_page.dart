@@ -9,6 +9,7 @@ import '../../widgets/cards/my_offer_card.dart';
 
 import 'package:frontend/models/offer.dart';
 
+/// Visualização que gerencia e exibe as ofertas de venda criadas pelo próprio usuário logado.
 class MyOffersView extends StatefulWidget {
   const MyOffersView({super.key});
 
@@ -17,17 +18,21 @@ class MyOffersView extends StatefulWidget {
 }
 
 class _MyOffersViewState extends State<MyOffersView> {
-  List<OfferWithId> _myOffers = [];
+  // Lista completa de ofertas do usuário
+  List<Offer> _myOffers = [];
   bool _isLoading = true;
+  
+  // Status selecionado para filtragem (ALL, OPEN, ACCEPTED, CANCELLED, EXPIRED)
   String _selectedStatus = 'ALL';
 
   @override
   void initState() {
     super.initState();
-    _loadMyOffers();
+    _loadMyOffers(); // Busca as ofertas do usuário ao inicializar
   }
 
-  List<OfferWithId> get _filteredOffers {
+  /// Retorna as ofertas filtradas conforme o status selecionado na interface
+  List<Offer> get _filteredOffers {
     if (_selectedStatus == 'ALL') return _myOffers;
     return _myOffers
         .where((offer) =>
@@ -35,6 +40,7 @@ class _MyOffersViewState extends State<MyOffersView> {
         .toList();
   }
 
+  /// Recupera todas as ofertas vinculadas ao UID do usuário autenticado
   Future<void> _loadMyOffers() async {
     setState(() => _isLoading = true);
     final result = await OfferService.getMyOffers();
@@ -77,14 +83,15 @@ class _MyOffersViewState extends State<MyOffersView> {
       ),
       body: Column(
         children: [
+          // Barra superior de filtros rápidos (Chips)
           _buildFilterBar(),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadMyOffers,
               child: _isLoading
-                  ? _buildSkeletonLoading()
+                  ? _buildSkeletonLoading() // Shimmer enquanto carrega
                   : _filteredOffers.isEmpty
-                      ? _buildEmptyState()
+                      ? _buildEmptyState() // Feedback se não houver dados
                       : ListView.builder(
                           padding: const EdgeInsets.all(16),
                           itemCount: _filteredOffers.length,
@@ -92,7 +99,7 @@ class _MyOffersViewState extends State<MyOffersView> {
                             final offer = _filteredOffers[index];
                             return MyOfferCard(
                               offer: offer,
-                              onCancelled: _loadMyOffers,
+                              onCancelled: _loadMyOffers, // Callback para recarregar após cancelamento
                             );
                           },
                         ),
@@ -103,8 +110,10 @@ class _MyOffersViewState extends State<MyOffersView> {
     );
   }
 
+  /// Constrói a barra de chips para filtragem por status da oferta
   Widget _buildFilterBar() {
     final theme = Theme.of(context);
+    // Mapeamento de status amigáveis para o usuário
     final statuses = [
       {'value': 'ALL', 'label': 'Todos'},
       {'value': 'OPEN', 'label': 'Abertas'},

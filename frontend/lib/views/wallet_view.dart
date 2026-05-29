@@ -19,6 +19,9 @@ import '../pages/wallet/all_assets_page.dart';
 import '../widgets/charts/assets_pie_chart.dart';
 import '../widgets/headers/home_header.dart';
 
+/// Visão principal da área financeira (Carteira) do investidor.
+/// Age como um dashboard consolidando saldo fiduciário (BRL), portfólio de tokens,
+/// histórico de evolução patrimonial (gráfico) e as últimas transações e movimentações.
 class WalletView extends StatefulWidget {
   const WalletView({super.key});
 
@@ -27,13 +30,17 @@ class WalletView extends StatefulWidget {
 }
 
 class _WalletViewState extends State<WalletView> {
-  final GlobalKey<PortfolioChartState> _chartKey =
-      GlobalKey<PortfolioChartState>();
-  List<Transaction> _transactions = [];
-  Map<String, StartupListItem> _startupsMap = {};
+  // Chave global usada para forçar o recarregamento interno do gráfico de evolução patrimonial
+  final GlobalKey<PortfolioChartState> _chartKey = GlobalKey<PortfolioChartState>();
+  
+  // Dados de exibição resumida
+  List<Transaction> _transactions = []; // Últimas 5 negociações de tokens
+  Map<String, StartupListItem> _startupsMap = {}; // Mapa auxiliar para nome e logo das startups
+  
+  // Estados de controle da interface
   bool _isLoading = true;
   String? _error;
-  bool _isVisible = true;
+  bool _isVisible = true; // Controla a privacidade (ocultar/mostrar valores financeiros)
 
   @override
   void initState() {
@@ -41,6 +48,7 @@ class _WalletViewState extends State<WalletView> {
     _loadData();
   }
 
+  /// Centraliza o carregamento de todos os widgets e dados do dashboard da carteira.
   Future<void> _loadData() async {
     if (!mounted) return;
 
@@ -50,21 +58,22 @@ class _WalletViewState extends State<WalletView> {
     });
 
     try {
+      // Dispara 4 requisições em paralelo para otimizar o tempo de tela
       final results = await Future.wait([
-        UserState.refreshUser(),
-        TransactionService.getUserTransactions(limit: 5),
-        StartupService.listStartups(),
-        _chartKey.currentState?.refresh() ?? Future.value(),
+        UserState.refreshUser(), // Atualiza Saldo e Posições
+        TransactionService.getUserTransactions(limit: 5), // Histórico recente
+        StartupService.listStartups(), // Dados auxiliares (Logos/Nomes)
+        _chartKey.currentState?.refresh() ?? Future.value(), // Atualiza linha do gráfico
       ]);
 
-      final transactionResult =
-          results[1] as ApiResponse<TransactionListResponse>;
+      final transactionResult = results[1] as ApiResponse<TransactionListResponse>;
       final startupsResult = results[2] as ApiResponse<List<StartupListItem>>;
 
       if (mounted) {
         setState(() {
           if (transactionResult.success && startupsResult.success) {
             _transactions = transactionResult.data!.transactions;
+            // Cria um mapa para linkar o startupId das transações com o nome da empresa
             _startupsMap = {for (var s in startupsResult.data!) s.id: s};
           } else {
             _error = transactionResult.message ?? startupsResult.message;
@@ -92,6 +101,7 @@ class _WalletViewState extends State<WalletView> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadData,
+          // Reage imediatamente a qualquer mudança no estado global (ex: um depósito que acabou de ser feito)
           child: ValueListenableBuilder<UserProfile?>(
             valueListenable: UserState.userNotifier,
             builder: (context, userData, _) {
@@ -106,7 +116,7 @@ class _WalletViewState extends State<WalletView> {
                       horizontal: 24,
                       vertical: 16,
                     ),
-                    physics: const AlwaysScrollableScrollPhysics(),
+                    physics: const AlwaysScrollableScrollPhysics(), // Permite pull-to-refresh mesmo sem preencher a tela
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -117,7 +127,7 @@ class _WalletViewState extends State<WalletView> {
                         ),
                         const SizedBox(height: 32),
 
-                        // Saldo
+                        // Bloco 1: Card de Saldo e Botões de Depósito/Saque
                         isInitialLoading
                             ? const ShimmerPlaceholder(
                                 height: 180,
@@ -134,7 +144,7 @@ class _WalletViewState extends State<WalletView> {
                               ),
                         const SizedBox(height: 32),
 
-                        // Gráfico
+                        // Bloco 2: Gráfico interativo de rentabilidade do portfólio (FlChart)
                         Text(
                           'Valorização do Patrimônio',
                           style: TextStyle(
@@ -147,7 +157,7 @@ class _WalletViewState extends State<WalletView> {
                         PortfolioChart(key: _chartKey),
                         const SizedBox(height: 32),
 
-                        // Investimentos (Ativos)
+                        // Bloco 3: Distribuição de Ativos (Gráfico de Pizza)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -177,7 +187,7 @@ class _WalletViewState extends State<WalletView> {
                         _buildInvestmentsSection(userData, isInitialLoading),
                         const SizedBox(height: 32),
 
-                        // Movimentações
+                        // Bloco 4: Extrato (Entradas e Saídas)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -215,7 +225,7 @@ class _WalletViewState extends State<WalletView> {
                         ),
                         const SizedBox(height: 32),
 
-                        // Transações
+                        // Bloco 5: Recibo das Últimas Negociações de Tokens (Compra/Venda)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -257,6 +267,7 @@ class _WalletViewState extends State<WalletView> {
     );
   }
 
+  /// Renderiza o gráfico de pizza (AssetsPieChart) se houverem posições abertas na carteira.
   Widget _buildInvestmentsSection(UserProfile? userData, bool isLoading) {
     if (isLoading || userData == null) {
       return const ShimmerPlaceholder(
@@ -280,6 +291,7 @@ class _WalletViewState extends State<WalletView> {
     );
   }
 
+  /// Renderiza a lista resumida (Top 5) de transações na base do dashboard.
   Widget _buildTransactionsSection() {
     if (_isLoading) {
       return Column(

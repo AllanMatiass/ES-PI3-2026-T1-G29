@@ -7,8 +7,10 @@ import '../../services/wallet_service.dart';
 import '../../widgets/tiles/movement_list_tile.dart';
 import '../../widgets/shimmer_placeholder.dart';
 
+/// Página que exibe o histórico detalhado de movimentações financeiras (Depósitos e Saques).
+/// Implementa rolagem infinita (Infinite Scroll) para otimização de performance e dados.
 class MovementHistoryPage extends StatefulWidget {
-  final bool isVisible;
+  final bool isVisible; // Define se os valores monetários devem ser exibidos ou mascarados
 
   const MovementHistoryPage({super.key, required this.isVisible});
 
@@ -17,35 +19,45 @@ class MovementHistoryPage extends StatefulWidget {
 }
 
 class _MovementHistoryPageState extends State<MovementHistoryPage> {
+  // Lista acumulada de movimentações recuperadas da API
   final List<Movement> _movements = [];
+  
+  // Estados de controle de carregamento e erro
   bool _isLoading = true;
   String? _error;
-  String? _lastId;
-  bool _hasMore = true;
+  
+  // Controle de Paginação
+  String? _lastId; // ID da última movimentação carregada (usado como cursor no backend)
+  bool _hasMore = true; // Indica se ainda existem dados para serem carregados
+  
+  // Controlador de scroll para detectar quando o usuário chega ao fim da lista
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadMore();
-    _scrollController.addListener(_onScroll);
+    _loadMore(); // Carregamento da primeira página
+    _scrollController.addListener(_onScroll); // Monitora o scroll para paginação automática
   }
 
   @override
   void dispose() {
+    // Libera o controlador para evitar vazamento de memória
     _scrollController.dispose();
     super.dispose();
   }
 
+  /// Verifica se o usuário scrollou até o final da lista (com margem de 200px)
   void _onScroll() {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200 &&
         !_isLoading &&
         _hasMore) {
-      _loadMore();
+      _loadMore(); // Dispara carregamento da próxima página
     }
   }
 
+  /// Busca o próximo lote de movimentações via WalletService
   Future<void> _loadMore() async {
     if (!_hasMore) return;
 
@@ -55,6 +67,7 @@ class _MovementHistoryPageState extends State<MovementHistoryPage> {
     });
 
     try {
+      // Solicita 20 itens a partir do último ID conhecido
       final response = await WalletService.getUserMovements(
         limit: 20,
         lastMovementId: _lastId,
@@ -66,6 +79,8 @@ class _MovementHistoryPageState extends State<MovementHistoryPage> {
             final newData = response.data!.movements;
             _movements.addAll(newData);
             _lastId = response.data!.lastMovementId;
+            
+            // Se vieram menos de 20 itens ou o ID for nulo, a lista chegou ao fim
             _hasMore = newData.length == 20 && _lastId != null;
           } else {
             _error = response.message;
@@ -96,6 +111,7 @@ class _MovementHistoryPageState extends State<MovementHistoryPage> {
         elevation: 0,
       ),
       body: RefreshIndicator(
+        // Permite resetar a lista e recarregar tudo do zero (Pull to Refresh)
         onRefresh: () async {
           setState(() {
             _movements.clear();
@@ -105,11 +121,11 @@ class _MovementHistoryPageState extends State<MovementHistoryPage> {
           await _loadMore();
         },
         child: _movements.isEmpty && _isLoading
-            ? _buildLoadingState()
+            ? _buildLoadingState() // Exibe Skeleton (Shimmer)
             : _error != null && _movements.isEmpty
-            ? ErrorStateWidget(errorMessage: _error, onRetry: _loadMore)
+            ? ErrorStateWidget(errorMessage: _error, onRetry: _loadMore) // Tela de erro
             : _movements.isEmpty
-            ? const EmptyStateWidget(
+            ? const EmptyStateWidget( // Feedback de lista vazia
                 icon: Icons.history,
                 title: 'Nenhuma movimentação',
                 message: 'Seus depósitos e saques aparecerão aqui.',
@@ -120,6 +136,7 @@ class _MovementHistoryPageState extends State<MovementHistoryPage> {
                 itemCount: _movements.length + (_hasMore ? 1 : 0),
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
+                  // Exibe indicador de progresso no final da lista se houver mais páginas
                   if (index == _movements.length) {
                     return const Center(
                       child: Padding(
@@ -128,6 +145,7 @@ class _MovementHistoryPageState extends State<MovementHistoryPage> {
                       ),
                     );
                   }
+                  // Renderiza o item de movimentação individual
                   return MovementListTile(
                     movement: _movements[index],
                     isVisible: widget.isVisible,
@@ -138,6 +156,7 @@ class _MovementHistoryPageState extends State<MovementHistoryPage> {
     );
   }
 
+  // Constrói uma lista de placeholders animados enquanto carrega os dados iniciais
   Widget _buildLoadingState() {
     return ListView.separated(
       padding: const EdgeInsets.all(24),

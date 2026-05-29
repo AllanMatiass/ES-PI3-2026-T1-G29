@@ -9,7 +9,7 @@ import '../modals/feedback_modal.dart';
 import 'package:frontend/models/offer.dart';
 
 class MyOfferCard extends StatelessWidget {
-  final OfferWithId offer;
+  final Offer offer;
   final VoidCallback? onCancelled;
 
   MyOfferCard({super.key, required this.offer, this.onCancelled});

@@ -2,35 +2,40 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// Widget que anima a transição de um valor monetário (em centavos) formatando para BRL.
+/// Widget semelhante ao [AnimatedCounter], porém otimizado especificamente para 
+/// valores financeiros. Ele recebe o valor em centavos e cuida da conversão,
+/// animação decimal e formatação para a moeda corrente (BRL - Real).
 class AnimatedCurrency extends StatelessWidget {
-  final double valueCents;
+  final double valueCents; // O valor total em centavos para evitar imprecisões flutuantes
   final TextStyle style;
-  final String prefix;
-  final bool isVisible;
+  final String prefix; // Permite trocar a moeda, embora R$ seja o padrão no Mescla Invest
+  final bool isVisible; // Controle de privacidade do saldo
 
   const AnimatedCurrency({
     super.key,
     required this.valueCents,
     required this.style,
     this.prefix = 'R\$',
-    this.isVisible = true,
+    this.isVisible = true, // Visível por padrão
   });
 
   @override
   Widget build(BuildContext context) {
-    // Máscara de privacidade para o saldo
+    // Máscara de privacidade para ocultar o saldo em tela cheia (Card da Carteira)
     if (!isVisible) {
       return Text('••••••', style: style);
     }
 
-    // Anima o valor de 0 até o total de centavos
+    // TweenAnimation interpolando de 0 até o total de centavos (double)
+    // A animação acontece na casa dos centavos, e a formatação transforma isso
+    // na string correta (ex: animando de R$ 0,00 até R$ 10.000,50)
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: valueCents),
-      duration: const Duration(milliseconds: 1000),
-      curve: Curves.easeOutExpo,
+      duration: const Duration(milliseconds: 1000), // Duração padronizada da UI (1s)
+      curve: Curves.easeOutExpo, // Acelera no começo, freia para o usuário conseguir ler o fim
       builder: (context, value, child) {
-        // Converte centavos para reais (/100) e formata com locale pt_BR
+        
+        // Conversão em tempo real do frame da animação (centavos -> double formatado BRL)
         final formatted = NumberFormat.currency(
           locale: 'pt_BR',
           symbol: prefix,

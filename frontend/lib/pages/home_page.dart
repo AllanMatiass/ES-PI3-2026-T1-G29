@@ -10,10 +10,13 @@ import 'package:frontend/views/wallet_view.dart';
 
 import 'package:frontend/views/news_view.dart';
 
+/// Controlador principal de navegação da aplicação (Bottom Navigation Bar).
+/// Gerencia a exibição das diferentes visões (Início, Notícias, Investir, Mercado, Carteira e Perfil)
+/// mantendo o estado de cada uma através do IndexedStack.
 class HomePage extends StatefulWidget {
   final String userName;
-  final int initialIndex;
-  final String? initialStartupId;
+  final int initialIndex; // Aba a ser selecionada ao abrir a página
+  final String? initialStartupId; // Passado opcionalmente para abrir notícias filtradas
 
   const HomePage({
     super.key,
@@ -35,10 +38,12 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _selectedIndex = widget.initialIndex;
 
+    // Inicializa todas as visões principais do app. 
+    // O IndexedStack manterá o estado (scroll, inputs) delas vivo durante a navegação.
     _pages = [
       HomeView(
         userName: widget.userName,
-        onNavigateToCatalog: () => _onItemTapped(2),
+        onNavigateToCatalog: () => _onItemTapped(2), // Atalho para a aba "Investir"
       ),
       NewsView(initialStartupId: widget.initialStartupId),
       const CatalogPage(),
@@ -48,6 +53,7 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
+  /// Atualiza o índice da aba ativa
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -56,16 +62,20 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Garante que a página só seja renderizada se houver um usuário autenticado
     final user = FirebaseAuth.instance.currentUser;
     final theme = Theme.of(context);
 
     if (user == null) {
-      // Usamos Future.microtask para evitar erros de navegação durante o build
+      // Redireciona para o login de forma segura após o término do frame atual
+      // para evitar a exceção "setState() or markNeedsBuild() called during build"
       Future.microtask(() => Navigator.pushReplacementNamed(context, '/login'));
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
+      // IndexedStack renderiza todas as telas sobrepostas, mas só exibe a de índice _selectedIndex.
+      // Isso é crucial para que o usuário não perca sua posição de scroll ao trocar de aba.
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -81,12 +91,12 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.trending_up),
-            label: 'Investir',
+            label: 'Investir', // Leva ao Catálogo de Startups
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.candlestick_chart),
             activeIcon: Icon(Icons.candlestick_chart),
-            label: 'Mercado',
+            label: 'Balcão', // Balcão
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.credit_card),
@@ -104,7 +114,7 @@ class _HomePageState extends State<HomePage> {
           0.6,
         ),
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.shifting,
         backgroundColor: theme.colorScheme.surface,
         elevation: 8,
       ),
