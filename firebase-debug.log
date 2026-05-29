@@ -1,0 +1,8 @@
+[debug] [2026-05-29T16:46:01.737Z] ----------------------------------------------------------------------
+[debug] [2026-05-29T16:46:01.738Z] Command:       C:\nvm4w\nodejs\node.exe C:\Users\Administrador\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions:signup
+[debug] [2026-05-29T16:46:01.739Z] CLI Version:   15.9.0
+[debug] [2026-05-29T16:46:01.739Z] Platform:      win32
+[debug] [2026-05-29T16:46:01.739Z] Node Version:  v24.12.0
+[debug] [2026-05-29T16:46:01.739Z] Time:          Fri May 29 2026 13:46:01 GMT-0300 (Horário Padrão de Brasília)
+[debug] [2026-05-29T16:46:01.739Z] ----------------------------------------------------------------------
+[debug] 
