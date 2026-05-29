@@ -1,5 +1,6 @@
 // Autor: Allan Giovanni Matias Paes - 25008211
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/colors.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   final IconData icon;
@@ -52,7 +53,7 @@ class EmptyStateWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: onButtonPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00A84E),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(

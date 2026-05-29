@@ -17,7 +17,9 @@ import '../widgets/headers/home_header.dart';
 import '../states/user_state.dart';
 import '../models/user.dart';
 
-// Visão que exibe todas as ofertas abertas de tokens no mercado secundário.
+/// Visão que funciona como a vitrine (Order Book) do mercado secundário de tokens.
+/// Exibe todas as ofertas abertas criadas por outros usuários (P2P), permitindo
+/// filtragem por startup e preço, além de ser o ponto de entrada para criação de novas ofertas.
 class OffersView extends StatefulWidget {
   const OffersView({super.key});
 
@@ -26,21 +28,26 @@ class OffersView extends StatefulWidget {
 }
 
 class _OffersViewState extends State<OffersView> {
+  // Controle de Paginação
   final ScrollController _scrollController = ScrollController();
-  final List<OfferWithId> _offers = [];
-  bool _isLoading = false;
-  bool _hasMore = true;
-  String? _lastOfferId;
+  final List<Offer> _offers = []; // Lista em memória das ofertas carregadas
+  bool _isLoading = false; 
+  bool _hasMore = true; // Indica se há mais páginas no backend
+  String? _lastOfferId; // Cursor para a busca da próxima página
+
+  // Filtros Locais
   String _searchStartup = "";
   double? _maxPrice;
   final TextEditingController _priceController = TextEditingController();
+  
+  // UID do usuário atual (Usado para não exibir as próprias ofertas na vitrine de compra)
   final String? _currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
     super.initState();
     _loadMoreOffers();
-    _scrollController.addListener(_onScroll);
+    _scrollController.addListener(_onScroll); // Ativa o Infinite Scroll
   }
 
   @override
@@ -50,7 +57,8 @@ class _OffersViewState extends State<OffersView> {
     super.dispose();
   }
 
-  // Monitora o scroll para carregar mais itens quando o usuário chegar ao final da lista.
+  /// Monitora o scroll para carregar mais itens quando o usuário chegar 
+  /// próximo ao final da lista (margem de 200px).
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -58,19 +66,22 @@ class _OffersViewState extends State<OffersView> {
     }
   }
 
-  // Busca mais ofertas no servidor, gerenciando o estado de carregamento e paginação.
+  /// Busca mais ofertas no servidor, gerenciando o estado de carregamento e o cursor de paginação.
   Future<void> _loadMoreOffers({bool refresh = false}) async {
+    // Evita requests simultâneos e bloqueia se já chegou ao fim
     if (_isLoading || (!_hasMore && !refresh)) return;
 
     setState(() {
       _isLoading = true;
       if (refresh) {
+        // Zera o estado se for uma recarga manual (Pull-to-refresh)
         _offers.clear();
         _lastOfferId = null;
         _hasMore = true;
       }
     });
 
+    // Busca um lote de 15 ofertas
     final result = await OfferService.getOffers(
       limit: 15,
       startAfter: _lastOfferId,
@@ -78,13 +89,14 @@ class _OffersViewState extends State<OffersView> {
 
     if (mounted) {
       if (result.success) {
-        final List<OfferWithId> newOffers = result.data?.offers ?? [];
+        final List<Offer> newOffers = result.data?.offers ?? [];
         final String? lastId = result.data?.lastOfferId;
 
         setState(() {
           _offers.addAll(newOffers);
           _lastOfferId = lastId;
           _isLoading = false;
+          // Se o backend retornou menos que o limite, significa que não há mais páginas
           if (newOffers.length < 15 || lastId == null) {
             _hasMore = false;
           }
@@ -101,10 +113,11 @@ class _OffersViewState extends State<OffersView> {
     }
   }
 
-  // Filtra a lista de ofertas carregadas localmente com base na busca e preço máximo.
-  List<OfferWithId> get _filteredOffers {
+  /// Filtra a lista de ofertas carregadas localmente em tempo real.
+  /// Evita que o usuário perca tempo mandando requests para a API a cada letra digitada.
+  List<Offer> get _filteredOffers {
     return _offers.where((offer) {
-      // Não exibe ofertas criadas pelo próprio usuário logado.
+      // Regra de Negócio: O usuário não pode "comprar" a própria oferta.
       if (_currentUserId != null && offer.seller.id == _currentUserId) {
         return false;
       }
@@ -113,7 +126,7 @@ class _OffersViewState extends State<OffersView> {
           .toLowerCase()
           .contains(_searchStartup.toLowerCase());
       
-      // Converte o preço de centavos para reais para comparar com o filtro de preço máximo.
+      // Converte o preço de centavos para reais para comparar com o input numérico do filtro
       final matchesPrice = _maxPrice == null || 
           (offer.tokenPriceCents / 100) <= _maxPrice!;
           
@@ -121,38 +134,45 @@ class _OffersViewState extends State<OffersView> {
     }).toList();
   }
 
-  Future<void> _handleBuyOffer(OfferWithId offer) async {
-    // Exibe indicador de carregamento enquanto verifica a expiração da oferta.
+  /// Intercepta o clique em "Comprar" em um card de oferta.
+  /// Como uma oferta pode expirar no banco de dados enquanto o usuário apenas 
+  /// olhava a lista, fazemos um check forçado (revalidação) antes de abrir a tela de pagamento.
+  Future<void> _handleBuyOffer(Offer offer) async {
+    // Exibe indicador de carregamento bloqueante para evitar multi-clicks
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
     );
 
+    // Valida o status da oferta em tempo real
     final resultCheck = await OfferService.isOfferExpired(offerId: offer.id);
 
     if (mounted) {
-      Navigator.of(context).pop(); // Fecha o indicador de carregamento.
+      Navigator.of(context).pop(); // Fecha o indicador de carregamento
     }
 
     if (resultCheck.success) {
       if (resultCheck.data == true) {
+        // A oferta expirou ou foi comprada por outro usuário nesse meio tempo
         if (mounted) {
           FeedbackModal.show(
             context: context,
             title: 'Oferta Expirada',
             message: 'Essa oferta acabou de expirar! Que tal conferir outras oportunidades no catálogo?',
             type: FeedbackType.info,
-            onConfirm: () => _loadMoreOffers(refresh: true),
+            onConfirm: () => _loadMoreOffers(refresh: true), // Atualiza a vitrine para remover a oferta "fantasma"
           );
         }
       } else {
+        // A oferta está válida, direciona para o fluxo de pagamento
         if (mounted) {
           final result = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
               builder: (context) => BuyOfferPage(offer: offer),
             ),
           );
+          // Se a compra foi concluída com sucesso, recarrega o feed
           if (result == true) {
             _loadMoreOffers(refresh: true);
           }
@@ -183,16 +203,17 @@ class _OffersViewState extends State<OffersView> {
           body: SafeArea(
             child: Column(
               children: [
-                // Custom Header
+                // Header sincronizado com o saldo do usuário (Estado Global)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
                   child: AppHeader(
-                    title: 'Mercado',
+                    title: 'Balcão',
                     userData: userData,
                     isDark: isDark,
                   ),
                 ),
                 
+                // Filtros de busca (Nome e Preço Máximo)
                 MarketFilters(
                   searchStartup: _searchStartup,
                   priceController: _priceController,
@@ -208,7 +229,7 @@ class _OffersViewState extends State<OffersView> {
                   child: RefreshIndicator(
                     onRefresh: () => _loadMoreOffers(refresh: true),
                     child: _offers.isEmpty && _isLoading
-                        ? ListView.builder(
+                        ? ListView.builder( // Skeleton Loading State
                             itemCount: 5,
                             padding: const EdgeInsets.all(16.0),
                             itemBuilder: (context, index) => const ShimmerPlaceholder(
@@ -220,15 +241,17 @@ class _OffersViewState extends State<OffersView> {
                         : ListView.builder(
                             controller: _scrollController,
                             physics: const AlwaysScrollableScrollPhysics(),
-                            itemCount: _filteredOffers.length + (_hasMore ? 1 : 0) + 1, // +1 para o Card de atalho
+                            // +1 para o Card de atalho "Minhas Ofertas" no topo
+                            itemCount: _filteredOffers.length + (_hasMore ? 1 : 0) + 1,
                             padding: const EdgeInsets.all(16.0),
                             itemBuilder: (context, index) {
                               if (index == 0) {
-                                return _buildMyOffersShortcut();
+                                return _buildMyOffersShortcut(); // Injeta o banner gerencial como primeiro item
                               }
                               
                               final actualIndex = index - 1;
 
+                              // Se for o último índice (após a lista e o banner) e não há mais dados, exibe lista vazia ou spinner
                               if (actualIndex == _filteredOffers.length) {
                                 if (_filteredOffers.isEmpty && !_isLoading) {
                                   return const EmptyStateWidget(
@@ -257,11 +280,13 @@ class _OffersViewState extends State<OffersView> {
               ],
             ),
           ),
+          // CTA Principal: Botão flutuante (FAB) para publicar uma nova intenção de venda
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
               final result = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(builder: (context) => const CreateOfferPage()),
               );
+              // Atualiza o mercado (order book) se o usuário publicou uma oferta com sucesso
               if (result == true) {
                 _loadMoreOffers(refresh: true);
               }
@@ -274,6 +299,8 @@ class _OffersViewState extends State<OffersView> {
     );
   }
 
+  /// Banner promocional injetado como o primeiro item da lista, servindo como 
+  /// atalho para a área restrita onde o usuário gerencia o que ele está vendendo.
   Widget _buildMyOffersShortcut() {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),

@@ -24,20 +24,28 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  bool _isSendingVerification = false;
-  bool _isSendingPasswordReset = false;
-  bool _isUploadingPicture = false;
+  // Estados de carregamento para ações específicas
+  bool _isSendingVerification = false; // Envio de e-mail de verificação
+  bool _isSendingPasswordReset = false; // Envio de e-mail de redefinição de senha
+  bool _isUploadingPicture = false; // Upload da imagem para o Firebase Storage
+  
+  // Assinatura para escutar mudanças no estado de autenticação (Firebase)
   StreamSubscription<User?>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
+    // Atualiza os dados do usuário a partir do backend ao entrar na tela
     UserState.refreshUser();
+    
+    // Configura um listener para sincronizar o e-mail do Firebase com o perfil do banco de dados
     _authSubscription = FirebaseAuth.instance.userChanges().listen((
       user,
     ) async {
       if (user == null || user.email == null) return;
       final current = UserState.userNotifier.value;
+      
+      // Se o e-mail no Firebase mudou mas não foi sincronizado no app, dispara atualização
       if (current == null || current.email == user.email) return;
       try {
         await BaseService.call<void>(
@@ -46,16 +54,20 @@ class _ProfilePageState extends State<ProfilePage> {
           fromJson: (_) {},
         );
         UserState.userNotifier.value = current.copyWith(email: user.email!);
-      } catch (_) {}
+      } catch (_) {
+        // Silencia erros de sincronização automática para não interromper a UX
+      }
     });
   }
 
   @override
   void dispose() {
+    // Cancela a assinatura para evitar memory leaks
     _authSubscription?.cancel();
     super.dispose();
   }
 
+  /// Gerencia a troca da foto de perfil (Galeria -> Storage -> State)
   Future<void> _changeProfilePicture() async {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(
@@ -96,7 +108,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro ao carregar imagem: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.danger,
           ),
         );
       }
@@ -105,6 +117,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  /// Envia o e-mail de verificação oficial do Firebase
   Future<void> _sendVerificationEmail() async {
     setState(() => _isSendingVerification = true);
     try {
@@ -121,6 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
+      // Trata limite de envios (anti-spam) e erros genéricos
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -129,7 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 : (e.message ?? 'Não foi possível enviar o email.'),
           ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.danger,
         ),
       );
     } finally {
@@ -137,6 +151,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  /// Envia o link de redefinição de senha via Firebase Auth
   Future<void> _sendPasswordResetEmail() async {
     final email = FirebaseAuth.instance.currentUser?.email;
     if (email == null || email.isEmpty) return;
@@ -926,6 +941,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// Extrai as iniciais do nome do usuário para o avatar (Ex: "Pedro Romanato" -> "PR")
   String _getInitials(String name) {
     final parts = name.trim().split(' ');
     if (parts.length >= 2) {
@@ -934,6 +950,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
+  /// Aplica máscara parcial no CPF para privacidade (Ex: "123.***.***-90")
   String _maskCpf(String cpf) {
     final digits = cpf.replaceAll(RegExp(r'\D'), '');
     if (digits.length == 11) {
@@ -942,6 +959,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return cpf;
   }
 
+  /// Formata e aplica máscara no telefone (Ex: "+55 (11) *****-1234")
   String _maskPhone(String phone) {
     final digits = phone.replaceAll(RegExp(r'\D'), '');
     String purePhone = digits;
@@ -959,6 +977,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return phone;
   }
 
+  /// Exibe o título de uma seção do perfil (ex: Dados Pessoais)
   Widget _sectionTitle(String title, ThemeData theme) {
     return Text(
       title,
@@ -971,6 +990,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// Container estilizado para agrupar linhas de informação
   Widget _infoCard(ThemeData theme, List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
@@ -982,6 +1002,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// Renderiza uma linha de informação simples (ícone + label + valor)
   Widget _infoRow(
     ThemeData theme, {
     required IconData icon,
@@ -1025,6 +1046,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// Renderiza uma linha de informação com botão de edição lateral
   Widget _editableRow(
     ThemeData theme, {
     required IconData icon,
@@ -1072,6 +1094,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// Card clicável para ações de segurança ou configurações
   Widget _actionCard(
     ThemeData theme, {
     required IconData icon,
@@ -1141,6 +1164,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// Solicita confirmação antes de realizar o logout
   Future<void> _confirmLogout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,

@@ -124,7 +124,7 @@ void main() {
 
         // assert
         expect(result.success, true);
-        expect(result.data, isA<List<OfferWithId>>());
+        expect(result.data, isA<List<Offer>>());
         expect(result.data!.length, 1);
         expect(result.data!.first.seller.name, 'Roberto');
       },
@@ -150,7 +150,7 @@ void main() {
 
         // assert
         expect(result.success, true);
-        expect(result.data, isA<OfferWithId>());
+        expect(result.data, isA<Offer>());
         expect(result.data!.id, 'offer_abc123');
         expect(result.data!.totalCents, 50000.0);
       },

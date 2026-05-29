@@ -5,9 +5,11 @@ import '../../models/transaction.dart';
 import '../../constants/colors.dart';
 import '../animations/animated_currency.dart';
 
+/// Bottom Sheet Modal utilizado para exibir o detalhamento completo de uma transação 
+/// de ativos (Compra/Venda de Tokens). Chamado ao clicar em um card no histórico de transações.
 class TransactionDetailModal extends StatelessWidget {
-  final Transaction transaction;
-  final bool isVisible;
+  final Transaction transaction; // Objeto de domínio contendo os dados do recibo
+  final bool isVisible; // Controle de privacidade propagado da WalletView
 
   const TransactionDetailModal({
     super.key,
@@ -15,6 +17,8 @@ class TransactionDetailModal extends StatelessWidget {
     required this.isVisible,
   });
 
+  /// Utilitário estático para invocar o modal de forma elegante a partir de qualquer tela,
+  /// utilizando o padrão `showModalBottomSheet` do Material Design.
   static void show(
     BuildContext context,
     Transaction transaction,
@@ -22,8 +26,8 @@ class TransactionDetailModal extends StatelessWidget {
   ) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      isScrollControlled: true, // Permite que o modal cresça conforme o conteúdo (evita corte em telas pequenas)
+      backgroundColor: Colors.transparent, // Fundo transparente para aplicar cantos arredondados no Container
       builder: (context) => TransactionDetailModal(
         transaction: transaction,
         isVisible: isVisible,
@@ -35,6 +39,8 @@ class TransactionDetailModal extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    
+    // Identifica se a operação de tokens foi uma COMPRA (saída de dinheiro) ou VENDA (entrada de dinheiro)
     final isBuy = transaction.transactionType.contains('BUY');
 
     return Container(
@@ -44,8 +50,9 @@ class TransactionDetailModal extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // Modal abraça o conteúdo, não ocupando a tela inteira
         children: [
+          // "Notch" ou "Pill" indicador de arrasto no topo do Bottom Sheet
           Container(
             width: 40,
             height: 4,
@@ -55,6 +62,8 @@ class TransactionDetailModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
+          
+          // Ícone ilustrativo da operação de caixa
           Container(
             width: 64,
             height: 64,
@@ -79,11 +88,13 @@ class TransactionDetailModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+          
+          // O FittedBox garante que valores milionários encolham em vez de quebrar a linha (overflow)
           FittedBox(
             fit: BoxFit.scaleDown,
             child: AnimatedCurrency(
               valueCents: transaction.totalCents,
-              isVisible: isVisible,
+              isVisible: isVisible, // Respeita a regra de censura
               prefix: isBuy ? '- R\$' : '+ R\$',
               style: TextStyle(
                 fontSize: 32,
@@ -93,7 +104,10 @@ class TransactionDetailModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
+          
+          // Detalhamento técnico do recibo
           _buildInfoSection(theme, isDark),
+          
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
@@ -119,6 +133,7 @@ class TransactionDetailModal extends StatelessWidget {
     );
   }
 
+  /// Caixa com os dados estruturados da transação ("Nota Fiscal")
   Widget _buildInfoSection(ThemeData theme, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -159,13 +174,14 @@ class TransactionDetailModal extends StatelessWidget {
             'ID da Transação',
             transaction.id.substring(0, 8).toUpperCase(),
             theme,
-            isMonospace: true,
+            isMonospace: true, // Fonte mono-espaçada é padrão-ouro de UX para exibição de Hashes/IDs
           ),
         ],
       ),
     );
   }
 
+  /// Método auxiliar para alinhar Chave-Valor no recibo
   Widget _buildRow(
     String label,
     String value,
@@ -195,6 +211,7 @@ class TransactionDetailModal extends StatelessWidget {
     );
   }
 
+  /// Converte centavos do preço unitário em BRL formatado
   String _formatUnit(double cents) {
     return NumberFormat.currency(
       locale: 'pt_BR',
@@ -202,5 +219,6 @@ class TransactionDetailModal extends StatelessWidget {
     ).format(cents / 100);
   }
 
+  /// Força o padrão Capitalized Strings na formatação de datas (ex: "10 de Maio" invés de "10 de maio")
   String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 }
