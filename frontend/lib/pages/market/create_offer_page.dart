@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/constants/colors.dart';
+import 'package:frontend/states/user_state.dart';
 import 'package:frontend/widgets/charts/price_chart.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/modals/confirmation_modal.dart';
@@ -58,6 +59,7 @@ class MaxValueInputFormatter extends TextInputFormatter {
   }
 }
 
+// Página que permite ao usuário criar uma oferta de venda para seus tokens no balcão.
 class CreateOfferPage extends StatefulWidget {
   const CreateOfferPage({super.key});
 
@@ -66,49 +68,64 @@ class CreateOfferPage extends StatefulWidget {
 }
 
 class _CreateOfferPageState extends State<CreateOfferPage> {
+  // Chave para validação e submissão do formulário
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = true;
-  bool _isSubmitting = false;
-  List<WalletTokenPosition> _positions = [];
-  WalletTokenPosition? _selectedPosition;
-  StartupData? _selectedStartupData;
-  bool _isLoadingChart = false;
+  
+  // Estados de controle de carregamento
+  bool _isLoading = true; // Carregamento inicial (posições do usuário)
+  bool _isSubmitting = false; // Estado durante o envio da oferta
+  bool _isLoadingChart = false; // Carregamento dos dados de mercado da startup selecionada
 
-  final TextEditingController _qtdController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
+  // Dados do usuário e da startup selecionada
+  List<WalletTokenPosition> _positions = []; // Tokens que o usuário possui na carteira
+  WalletTokenPosition? _selectedPosition; // Posição (startup) selecionada para venda
+  StartupData? _selectedStartupData; // Dados financeiros (preço médio, gráfico) da startup selecionada
+
+  // Controladores de entrada de dados
+  final TextEditingController _qtdController = TextEditingController(); // Quantidade de tokens a vender
+  final TextEditingController _priceController = TextEditingController(); // Preço pedido por cada token
+  
+  // Data de expiração da oferta (padrão 30 dias a partir de hoje)
   DateTime _expiresAt = DateTime.now().add(const Duration(days: 30));
 
   @override
   void initState() {
     super.initState();
-    _loadUserTokens();
+    _loadUserTokens(); // Busca as posições da carteira do usuário ao carregar a tela
   }
 
   @override
   void dispose() {
+    // Limpeza de recursos para evitar vazamento de memória
     _qtdController.dispose();
     _priceController.dispose();
     super.dispose();
   }
 
+  // Recupera os tokens que o usuário possui utilizando o estado global (UserState).
+  // Isso garante sincronia com o cabeçalho e outras telas da aplicação.
   Future<void> _loadUserTokens() async {
     setState(() => _isLoading = true);
-    final result = await UserService.getUserData();
+    
+    // Sincroniza e atualiza o estado global da carteira do usuário
+    await UserState.refreshUser();
 
     if (mounted) {
-      if (result.success) {
-        final UserProfile profile = result.data!;
+      final profile = UserState.userNotifier.value;
+      if (profile != null) {
         setState(() {
+          // Filtra apenas startups onde o usuário possui tokens desbloqueados disponíveis para venda
           _positions = profile.wallet.positions
-              .where((p) => p.qtdTokens > 0)
+              .where((p) => (p.qtdTokens - p.lockedTokens) > 0)
               .toList();
           _isLoading = false;
         });
       } else {
+        setState(() => _isLoading = false);
         FeedbackModal.show(
           context: context,
           title: 'Erro ao carregar',
-          message: result.message ?? 'Erro ao carregar seus tokens',
+          message: 'Erro ao carregar os dados da sua carteira. Tente novamente.',
           type: FeedbackType.error,
         );
         Navigator.of(context).pop();
@@ -116,6 +133,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     }
   }
 
+  /// Busca dados de mercado (histórico e resumo) para auxiliar o usuário na precificação da oferta
   Future<void> _loadStartupDetails(String startupId) async {
     setState(() => _isLoadingChart = true);
     final result = await StartupService.getStartupDetails(startupId);
@@ -131,9 +149,12 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     }
   }
 
+  /// Valida e envia a nova oferta de venda para o sistema
   Future<void> _submit() async {
+    // Validações básicas do formulário
     if (!_formKey.currentState!.validate() || _selectedPosition == null) return;
 
+    // Garante que a oferta não expire hoje
     final now = DateTime.now();
     final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
@@ -154,6 +175,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
 
     try {
       final int qtd = int.parse(_qtdController.text);
+      // Converte o texto da moeda para inteiro em centavos
       String priceText = _priceController.text.replaceAll(
         RegExp(r'[^0-9]'),
         '',
@@ -161,6 +183,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
       final int priceCents = int.parse(priceText);
       final totalCents = qtd * priceCents;
 
+      // Solicita confirmação explícita antes de criar o compromisso de venda
       final confirmed = await ConfirmationModal.show(
         context: context,
         title: 'Confirmar Venda',
@@ -188,6 +211,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
         return;
       }
 
+      // Efetiva a criação da oferta via API
       final result = await OfferService.createOffer(
         startupId: _selectedPosition!.startupId,
         qtdTokens: qtd,
@@ -202,7 +226,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
             context: context,
             title: 'Oferta Publicada!',
             message:
-                'Sua oferta agora está visível para outros investidores no catálogo.',
+                'Sua oferta agora está visível para outros investidores no balcão.',
             type: FeedbackType.success,
             onConfirm: () => Navigator.of(context).pop(true),
             buttonText: 'Ótimo!',
@@ -229,11 +253,13 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     }
   }
 
+  /// Formata um valor numérico para o padrão de moeda Real (R$)
   String _formatCurrency(double cents) {
     final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
     return formatter.format(cents / 100);
   }
 
+  /// Botão de atalho para preencher o preço rapidamente com valores de mercado
   Widget _buildQuickPriceButton(String label, double cents) {
     return GestureDetector(
       onTap: () {
@@ -311,6 +337,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
+                        // Dropdown para seleção da Startup (baseado no que o usuário possui na carteira)
                         DropdownButtonFormField<WalletTokenPosition>(
                           value: _selectedPosition,
                           dropdownColor: theme.colorScheme.surface,
@@ -358,6 +385,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                           validator: (value) =>
                               value == null ? 'Selecione uma startup' : null,
                         ),
+                        // Exibe informações de mercado assim que uma startup é selecionada
                         if (_selectedPosition != null) ...[
                           const SizedBox(height: 24),
                           _buildMarketSummary(),
@@ -366,6 +394,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Campo de Quantidade
                             Expanded(
                               child: TextFormField(
                                 controller: _qtdController,
@@ -407,7 +436,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   FilteringTextInputFormatter.digitsOnly,
                                   if (_selectedPosition != null)
                                     MaxValueInputFormatter(
-                                      _selectedPosition!.qtdTokens,
+                                      _selectedPosition!.qtdTokens - _selectedPosition!.lockedTokens,
                                     ),
                                 ],
                                 validator: (value) {
@@ -416,7 +445,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                                   final int? qtd = int.tryParse(value);
                                   if (qtd == null || qtd <= 0) return 'Mín 1';
                                   if (_selectedPosition != null &&
-                                      qtd > _selectedPosition!.qtdTokens) {
+                                      qtd > (_selectedPosition!.qtdTokens - _selectedPosition!.lockedTokens)) {
                                     return 'Sem saldo';
                                   }
                                   return null;
@@ -424,6 +453,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                               ),
                             ),
                             const SizedBox(width: 16),
+                            // Campo de Preço Unitário
                             Expanded(
                               child: TextFormField(
                                 controller: _priceController,
@@ -480,6 +510,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                             ),
                           ],
                         ),
+                        // Sugestões de preço baseadas nos dados reais de mercado
                         if (_selectedStartupData != null) ...[
                           const SizedBox(height: 8),
                           Row(
@@ -498,6 +529,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                           ),
                         ],
                         const SizedBox(height: 24),
+                        // Seletor de Data de Expiração
                         InkWell(
                           onTap: () async {
                             final now = DateTime.now();
@@ -578,6 +610,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
                           ),
                         ),
                         const SizedBox(height: 40),
+                        // Botão de Submissão final
                         ElevatedButton(
                           onPressed: _isSubmitting ? null : _submit,
                           style: ElevatedButton.styleFrom(
@@ -619,6 +652,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     );
   }
 
+  /// Renderiza um resumo de mercado e o gráfico histórico para a startup selecionada
   Widget _buildMarketSummary() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -692,7 +726,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
           const SizedBox(height: 24),
           SizedBox(
             height:
-                360, // Increased height to avoid overflow and show more details
+                360, // Gráfico de histórico para validar a tendência de preço
             child: PriceHistoryChart(
               startupId: _selectedPosition!.startupId,
               initialHistory: _selectedStartupData!.history,
@@ -704,6 +738,7 @@ class _CreateOfferPageState extends State<CreateOfferPage> {
     );
   }
 
+  /// Constrói um pequeno card de métrica financeira
   Widget _buildMetric(String label, String value) {
     final theme = Theme.of(context);
     return Column(
