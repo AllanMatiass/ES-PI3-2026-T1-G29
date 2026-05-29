@@ -62,9 +62,16 @@ describe("OfferService - Testes Unitários do Backend", () => {
     );
 
     // Configuração padrão dos mocks de protótipo
-    (UserService.prototype.get as jest.Mock).mockResolvedValue({ name: "Roberto Comprador", wallet: { balanceInCents: 10000, positions: [] } });
-    (TransactionService.prototype.registerTransactionTx as jest.Mock).mockResolvedValue({ id: "tx_roberto_sec" });
-    (TokenPricingService.prototype.revalueFromSecondaryTradeTx as jest.Mock).mockResolvedValue({});
+    (UserService.prototype.get as jest.Mock).mockResolvedValue({
+      name: "Roberto Comprador",
+      wallet: { balanceInCents: 10000, positions: [] },
+    });
+    (
+      TransactionService.prototype.registerTransactionTx as jest.Mock
+    ).mockResolvedValue({ id: "tx_roberto_sec" });
+    (
+      TokenPricingService.prototype.revalueFromSecondaryTradeTx as jest.Mock
+    ).mockResolvedValue({});
   });
 
   // teste do método createOffer com dados insuficientes
@@ -199,7 +206,9 @@ describe("OfferService - Testes Unitários do Backend", () => {
     const mockBuyerUserData = { name: "Roberto Comprador" };
 
     (getOfferById as jest.Mock).mockResolvedValue(mockOfferData);
-    (UserService.prototype.get as jest.Mock).mockResolvedValue(mockBuyerUserData);
+    (UserService.prototype.get as jest.Mock).mockResolvedValue(
+      mockBuyerUserData,
+    );
 
     // Mapeamento dinâmico baseado no ID do documento para evitar quebras de ordem paralela (Promise.all)
     mockTx.get.mockImplementation(async (ref: any) => {
