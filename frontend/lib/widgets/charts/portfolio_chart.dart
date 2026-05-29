@@ -6,7 +6,9 @@ import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:intl/intl.dart';
 
-/// Widget que exibe o gráfico de valorização do patrimônio do usuário.
+/// Widget que exibe o gráfico de linha (Line Chart) da evolução patrimonial do usuário.
+/// Conta com filtros de tempo (1D, 1W, 1M, 1Y, YTD) e interatividade de toque 
+/// para visualizar o valor do patrimônio em datas específicas do passado.
 class PortfolioChart extends StatefulWidget {
   const PortfolioChart({super.key});
 
@@ -15,19 +17,26 @@ class PortfolioChart extends StatefulWidget {
 }
 
 class PortfolioChartState extends State<PortfolioChart> {
-  List<PortfolioHistoryPoint> _history = [];
-  String _selectedRange = 'YTD';
-  bool _isLoading = true;
-  int? _selectedIndex;
-  double _totalValueCents = 0;
+  List<PortfolioHistoryPoint> _history = []; // Pontos do gráfico (Data vs Valor)
+  String _selectedRange = 'YTD'; // Filtro temporal atual (Padrão: Year-to-Date)
+  bool _isLoading = true; 
+  
+  // Índice do ponto selecionado via toque (Tooltip interativo)
+  int? _selectedIndex; 
+  
+  // Metadados retornados pela API
+  double _totalValueCents = 0; 
   double _variationPercent = 0;
 
   @override
   void initState() {
     super.initState();
-    refresh();
+    refresh(); // Carrega os dados ao montar o widget
   }
 
+  /// Recarrega os dados do gráfico a partir da API.
+  /// Pode ser chamado externamente através da `GlobalKey` pelo widget pai (`wallet_view.dart`)
+  /// caso ocorra uma transação que altere o patrimônio (ex: depósito/saque/compra de token).
   Future<void> refresh() async {
     if (!mounted) return;
     setState(() {
@@ -71,6 +80,7 @@ class PortfolioChartState extends State<PortfolioChart> {
     }
   }
 
+  /// Alterna o intervalo de tempo e recarrega a API (Ex: Trocar de 1M para 1Y)
   void _handleRangeChange(String range) {
     if (_selectedRange == range) return;
     setState(() {
@@ -79,10 +89,14 @@ class PortfolioChartState extends State<PortfolioChart> {
     refresh();
   }
 
+  /// Lógica de Geometria: Calcula qual ponto do gráfico foi tocado/arrastado.
   void _handleTap(Offset localPosition, Size size) {
     if (_history.length < 2) return;
 
+    // Divide a largura do canvas pela quantidade de pontos para saber a distância (x) entre cada um
     final double stepX = size.width / (_history.length - 1);
+    
+    // Calcula o índice mais próximo da coordenada X tocada
     final int index = (localPosition.dx / stepX).round().clamp(
       0,
       _history.length - 1,
@@ -120,6 +134,7 @@ class PortfolioChartState extends State<PortfolioChart> {
     );
   }
 
+  /// Constrói o topo do card, exibindo o valor atual e a porcentagem de lucro/prejuízo
   Widget _buildHeader(ThemeData theme) {
     final currencyFormat = NumberFormat.currency(
       locale: 'pt_BR',
@@ -137,6 +152,7 @@ class PortfolioChartState extends State<PortfolioChart> {
           ),
         ),
         const SizedBox(height: 4),
+        // Se houver um ponto tocado no gráfico, exibe o valor dele (Tooltip)
         if (_selectedIndex != null)
           Text(
             currencyFormat.format(_history[_selectedIndex!].valueCents / 100),
@@ -147,6 +163,7 @@ class PortfolioChartState extends State<PortfolioChart> {
             ),
           )
         else
+        // Senão, exibe o valor total padrão atual e a badge de rendimento (%)
           Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
             spacing: 8,
@@ -163,7 +180,7 @@ class PortfolioChartState extends State<PortfolioChart> {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color:
-                      (_variationPercent >= 0 ? AppColors.primary : Colors.red)
+                      (_variationPercent >= 0 ? AppColors.primary : AppColors.danger)
                           .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -174,7 +191,7 @@ class PortfolioChartState extends State<PortfolioChart> {
                     fontWeight: FontWeight.bold,
                     color: _variationPercent >= 0
                         ? AppColors.primary
-                        : Colors.red,
+                        : AppColors.danger,
                   ),
                 ),
               ),
@@ -184,6 +201,7 @@ class PortfolioChartState extends State<PortfolioChart> {
     );
   }
 
+  /// Constrói a linha de botões de filtro (1D, 1W, etc)
   Widget _buildFilters() {
     final ranges = {
       '1D': '1 dia',
@@ -222,6 +240,7 @@ class PortfolioChartState extends State<PortfolioChart> {
     );
   }
 
+  /// Constrói o Canvas (CustomPaint) onde a linha será desenhada
   Widget _buildChartArea(ThemeData theme, bool isDark) {
     return SizedBox(
       height: 180,
@@ -235,6 +254,7 @@ class PortfolioChartState extends State<PortfolioChart> {
           : LayoutBuilder(
               builder: (context, constraints) {
                 return GestureDetector(
+                  // Captura toques e arrastes (Pan) para mover a agulha de seleção
                   onPanUpdate: (details) =>
                       _handleTap(details.localPosition, constraints.biggest),
                   onTapDown: (details) =>
@@ -254,6 +274,7 @@ class PortfolioChartState extends State<PortfolioChart> {
     );
   }
 
+  /// Rodapé do gráfico que exibe as datas extremas e a data selecionada
   Widget _buildFooter(ThemeData theme) {
     if (_history.isEmpty || _isLoading) return const SizedBox.shrink();
 
@@ -287,6 +308,8 @@ class PortfolioChartState extends State<PortfolioChart> {
     );
   }
 
+  /// Formata as datas no eixo X baseando-se no intervalo de tempo
+  /// (Ex: "14:30" para o gráfico de 1 Dia, ou "15/12" para os gráficos de Anos/Meses)
   String _formatDate(String timestamp) {
     try {
       final date = DateTime.parse(timestamp).toLocal();
@@ -300,6 +323,7 @@ class PortfolioChartState extends State<PortfolioChart> {
   }
 }
 
+// Pintor customizado para desenhar a linha do gráfico de evolução e a sombra gradiente.
 class _PortfolioLinePainter extends CustomPainter {
   final List<PortfolioHistoryPoint> history;
   final Color lineColor;
@@ -317,10 +341,13 @@ class _PortfolioLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (history.length < 2) return;
 
+    // Normalização matemática: 
+    // Encontra o menor e o maior valor para esticar/encolher o gráfico e caber na tela.
     final values = history.map((e) => e.valueCents).toList();
     final double minVal = values.reduce((a, b) => a < b ? a : b);
     final double maxVal = values.reduce((a, b) => a > b ? a : b);
 
+    // Cria uma folga visual (15%) abaixo do ponto mais baixo
     final double range = maxVal - minVal == 0 ? 100 : (maxVal - minVal) * 1.3;
     final double offsetMin = minVal - (range * 0.15);
 
@@ -335,6 +362,7 @@ class _PortfolioLinePainter extends CustomPainter {
 
     final Path path = Path();
 
+    // Desenha o caminho da linha traçando os pontos Y
     for (int i = 0; i < history.length; i++) {
       final double x = i * stepX;
       final double y =
@@ -348,7 +376,7 @@ class _PortfolioLinePainter extends CustomPainter {
       }
     }
 
-    // Gradient fill
+    // Desenha o preenchimento translúcido sob a linha (Shader)
     final Path fillPath = Path.from(path);
     fillPath.lineTo(size.width, size.height);
     fillPath.lineTo(0, size.height);
@@ -364,6 +392,8 @@ class _PortfolioLinePainter extends CustomPainter {
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
 
+    // Se o usuário tocou no gráfico, desenha uma agulha vertical (Crosshair)
+    // e duas bolinhas marcando o valor selecionado
     if (selectedIndex != null && selectedIndex! < history.length) {
       final double x = selectedIndex! * stepX;
       final double y =
@@ -377,12 +407,16 @@ class _PortfolioLinePainter extends CustomPainter {
         ..strokeWidth = 1
         ..style = PaintingStyle.stroke;
 
+      // Agulha vertical
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), selectionPaint);
+      
+      // Bolinha externa (borda)
       canvas.drawCircle(
         Offset(x, y),
         6,
         Paint()..color = isDark ? Colors.black : Colors.white,
       );
+      // Bolinha interna
       canvas.drawCircle(Offset(x, y), 4, Paint()..color = lineColor);
     }
   }

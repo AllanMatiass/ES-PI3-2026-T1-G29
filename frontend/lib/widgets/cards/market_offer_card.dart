@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:frontend/constants/colors.dart';
 
 class MarketOfferCard extends StatelessWidget {
-  final OfferWithId offer;
+  final Offer offer;
   final VoidCallback onBuyPressed;
 
   const MarketOfferCard({

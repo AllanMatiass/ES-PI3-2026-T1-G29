@@ -7,6 +7,8 @@ import 'package:frontend/constants/colors.dart';
 import 'package:frontend/services/mfa_service.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 
+/// Página de configuração da Autenticação em Dois Fatores (2FA) via TOTP (App Autenticador).
+/// Permite ao usuário ativar, verificar e desativar o segundo fator de segurança.
 class MfaSetupPage extends StatefulWidget {
   const MfaSetupPage({super.key});
 
@@ -15,20 +17,24 @@ class MfaSetupPage extends StatefulWidget {
 }
 
 class _MfaSetupPageState extends State<MfaSetupPage> {
-  bool _isTotpEnrolled = false;
-  bool _isLoading = false;
+  // Estados de controle da conta e interface
+  bool _isTotpEnrolled = false; // Indica se o 2FA já está ativo para este usuário
+  bool _isLoading = false; // Estado de carregamento para chamadas de rede
 
+  // Dados gerados durante o processo de ativação (Segredo e QR Code)
   TotpEnrollmentData? _enrollmentData;
   final TextEditingController _codeController = TextEditingController();
 
+  // Controla se o usuário está na etapa de visualização do QR Code/Segredo
   bool _isInVerificationStep = false;
 
   @override
   void initState() {
     super.initState();
-    _loadEnrollmentStatus();
+    _loadEnrollmentStatus(); // Verifica o status atual do 2FA ao carregar a página
   }
 
+  /// Consulta o Firebase para verificar se o usuário já possui 2FA ativo
   Future<void> _loadEnrollmentStatus() async {
     final enrolled = await MfaService.isTotpEnrolled();
     if (mounted) setState(() => _isTotpEnrolled = enrolled);
@@ -40,11 +46,13 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
     super.dispose();
   }
 
+  /// Inicia o processo de registro de um novo fator TOTP
   Future<void> _startEnrollment() async {
     setState(() => _isLoading = true);
 
     try {
-      final data = await MfaService.startEnrollment(issuer: 'InvestApp');
+      // Gera o segredo compartilhado e a URL para o QR Code
+      final data = await MfaService.startEnrollment(issuer: 'MesclaInvest');
       setState(() {
         _enrollmentData = data;
         _isInVerificationStep = true;
@@ -54,6 +62,7 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
       setState(() => _isLoading = false);
       if (!mounted) return;
 
+      // O Firebase exige login recente para operações sensíveis de segurança
       if (e.code == 'requires-recent-login') {
         FeedbackModal.show(
           context: context,
@@ -73,9 +82,11 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
     }
   }
 
+  // Confirma o registro do 2FA validando o primeiro código gerado pelo app do usuário
   Future<void> _confirmEnrollment() async {
     final code = _codeController.text.trim();
 
+    // Validação básica do formato do código TOTP
     if (code.length != 6) {
       FeedbackModal.show(
         context: context,
@@ -89,6 +100,7 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
     setState(() => _isLoading = true);
 
     try {
+      // Finaliza o vínculo do dispositivo/segredo com a conta do usuário
       await MfaService.confirmEnrollment(
         totpSecret: _enrollmentData!.secret,
         verificationCode: code,
@@ -113,6 +125,8 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
     } on FirebaseAuthException catch (e) {
       setState(() => _isLoading = false);
       if (!mounted) return;
+      
+      // Trata erro de código incorreto (desincronização de tempo ou digitação)
       FeedbackModal.show(
         context: context,
         title: 'Código incorreto',
@@ -124,7 +138,9 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
     }
   }
 
+  /// Remove o segundo fator de autenticação da conta do usuário
   Future<void> _unenroll() async {
+    // Solicita confirmação antes de reduzir a segurança da conta
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -173,6 +189,7 @@ class _MfaSetupPageState extends State<MfaSetupPage> {
       setState(() => _isLoading = false);
       if (!mounted) return;
 
+      // Também exige login recente para remoção de fator de segurança
       if (e.code == 'requires-recent-login') {
         FeedbackModal.show(
           context: context,

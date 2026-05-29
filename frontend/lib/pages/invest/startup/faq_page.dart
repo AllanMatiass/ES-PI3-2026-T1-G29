@@ -1,15 +1,17 @@
 // Autor: Allan Giovanni Matias Paes - 25008211
 import 'package:flutter/material.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
-import '../../../models/startup.dart';
-import '../../../services/startup_service.dart';
+import 'package:frontend/constants/colors.dart';
+import 'package:frontend/models/startup.dart';
+import 'package:frontend/services/startup_service.dart';
 
+/// Página que exibe e gerencia as perguntas frequentes (FAQ) de uma startup específica.
 class FAQPage extends StatefulWidget {
-  final List<Question> questions;
+  final List<Question> questions; // Lista inicial de perguntas carregada anteriormente
   final String startupName;
   final String logoUrl;
   final String startupId;
-  final Access access;
+  final Access access; // Define as permissões do usuário (se é investidor, etc.)
 
   const FAQPage({
     super.key,
@@ -25,11 +27,12 @@ class FAQPage extends StatefulWidget {
 }
 
 class _FAQPageState extends State<FAQPage> {
-  late List<Question> _questions;
+  late List<Question> _questions; // Lista mutável de perguntas (para atualizações locais)
   final TextEditingController _questionController = TextEditingController();
-  bool _isPrivate = false;
-  bool _isLoading = false;
-  bool _isRefreshing = false;
+
+  // Estados de controle da interface
+  bool _isPrivate = false; // Define se a nova pergunta será privada (apenas para investidores)
+  bool _isRefreshing = false; // Carregamento durante o "pull-to-refresh"
 
   @override
   void initState() {
@@ -37,6 +40,7 @@ class _FAQPageState extends State<FAQPage> {
     _questions = List.from(widget.questions);
   }
 
+  /// Atualiza a lista de perguntas buscando os dados mais recentes da startup
   Future<void> _handleRefresh() async {
     setState(() => _isRefreshing = true);
     final result = await StartupService.getStartupDetails(widget.startupId);
@@ -57,9 +61,11 @@ class _FAQPageState extends State<FAQPage> {
     }
   }
 
-  Future<void> _submitQuestion([void Function(void Function())? setModalState]) async {
-    _isLoading = true;
+  /// Processa o envio de uma nova pergunta para a startup
+
+  Future<void> _submitQuestion() async {
     final text = _questionController.text.trim();
+
     if (text.isEmpty) {
       FeedbackModal.show(
         context: context,
@@ -70,12 +76,6 @@ class _FAQPageState extends State<FAQPage> {
       return;
     }
 
-    if (setModalState != null) {
-      setModalState(() => _isLoading = true);
-    } else {
-      setState(() => _isLoading = true);
-    }
-
     final visibility = _isPrivate ? 'privada' : 'publica';
 
     final result = await StartupService.createQuestion(
@@ -84,46 +84,50 @@ class _FAQPageState extends State<FAQPage> {
       visibility: visibility,
     );
 
-    if (mounted) {
-      if (setModalState != null) {
-        setModalState(() => _isLoading = false);
-      } else {
-        setState(() => _isLoading = false);
-      }
+    if (!mounted) return;
 
-      if (result.success) {
-        setState(() {
-          _questions.insert(0, result.data!);
-          _questionController.clear();
-          _isPrivate = false;
-        });
-        Navigator.pop(context); // Fecha o bottom sheet
-        FeedbackModal.show(
-          context: context,
-          title: 'Sucesso!',
-          message: 'Sua pergunta foi enviada com sucesso.',
-          type: FeedbackType.success,
-        );
-        return;
-      }
+    if (result.success) {
+      setState(() {
+        _questions.insert(0, result.data!);
+        _questionController.clear();
+        _isPrivate = false;
+      });
+
+      Navigator.pop(context);
+
       FeedbackModal.show(
         context: context,
-        title: 'Erro ao enviar',
-        message: result.message ?? 'Não foi possível enviar sua pergunta',
-        type: FeedbackType.error,
+        title: 'Sucesso!',
+        message: 'Sua pergunta foi enviada com sucesso.',
+        type: FeedbackType.success,
       );
-      _isLoading = false;
+
+      return;
     }
+
+    FeedbackModal.show(
+      context: context,
+      title: 'Erro ao enviar',
+      message: result.message ?? 'Não foi possível enviar sua pergunta',
+      type: FeedbackType.error,
+    );
   }
+
 
   void _showAddQuestionSheet() {
     final theme = Theme.of(context);
+
+    // Estado local do loading do modal
+    final loading = ValueNotifier(false);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -141,65 +145,121 @@ class _FAQPageState extends State<FAQPage> {
                 children: [
                   Text(
                     'Fazer uma pergunta',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.onSurface),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
+
                   const SizedBox(height: 15),
+
                   TextField(
                     controller: _questionController,
                     maxLines: 3,
-                    style: TextStyle(color: theme.colorScheme.onSurface),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Digite sua pergunta aqui...',
-                      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                      hintStyle: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant
+                            .withOpacity(0.5),
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 15),
+
                   if (widget.access.isInvestor)
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Pergunta privada?', style: TextStyle(color: theme.colorScheme.onSurface)),
+                        Text(
+                          'Pergunta privada?',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+
                         Switch(
                           value: _isPrivate,
-                          activeThumbColor: const Color(0xFF00A84E),
+                          activeThumbColor: AppColors.primary,
                           onChanged: (value) {
-                            setModalState(() => _isPrivate = value);
-                            setState(() => _isPrivate = value);
+                            setModalState(() {
+                              _isPrivate = value;
+                            });
                           },
                         ),
                       ],
                     )
                   else
                     Text(
-                      'Sua pergunta será pública (apenas investidores podem enviar perguntas privadas).',
-                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : () => _submitQuestion(setModalState),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00A84E),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      'Sua pergunta será pública '
+                          '(apenas investidores podem '
+                          'enviar perguntas privadas).',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme
+                            .onSurfaceVariant,
                       ),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text('Enviar Pergunta',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+
+                  const SizedBox(height: 20),
+
+                  ValueListenableBuilder<bool>(
+                    valueListenable: loading,
+                    builder: (context, isLoading, _) {
+                      return ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                          loading.value = true;
+
+                          await _submitQuestion();
+
+                          if (mounted) {
+                            loading.value = false;
+                          }
+                        },
+
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 15,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                            BorderRadius.circular(12),
+                          ),
+                        ),
+
+                        child: isLoading
+                            ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child:
+                          CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                            : const Text(
+                          'Enviar Pergunta',
+                          style: TextStyle(
+                            fontWeight:
+                            FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    },
                   ),
+
                   const SizedBox(height: 20),
                 ],
               ),
@@ -261,13 +321,13 @@ class _FAQPageState extends State<FAQPage> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _showAddQuestionSheet,
-          backgroundColor: const Color(0xFF00A84E),
+          backgroundColor: AppColors.primary,
           label: const Text('Fazer Pergunta'),
           icon: const Icon(Icons.add_comment_outlined),
         ),
         body: RefreshIndicator(
           onRefresh: _handleRefresh,
-          color: const Color(0xFF00A84E),
+          color: AppColors.primary,
           child: Column(
             children: [
               // Header com Logo e Nome
@@ -418,7 +478,7 @@ class _FAQPageState extends State<FAQPage> {
                                                 'Resposta da Startup:',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  color: Color(0xFF00A84E),
+                                                  color: AppColors.primary,
                                                   fontSize: 14,
                                                 ),
                                               ),

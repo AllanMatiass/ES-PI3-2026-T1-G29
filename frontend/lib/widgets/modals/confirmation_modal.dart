@@ -2,14 +2,16 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 
+/// Modal de confirmação genérico utilizado em operações sensíveis (ex: Comprar Tokens, Sacar, Transferir).
+/// Exibe um resumo detalhado em formato de "Nota Fiscal/Recibo" antes que o usuário conclua a ação.
 class ConfirmationModal extends StatelessWidget {
   final String title;
   final String description;
-  final List<ConfirmationRowData> rows;
+  final List<ConfirmationRowData> rows; // Linhas de dados (Chave -> Valor) para o resumo
   final String confirmButtonText;
   final String cancelButtonText;
   final Color? confirmButtonColor;
-  final String? note;
+  final String? note; // Observação de rodapé (ex: "Os fundos ficarão bloqueados por X dias")
 
   const ConfirmationModal({
     super.key,
@@ -22,6 +24,8 @@ class ConfirmationModal extends StatelessWidget {
     this.note,
   });
 
+  /// Método utilitário assíncrono para exibir o modal de qualquer tela.
+  /// Retorna `true` se o usuário confirmou a ação ou `false` (ou null) se cancelou/fechou.
   static Future<bool?> show({
     required BuildContext context,
     required String title,
@@ -75,6 +79,8 @@ class ConfirmationModal extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            
+            // Caixa cinza agrupando as linhas de resumo da transação
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -132,6 +138,8 @@ class ConfirmationModal extends StatelessWidget {
     );
   }
 
+  /// Constrói uma linha individual de dado (Ex: "Quantidade: 100 tokens")
+  /// Se `isTotal` for true, adiciona um divisor visual e formata o texto em negrito/cor de destaque.
   Widget _buildRow(ConfirmationRowData row) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -165,6 +173,7 @@ class ConfirmationModal extends StatelessWidget {
   }
 }
 
+/// DTO auxiliar para estruturar as informações que serão exibidas na lista do ConfirmationModal.
 class ConfirmationRowData {
   final String label;
   final String value;

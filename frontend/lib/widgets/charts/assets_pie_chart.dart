@@ -6,10 +6,13 @@ import '../../models/user.dart';
 import '../../models/startup.dart';
 import '../../constants/colors.dart';
 
+/// Widget que desenha um Pie Chart representando a distribuição
+/// do patrimônio do usuário alocado em diferentes startups.
+/// O gráfico é interativo: tocar em uma fatia exibe detalhes de rentabilidade abaixo.
 class AssetsPieChart extends StatefulWidget {
-  final List<WalletTokenPosition> positions;
-  final Map<String, StartupListItem> startupsMap;
-  final bool isBalanceVisible;
+  final List<WalletTokenPosition> positions; // Tokens que o usuário possui
+  final Map<String, StartupListItem> startupsMap; // Mapa auxiliar para nome e preço de mercado
+  final bool isBalanceVisible; // Controle de máscara de privacidade
 
   const AssetsPieChart({
     super.key,
@@ -23,7 +26,7 @@ class AssetsPieChart extends StatefulWidget {
 }
 
 class _AssetsPieChartState extends State<AssetsPieChart> {
-  int? _selectedIndex;
+  int? _selectedIndex; // Índice da fatia atualmente destacada/tocada
 
   final List<Color> _chartColors = AppColors.chartPalette;
 
@@ -31,7 +34,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    // Processar dados
+    // Processamento de dados: Converte a carteira em "fatias" financeiras
     double totalUnavailableCents = 0;
     int totalUnavailableTokens = 0;
     
@@ -39,15 +42,17 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
     
     for (var pos in widget.positions) {
       final startup = widget.startupsMap[pos.startupId];
+      // Usa o preço de mercado se disponível, caso contrário usa o preço médio de aquisição
       final currentPrice = startup?.currentTokenPriceCents ?? pos.averagePriceCents;
       
-      // Tokens Indisponíveis (Bloqueados)
+      // Tokens Indisponíveis (Bloqueados em ordens de venda P2P abertas)
+      // Agrupamos todos os tokens bloqueados em uma única fatia "cinza" neutra.
       if (pos.lockedTokens > 0) {
         totalUnavailableCents += pos.lockedTokens * currentPrice;
         totalUnavailableTokens += pos.lockedTokens;
       }
       
-      // Tokens Disponíveis
+      // Tokens Disponíveis (Livres para venda ou valorização)
       final availableTokens = pos.qtdTokens - pos.lockedTokens;
       if (availableTokens > 0) {
         final availableValue = availableTokens * currentPrice;
@@ -61,12 +66,12 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
           profitCents: profit,
           isUnavailable: false,
           tokensCount: availableTokens,
-          color: _chartColors[slices.length % _chartColors.length],
+          color: _chartColors[slices.length % _chartColors.length], // Rotação de paleta
         ));
       }
     }
     
-    // Adicionar fatia de indisponíveis se houver
+    // Adicionar a fatia agrupada de indisponíveis no final do gráfico
     if (totalUnavailableCents > 0) {
       slices.add(_PieSliceData(
         startupName: 'Tokens Indisponíveis',
@@ -81,6 +86,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
 
     if (slices.isEmpty) return const SizedBox.shrink();
 
+    // Soma o patrimônio total alocado em ativos (tokens)
     final totalValue = slices.fold<double>(0, (sum, s) => sum + s.valueCents);
 
     return Column(
@@ -90,6 +96,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               return GestureDetector(
+                // Usa onTapDown para detectar a coordenada exata do clique no canvas
                 onTapDown: (details) => _handleTap(details.localPosition, constraints.biggest, slices),
                 child: CustomPaint(
                   size: Size.infinite,
@@ -110,26 +117,30 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
     );
   }
 
+  /// Lógica de Geometria: Calcula qual fatia do gráfico circular foi tocada
+  /// baseando-se na distância do centro e no ângulo do toque (em radianos).
   void _handleTap(Offset localPosition, Size size, List<_PieSliceData> slices) {
     final center = Offset(size.width / 2, size.height / 2);
     final distance = (localPosition - center).distance;
     final radius = math.min(size.width, size.height) / 2;
 
+    // Toque fora do círculo
     if (distance > radius) {
       setState(() => _selectedIndex = null);
       return;
     }
 
+    // Calcula o ângulo do toque (0 a 2*PI)
     double angle = math.atan2(localPosition.dy - center.dy, localPosition.dx - center.dx);
     if (angle < 0) angle += 2 * math.pi;
 
     final totalValue = slices.fold<double>(0, (sum, s) => sum + s.valueCents);
-    double startAngle = -math.pi / 2;
+    double startAngle = -math.pi / 2; // Começa a desenhar a partir de 12 horas
 
     for (int i = 0; i < slices.length; i++) {
       final sweepAngle = (slices[i].valueCents / totalValue) * 2 * math.pi;
       
-      // Normalizar ângulos para comparação
+      // Normalizar os ângulos para comparação correta independentemente das rotações
       double normalizedStart = startAngle;
       while (normalizedStart < 0) normalizedStart += 2 * math.pi;
       while (normalizedStart >= 2 * math.pi) normalizedStart -= 2 * math.pi;
@@ -144,6 +155,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
       }
 
       if (isHit) {
+        // Alterna entre selecionar e desselecionar a fatia
         setState(() => _selectedIndex = (_selectedIndex == i ? null : i));
         return;
       }
@@ -151,6 +163,8 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
     }
   }
 
+  /// Constrói o cartão de detalhamento dinâmico exibido abaixo do gráfico
+  /// quando o usuário toca em uma das fatias (Mostra investimento inicial vs Lucro).
   Widget _buildLegend(List<_PieSliceData> slices, double totalValue) {
     if (_selectedIndex == null) {
       return Text(
@@ -243,6 +257,7 @@ class _AssetsPieChartState extends State<AssetsPieChart> {
   }
 }
 
+/// DTO Interno para abstrair a geometria da fatia
 class _PieSliceData {
   final String startupName;
   final double valueCents;
@@ -263,6 +278,7 @@ class _PieSliceData {
   });
 }
 
+/// Pintor customizado de alta performance que desenha os arcos do gráfico de Rosca (Donut).
 class _PieChartPainter extends CustomPainter {
   final List<_PieSliceData> slices;
   final double totalValue;
@@ -282,7 +298,7 @@ class _PieChartPainter extends CustomPainter {
     final radius = math.min(size.width, size.height) / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
 
-    double startAngle = -math.pi / 2;
+    double startAngle = -math.pi / 2; // Inicia às 12 horas do relógio
 
     for (int i = 0; i < slices.length; i++) {
       final slice = slices[i];
@@ -294,7 +310,7 @@ class _PieChartPainter extends CustomPainter {
         ..style = PaintingStyle.fill;
 
       if (isSelected) {
-        // Destacar fatia selecionada
+        // Efeito "Pop-out": A fatia selecionada é empurrada para fora do centro
         final double offset = 8.0;
         final double middleAngle = startAngle + sweepAngle / 2;
         final Offset selectedCenter = center + Offset(math.cos(middleAngle) * offset, math.sin(middleAngle) * offset);
@@ -302,7 +318,7 @@ class _PieChartPainter extends CustomPainter {
         
         canvas.drawArc(selectedRect, startAngle, sweepAngle, true, paint);
         
-        // Borda no selecionado
+        // Adiciona uma borda branca para destacar ainda mais a fatia selecionada
         final borderPaint = Paint()
           ..color = AppColors.white
           ..style = PaintingStyle.stroke
@@ -315,12 +331,12 @@ class _PieChartPainter extends CustomPainter {
       startAngle += sweepAngle;
     }
 
-    // Desenhar círculo central (Donut chart effect)
+    // Desenhar círculo central em branco (Este é o truque que transforma a Pizza num Donut/Rosca)
     final innerRadius = radius * 0.6;
     final innerPaint = Paint()..color = AppColors.white;
     canvas.drawCircle(center, innerRadius, innerPaint);
     
-    // Texto central
+    // Desenha o rótulo "Patrimônio" no centro
     final textPainter = TextPainter(
       text: TextSpan(
         text: 'Patrimônio',
@@ -331,6 +347,7 @@ class _PieChartPainter extends CustomPainter {
     textPainter.layout();
     textPainter.paint(canvas, center - Offset(textPainter.width / 2, 20));
 
+    // Desenha o Valor Financeiro Total no centro (respeitando a máscara de privacidade)
     final totalText = isBalanceVisible 
       ? numberFormatter.NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(totalValue / 100)
       : 'R\$ •••••';
@@ -346,6 +363,8 @@ class _PieChartPainter extends CustomPainter {
     valuePainter.paint(canvas, center - Offset(valuePainter.width / 2, -4));
   }
 
+  /// Otimização do Flutter: O canvas só é redesenhado se a fatia selecionada mudar 
+  /// ou se o usuário alternar a visualização de saldo (olhinho).
   @override
   bool shouldRepaint(covariant _PieChartPainter oldDelegate) {
     return oldDelegate.selectedIndex != selectedIndex || oldDelegate.isBalanceVisible != isBalanceVisible;

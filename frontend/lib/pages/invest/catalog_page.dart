@@ -6,6 +6,7 @@ import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/api_response.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/models/startup.dart';
+import 'package:frontend/widgets/placeholders/error_state_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../widgets/cards/startup_card.dart';
 
@@ -13,6 +14,8 @@ import '../../widgets/headers/home_header.dart';
 import '../../states/user_state.dart';
 import '../../models/user.dart';
 
+/// Página que exibe o catálogo de startups disponíveis para investimento,
+/// com suporte a busca textual e filtros por estágio.
 class CatalogPage extends StatefulWidget {
   const CatalogPage({super.key});
 
@@ -21,22 +24,27 @@ class CatalogPage extends StatefulWidget {
 }
 
 class _CatalogPageState extends State<CatalogPage> {
+  // Future que armazena a resposta da API para evitar chamadas redundantes no build
   late Future<ApiResponse<List<StartupListItem>>> _startupsFuture;
-  String _searchQuery = "";
-  StartupStage? _selectedStage;
+  
+  // Estados de filtro
+  String _searchQuery = ""; // Query de busca textual
+  StartupStage? _selectedStage; // Filtro por estágio (Todas, Novas, Expansão, etc.)
 
   @override
   void initState() {
     super.initState();
-    _loadStartups();
+    _loadStartups(); // Carregamento inicial ao abrir a página
   }
 
+  /// Inicializa ou reinicializa a busca de startups no backend
   void _loadStartups() {
     setState(() {
       _startupsFuture = StartupService.listStartups();
     });
   }
 
+  /// Gerencia a atualização da lista via "pull-to-refresh"
   Future<void> _handleRefresh() async {
     _loadStartups();
     await _startupsFuture;
@@ -47,6 +55,7 @@ class _CatalogPageState extends State<CatalogPage> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Escuta mudanças no estado do usuário para atualizar o cabeçalho (ex: saldo)
     return ValueListenableBuilder<UserProfile?>(
       valueListenable: UserState.userNotifier,
       builder: (context, userData, _) {
@@ -55,7 +64,7 @@ class _CatalogPageState extends State<CatalogPage> {
           body: SafeArea(
             child: Column(
               children: [
-                // Custom Header
+                // Cabeçalho personalizado com informações do usuário
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
                   child: AppHeader(
@@ -65,7 +74,7 @@ class _CatalogPageState extends State<CatalogPage> {
                   ),
                 ),
                 
-                // Search and Filters
+                // Barra de Busca e Filtros Rápidos
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: TextField(
@@ -89,6 +98,8 @@ class _CatalogPageState extends State<CatalogPage> {
                     ),
                   ),
                 ),
+                
+                // Seletor Horizontal de Estágios (Filter Chips)
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -105,16 +116,20 @@ class _CatalogPageState extends State<CatalogPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                
+                // Lista Principal de Startups com FutureBuilder
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: _handleRefresh,
                     child: FutureBuilder<ApiResponse<List<StartupListItem>>>(
                       future: _startupsFuture,
                       builder: (context, snapshot) {
+                        // Estado de Carregamento (Skeleton Shimmer)
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return _buildSkeletonLoading();
                         }
                         
+                        // Tratamento de Erro de Rede ou Conexão
                         if (snapshot.hasError) {
                           return _buildErrorState(snapshot.error.toString());
                         }
@@ -124,13 +139,14 @@ class _CatalogPageState extends State<CatalogPage> {
                         }
 
                         final response = snapshot.data!;
-                        
+
                         if (!response.success) {
                           return _buildErrorState(response.message ?? 'Erro desconhecido');
                         }
 
                         var startups = response.data!;
 
+                        // Verificação de Lista Vazia Geral
                         if (startups.isEmpty) {
                           return ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
@@ -143,6 +159,7 @@ class _CatalogPageState extends State<CatalogPage> {
                           );
                         }
 
+                        // Aplicação de filtros locais (Busca e Estágio)
                         if (_searchQuery.isNotEmpty) {
                           startups = startups
                               .where((s) =>
@@ -154,6 +171,7 @@ class _CatalogPageState extends State<CatalogPage> {
                           startups = startups.where((s) => s.stage == _selectedStage).toList();
                         }
 
+                        // Verificação de Lista Vazia após filtragem
                         if (startups.isEmpty) {
                           return ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
@@ -166,6 +184,7 @@ class _CatalogPageState extends State<CatalogPage> {
                           );
                         }
 
+                        // Renderização da lista de cards de startups
                         return ListView.builder(
                           itemCount: startups.length,
                           padding: const EdgeInsets.all(16.0),
@@ -186,9 +205,11 @@ class _CatalogPageState extends State<CatalogPage> {
     );
   }
 
+  /// Constrói um chip de filtro que atualiza o estado da listagem
   Widget _buildFilterChip(StartupStage? stage, String label) {
     final theme = Theme.of(context);
     bool isSelected = _selectedStage == stage;
+
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
@@ -197,19 +218,25 @@ class _CatalogPageState extends State<CatalogPage> {
           _selectedStage = selected ? stage : null;
         });
       },
+
       selectedColor: AppColors.primary.withOpacity(0.2),
+
       labelStyle: TextStyle(
         color: isSelected ? AppColors.primary : theme.colorScheme.onSurfaceVariant,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
+
       backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+
       side: BorderSide(
         color: isSelected ? AppColors.primary : Colors.transparent,
       ),
+
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 
+  /// Exibe cards de carregamento estilizados (Shimmer) enquanto os dados não chegam
   Widget _buildSkeletonLoading() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView.builder(
@@ -232,25 +259,8 @@ class _CatalogPageState extends State<CatalogPage> {
     );
   }
 
+  /// Exibe uma interface de erro amigável com botão de re-tentativa
   Widget _buildErrorState(String error) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 48),
-            const SizedBox(height: 16),
-            Text('Erro ao carregar startups: $error', textAlign: TextAlign.center, style: TextStyle(color: theme.colorScheme.onSurface)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadStartups,
-              child: const Text('Tentar novamente'),
-            ),
-          ],
-        ),
-      ),
-    );
+    return ErrorStateWidget(onRetry: _loadStartups);
   }
 }
