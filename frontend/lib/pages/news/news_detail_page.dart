@@ -204,7 +204,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
           CircleAvatar(
             radius: 20,
             backgroundImage: _startup!.logoUrl != null
-                ? NetworkImage(_startup!.logoUrl!)
+                ? NetworkImage(_startup!.logoUrl)
                 : null,
             backgroundColor: AppColors.primary.withOpacity(0.1),
             child: _startup!.logoUrl == null
