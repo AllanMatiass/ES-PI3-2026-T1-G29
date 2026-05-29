@@ -1,4 +1,4 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+// Autor: Murilo Rigoni - 25006049
 import { OfferService } from "../../exchange/shared/offerService";
 import { HttpsError } from "firebase-functions/v2/https";
 import { db } from "../../shared/firebase";
