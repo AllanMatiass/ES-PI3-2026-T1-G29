@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:frontend/constants/colors.dart';
+
 class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
   final String name;
   final String segment;
@@ -79,7 +81,7 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00A84E).withOpacity(0.1),
+                        color: AppColors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -88,7 +90,7 @@ class FixedHeader extends StatelessWidget implements PreferredSizeWidget {
                           segment[0].toUpperCase(),
                         ),
                         style: const TextStyle(
-                          color: Color(0xFF00A84E),
+                          color: AppColors.primary,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),

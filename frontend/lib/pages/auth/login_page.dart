@@ -16,25 +16,34 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // Chave global para validação do formulário
   final _formKey = GlobalKey<FormState>();
+
+  // Controladores de texto para capturar os dados de entrada
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isLoading = false;
-  bool _obscurePassword = true;
+
+  // Estados de controle da interface
+  bool _isLoading = false; // Controla o indicador de progresso no botão
+  bool _obscurePassword = true; // Controla a visibilidade da senha
 
   @override
   void dispose() {
+    // Libera os recursos dos controladores ao fechar a tela
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  /// Executa o fluxo de login principal
   Future<void> _handleLogin() async {
+    // Valida o formulário antes de prosseguir
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
 
     try {
+      // Chama o serviço de autenticação
       final result = await AuthService.login(
         _emailController.text,
         _passwordController.text,
@@ -45,6 +54,7 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (result.success) {
+        // Verifica se o e-mail do usuário está verificado no Firebase
         final user = FirebaseAuth.instance.currentUser;
         if (user != null && !user.emailVerified) {
           if (!mounted) return;
@@ -53,8 +63,10 @@ class _LoginPageState extends State<LoginPage> {
           return;
         }
 
+        // Navega para a Home em caso de sucesso
         _navigateToHome(result.data?['name'] ?? 'Usuário');
       } else {
+        // Exibe feedback de erro genérico
         FeedbackModal.show(
           context: context,
           title: 'Erro no login',
@@ -63,12 +75,14 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } on FirebaseAuthMultiFactorException catch (e) {
+      // Trata o caso de autenticação de dois fatores (MFA)
       setState(() => _isLoading = false);
       if (!mounted) return;
       await _showMfaChallengeModal(e.resolver);
     }
   }
 
+  /// Exibe um diálogo informando que o e-mail precisa ser verificado
   void _showEmailNotVerifiedDialog() {
     showDialog(
       context: context,
@@ -102,6 +116,7 @@ class _LoginPageState extends State<LoginPage> {
               actions: [
                 TextButton(
                   onPressed: () async {
+                    // Desloga o usuário se ele fechar o diálogo sem verificar
                     await FirebaseAuth.instance.signOut();
                     if (ctx.mounted) Navigator.of(ctx).pop();
                   },
@@ -118,6 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: isSending
                       ? null
                       : () async {
+                          // Permite o reenvio do e-mail de verificação
                           setDialogState(() => isSending = true);
                           try {
                             final user = FirebaseAuth.instance.currentUser;
@@ -167,6 +183,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// Exibe o desafio de autenticação de dois fatores (TOTP/App Autenticador)
   Future<void> _showMfaChallengeModal(MultiFactorResolver resolver) async {
     final codeController = TextEditingController();
     bool isVerifying = false;
@@ -177,6 +194,7 @@ class _LoginPageState extends State<LoginPage> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
+            /// Função interna para verificar o código inserido
             Future<void> verify() async {
               final code = codeController.text.trim();
               if (code.length != 6) {
@@ -192,6 +210,7 @@ class _LoginPageState extends State<LoginPage> {
               setModalState(() => isVerifying = true);
 
               try {
+                // Resolve o desafio de login com o código MFA
                 final credential = await MfaService.resolveSignIn(
                   resolver: resolver,
                   verificationCode: code,
@@ -310,6 +329,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// Navega para a página inicial
   void _navigateToHome(String name) {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -332,6 +352,7 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
+                // Logo da aplicação
                 Image.asset(
                   'assets/images/logo_sembg.png',
                   height: 120,
@@ -342,6 +363,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 40),
+                // Slogan ou Subtítulo
                 Text(
                   'Invista em startups promissoras',
                   textAlign: TextAlign.center,
@@ -351,6 +373,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 48),
+                // Campo de E-mail
                 Text(
                   'Email',
                   style: TextStyle(
@@ -391,6 +414,7 @@ class _LoginPageState extends State<LoginPage> {
                       : null,
                 ),
                 const SizedBox(height: 24),
+                // Campo de Senha com opção de recuperar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -457,6 +481,7 @@ class _LoginPageState extends State<LoginPage> {
                       : null,
                 ),
                 const SizedBox(height: 48),
+                // Botão de Entrar
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
@@ -479,6 +504,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                 ),
                 const SizedBox(height: 24),
+                // Link para Cadastro
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).push(
@@ -507,6 +533,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 40),
+                // Rodapé com Termos
                 Text(
                   'Ao continuar, você concorda com nossos Termos e Política de Privacidade',
                   textAlign: TextAlign.center,

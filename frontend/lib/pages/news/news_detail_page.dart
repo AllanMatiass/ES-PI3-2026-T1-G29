@@ -8,8 +8,10 @@ import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/tiles/sentiment_badge.dart';
 import 'package:intl/intl.dart';
 
+/// Página de leitura detalhada de uma notícia ou evento.
+/// Exibe o conteúdo completo, tags, sentimento e informações da startup vinculada.
 class NewsDetailPage extends StatefulWidget {
-  final Event event;
+  final Event event; // O evento (notícia) a ser exibido
 
   const NewsDetailPage({super.key, required this.event});
 
@@ -18,15 +20,16 @@ class NewsDetailPage extends StatefulWidget {
 }
 
 class _NewsDetailPageState extends State<NewsDetailPage> {
-  StartupData? _startup;
-  bool _isLoadingStartup = true;
+  StartupData? _startup; // Dados da startup mencionada na notícia
+  bool _isLoadingStartup = true; // Estado de carregamento do perfil da startup
 
   @override
   void initState() {
     super.initState();
-    _loadStartup();
+    _loadStartup(); // Busca detalhes da startup para exibir o mini-perfil
   }
 
+  /// Busca os dados da startup vinculada à notícia via ID
   Future<void> _loadStartup() async {
     final result = await StartupService.getStartupDetails(
       widget.event.startupId,
@@ -45,6 +48,8 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    
+    // Formatação da data da notícia (Ex: 29 de Maio 2026, 14:00)
     final dateStr = DateFormat(
       'dd MMMM yyyy, HH:mm',
       'pt_BR',
@@ -65,6 +70,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Seção de Tags e Sentimento (Indicadores rápidos)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Wrap(
@@ -72,7 +78,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  SentimentBadge(sentiment: widget.event.sentiment),
+                  SentimentBadge(sentiment: widget.event.sentiment), // Badge de Positivo/Neutro/Negativo
                   ...widget.event.tags.map(
                     (tag) => Container(
                       padding: const EdgeInsets.symmetric(
@@ -96,6 +102,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 ],
               ),
             ),
+            // Título Principal da Notícia
             Text(
               widget.event.title,
               style: theme.textTheme.headlineMedium?.copyWith(
@@ -105,7 +112,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
             ),
             const SizedBox(height: 24),
 
-            // Autor: Mescla Invest
+            // Autor da Notícia (Padrão: Mescla Invest)
             Row(
               children: [
                 CircleAvatar(
@@ -146,10 +153,11 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
             const SizedBox(height: 16),
 
-            // Perfil da Startup relacionada
+            // Perfil da Startup relacionada (Contexto para o investidor)
             _buildStartupProfile(theme, isDark, dateStr),
 
             const SizedBox(height: 24),
+            // Resumo/Lead da notícia em destaque
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -171,6 +179,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
               ),
             ),
             const SizedBox(height: 24),
+            // Conteúdo textual completo da notícia
             Text(
               widget.event.content,
               style: theme.textTheme.bodyLarge?.copyWith(
@@ -185,6 +194,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
     );
   }
 
+  /// Constrói o mini-perfil da startup vinculada à notícia
   Widget _buildStartupProfile(ThemeData theme, bool isDark, String dateStr) {
     if (_isLoadingStartup) {
       return const ShimmerPlaceholder(height: 60, borderRadius: 12);
