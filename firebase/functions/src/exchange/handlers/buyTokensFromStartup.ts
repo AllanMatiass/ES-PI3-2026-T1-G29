@@ -1,4 +1,4 @@
-// Autor: Pedro Vinícius Romanato - 25004075 - 25004075 & Allan Giovanni Matias Paes - 25008211
+// Autor: Pedro Vinícius Romanato - 25004075 - 25004075
 
 import { onCall } from "firebase-functions/v2/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
