@@ -19,12 +19,17 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  // Chave global para validação do formulário de cadastro
   final _formKey = GlobalKey<FormState>();
+
+  // Controladores para capturar os dados do usuário
   final _nameController = TextEditingController();
   final _cpfController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  // Máscaras de formatação para campos específicos
   final cpfMask = MaskTextInputFormatter(
     mask: '###.###.###-##',
     filter: { "#": RegExp(r'[0-9]') },
@@ -33,24 +38,30 @@ class _RegisterPageState extends State<RegisterPage> {
     mask: '(##) #####-####',
     filter: { "#": RegExp(r'[0-9]') },
   );
+
+  // Estados de controle da interface
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-  // Regras de senha forte
+  // Getters para regras de validação de senha forte (Requisitos de Segurança)
   bool get _hasMinLength => _passwordController.text.length >= 8;
   bool get _hasUppercase => _passwordController.text.contains(RegExp(r'[A-Z]'));
   bool get _hasNumber => _passwordController.text.contains(RegExp(r'[0-9]'));
   bool get _hasSpecial => _passwordController.text.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-\+=/\\]'));
+  
+  // Verifica se todos os requisitos de senha foram atendidos
   bool get _passwordValid => _hasMinLength && _hasUppercase && _hasNumber && _hasSpecial;
 
   @override
   void initState() {
     super.initState();
+    // Adiciona um listener para atualizar a interface conforme o usuário digita a senha
     _passwordController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
+    // Libera os recursos dos controladores ao descartar a página
     _nameController.dispose();
     _cpfController.dispose();
     _phoneController.dispose();
@@ -59,11 +70,14 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  /// Processa a criação de uma nova conta de usuário
   Future<void> _handleRegister() async {
+    // Valida todos os campos do formulário
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
 
+    // Chama o serviço de cadastro (API/Backend)
     final result = await AuthService.signUp(
       cpf: _cpfController.text,
       name: _nameController.text,
@@ -77,50 +91,56 @@ class _RegisterPageState extends State<RegisterPage> {
     if (mounted) {
       if (result.success) {
         try {
-  final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-    email: _emailController.text,
-    password: _passwordController.text,
-  );
-  await credential.user?.sendEmailVerification();
-  await FirebaseAuth.instance.signOut();
-  } catch (e) {
-    if (mounted) {
-      FeedbackModal.show(
-        context: context,
-        title: 'Aviso',
-        message: 'Conta criada, mas não foi possível enviar o email de verificação. Tente reenviar no login.',
-        type: FeedbackType.error,
-      );
+          // Após criar no backend, loga temporariamente para enviar o e-mail de verificação do Firebase
+          final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
+          await credential.user?.sendEmailVerification();
+          await FirebaseAuth.instance.signOut();
+        } catch (e) {
+          if (mounted) {
+            FeedbackModal.show(
+              context: context,
+              title: 'Aviso',
+              message: 'Conta criada, mas não foi possível enviar o email de verificação. Tente reenviar no login.',
+              type: FeedbackType.error,
+            );
+          }
+        }
+
+        // Informa o usuário sobre o sucesso e a necessidade de verificação
+        FeedbackModal.show(
+          context: context,
+          title: 'Conta criada!',
+          message:
+              'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text}. Confirme seu email antes de fazer login.',
+          type: FeedbackType.success,
+        );
+
+        // Aguarda alguns segundos para o usuário ler o modal e redireciona para o login
+        await Future.delayed(const Duration(seconds: 6));
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => const LoginPage(),
+            ),
+            (route) => false,
+          );
+        }
+      } else {
+        // Exibe erro retornado pelo serviço (ex: CPF já cadastrado)
+        FeedbackModal.show(
+          context: context,
+          title: 'Erro no cadastro',
+          message: result.message ?? 'Erro ao criar conta',
+          type: FeedbackType.error,
+        );
+      }
     }
   }
 
-  FeedbackModal.show(
-    context: context,
-    title: 'Conta criada!',
-    message:
-        'Sua conta foi criada com sucesso. Enviamos um email de verificação para ${_emailController.text}. Confirme seu email antes de fazer login.',
-    type: FeedbackType.success,
-  );
-
-        
-    await Future.delayed(const Duration(seconds: 6));
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => const LoginPage(),
-        ),
-            (route) => false,
-      );
-    }} else {
-    FeedbackModal.show(
-      context: context,
-      title: 'Erro no cadastro',
-      message: result.message ?? 'Erro ao criar conta',
-      type: FeedbackType.error,
-    );
-  }
-  }}
-
+  /// Constrói um indicador visual para as regras de complexidade da senha
   Widget _buildPasswordRule(bool satisfied, String label) {
     final theme = Theme.of(context);
     return Padding(

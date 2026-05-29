@@ -1,9 +1,10 @@
 //Autores:
 // Pedro Vinicius Romanato - 25004075
-// Allan Giovanni Matias Paes - 25008211 (gráfico e notícias)
+// Allan Giovanni Matias Paes - 25008211
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/colors.dart';
 import 'package:frontend/widgets/charts/price_chart.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/socio_row.dart';
@@ -23,6 +24,8 @@ import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/shimmer_placeholder.dart';
 import 'package:frontend/widgets/tiles/sentiment_badge.dart';
 
+/// Página principal de detalhes de uma startup, agregando informações financeiras, 
+/// histórico de preços, notícias, sócios e documentos para investimento.
 class StartupDetailsPage extends StatefulWidget {
   final String startupId;
 
@@ -33,12 +36,15 @@ class StartupDetailsPage extends StatefulWidget {
 }
 
 class _StartupDetailsPageState extends State<StartupDetailsPage> {
-  StartupData? _startupData;
-  List<Event> _newsEvents = [];
+  StartupData? _startupData; // Dados técnicos e financeiros da startup
+  List<Event> _newsEvents = []; // Lista de notícias/eventos recentes vinculados à startup
+  
+  // Estados de controle de carregamento e erro
   bool _isLoading = true;
   bool _isLoadingNews = true;
   String? _errorMessage;
 
+  // Formatadores para padronização de exibição (Moeda, Números e Percentuais)
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'pt_BR',
     symbol: 'R\$',
@@ -53,10 +59,11 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _loadData();
-    _loadNews();
+    _loadData(); // Carrega os detalhes principais (Valuation, FAQ, Sócios)
+    _loadNews(); // Carrega o feed de notícias específico desta startup
   }
 
+  /// Busca os detalhes da startup via StartupService
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final result = await StartupService.getStartupDetails(widget.startupId);
@@ -66,21 +73,22 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
           _startupData = result.data;
           _isLoading = false;
         });
-      } else {
-        setState(() {
-          _errorMessage = result.message;
-          _isLoading = false;
-        });
-        FeedbackModal.show(
-          context: context,
-          title: 'Erro ao carregar',
-          message: result.message ?? 'Não foi possível carregar os detalhes da startup',
-          type: FeedbackType.error,
-        );
+        return;
       }
+      setState(() {
+        _errorMessage = result.message;
+        _isLoading = false;
+      });
+      FeedbackModal.show(
+        context: context,
+        title: 'Erro ao carregar',
+        message: result.message ?? 'Não foi possível carregar os detalhes da startup',
+        type: FeedbackType.error,
+      );
     }
   }
 
+  /// Busca notícias recentes relacionadas à startup via EventService
   Future<void> _loadNews() async {
     setState(() => _isLoadingNews = true);
     final result = await EventService.listEvents(
@@ -127,12 +135,14 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Estado de Carregamento Principal
     if (_isLoading) {
       return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
           body: const Center(child: CircularProgressIndicator(color: Color(0xFF00A84E))));
     }
 
+    // Estado de Erro ou Dados Ausentes
     if (_errorMessage != null || _startupData == null) {
       return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
@@ -148,20 +158,23 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 child: const Text('Tentar Novamente'),
               )
             ],
-          )));
+          ))
+      );
     }
 
     final data = _startupData!;
 
+    // Cálculos de progresso da oferta de tokens
     final double progressoBarra = data.totalTokens > 0
         ? (data.circulatingTokens / data.totalTokens).clamp(0.0, 1.0)
         : 0.0;
 
     final double percentualVendido = progressoBarra * 100;
 
-    Color corRisco = const Color.fromARGB(255, 255, 102, 0);
-    if (data.riskLabel.toLowerCase().contains("baixo")) corRisco = Colors.green;
-    if (data.riskLabel.toLowerCase().contains("alto")) corRisco = Colors.red;
+    // Lógica visual para indicação de risco
+    Color corRisco = AppColors.warning;
+    if (data.riskLabel.toLowerCase().contains("baixo")) corRisco = AppColors.primary;
+    if (data.riskLabel.toLowerCase().contains("alto")) corRisco = AppColors.danger;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -173,7 +186,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
-        color: const Color(0xFF00A84E),
+        color: AppColors.primary,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
@@ -181,13 +194,13 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Card de Retorno
+                // Card de Retorno Esperado (Destaque principal do investimento)
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
                     color: data.expectedReturn >= 0
-                        ? const Color(0xFF25A830)
-                        : Colors.redAccent,
+                        ? AppColors.primary
+                        : AppColors.danger,
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
@@ -222,7 +235,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Risco e Prazo
+                // Seção de Risco e Prazo Estimado
                 Row(
                   children: [
                     Expanded(
@@ -281,7 +294,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
 
                 const SizedBox(height: 15),
 
-                // Gráfico de Preço
+                // Gráfico de Preço (Componente reutilizável para histórico de tokens)
                 PriceHistoryChart(
                   startupId: data.id,
                   initialHistory: data.history,
@@ -289,7 +302,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Métricas de Mercado
+                // Bloco de Métricas de Mercado (Valuation e Preços)
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
@@ -314,7 +327,12 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                           const SizedBox(width: 10),
                           Expanded(
                               child: _buildMarketMetric('Variação',
-                                  '${_formatPercent(data.history.isNotEmpty ? data.history.last.variationPercent ?? 0 : 0)}%')),
+                                  '${_formatPercent(
+                                      data.history.isNotEmpty
+                                      ? data.history.last.variationPercent ?? 0
+                                      : 0)}%'
+                              )
+                          ),
                         ],
                       ),
                     ],
@@ -322,6 +340,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 ),
                 const SizedBox(height: 15),
 
+                // Barra de Progresso de Venda de Tokens
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
@@ -363,9 +382,11 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 ),
                 const SizedBox(height: 15),
 
+                // Descrição Detalhada (Markdown/Texto longo)
                 CardSobreStartup(descricao: data.longDescription),
                 const SizedBox(height: 15),
 
+                // Vídeos de Pitch ou Demonstração do Produto
                 if (data.demoVideos.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 15),
@@ -391,10 +412,11 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                     ),
                   ),
 
-                // Notícias da Startup
+                // Seção Dinâmica de Notícias e Eventos (Agregador de valor)
                 _buildNewsSection(theme, data),
                 const SizedBox(height: 15),
 
+                // Documentos Oficiais para Download (Pitch Deck, Business Plan)
                 DocumentsDownloadCard(
                   pitchDeckUrl: data.pitchDeckUrl,
                   businessPlanUrl: data.businessPlanUrl,
@@ -402,7 +424,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Tags
+                // Tags de Categorização
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
@@ -418,7 +440,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Sócios
+                // Lista de Fundadores e Sócios (Equipe por trás do projeto)
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
@@ -446,7 +468,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 ),
                 const SizedBox(height: 30),
 
-                // Botão FAQ
+                // CTA secundário: Canal de dúvidas
                 OutlinedButton.icon(
                   onPressed: () {
                     Navigator.push(
@@ -477,6 +499,7 @@ class _StartupDetailsPageState extends State<StartupDetailsPage> {
                 ),
                 const SizedBox(height: 12),
 
+                // Conversão para Investimento
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(

@@ -4,11 +4,13 @@ import 'package:frontend/models/startup.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 
-/// Widget que exibe um gráfico de histórico de preços de uma startup.
+/// Widget que exibe o gráfico de linha da variação histórica do preço do token de uma startup.
+/// É altamente interativo, permitindo filtrar por períodos pré-definidos (3 meses, 1 ano, YTD)
+/// ou por um intervalo de datas customizado via modal.
 class PriceHistoryChart extends StatefulWidget {
-  final String startupId;
-  final List<PriceHistoryItem> initialHistory;
-  final String currency;
+  final String startupId; // ID da startup para buscar novos dados na API ao trocar o filtro
+  final List<PriceHistoryItem> initialHistory; // Dados carregados inicialmente junto com a página da startup
+  final String currency; // Moeda de exibição (ex: BRL)
 
   const PriceHistoryChart({
     super.key,
@@ -22,18 +24,23 @@ class PriceHistoryChart extends StatefulWidget {
 }
 
 class _PriceHistoryChartState extends State<PriceHistoryChart> {
-  late List<PriceHistoryItem> history;
+  late List<PriceHistoryItem> history; // O histórico atual que está sendo renderizado no Canvas
+  
+  // Controles de Filtro e Estado
   String selectedFilter = 'Esse ano';
   bool isLoading = false;
-  DateTimeRange? customRange;
-  String customInterval = 'monthly';
+  DateTimeRange? customRange; // Utilizado apenas quando selectedFilter == 'Custom'
+  String customInterval = 'monthly'; // Granularidade dos pontos no modo customizado (diário, mensal, etc)
+  
+  // Índice do ponto do gráfico selecionado pelo toque do usuário
   int? selectedIndex;
 
   @override
   void initState() {
     super.initState();
     history = widget.initialHistory;
-    // Carrega o filtro inicial "Esse ano"
+    // O backend pode enviar dados resumidos no `initialHistory`. 
+    // Por isso, após a montagem da UI, forçamos o carregamento do filtro padrão para garantir os dados precisos.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateFilter('Esse ano');
     });

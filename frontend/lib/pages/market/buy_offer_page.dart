@@ -39,9 +39,9 @@ class MaxValueInputFormatter extends TextInputFormatter {
   }
 }
 
-/// Página para confirmação e execução da compra de tokens de uma oferta específica.
+/// Página para confirmação e execução da compra de tokens de uma oferta específica no mercado secundário.
 class BuyOfferPage extends StatefulWidget {
-  final OfferWithId offer;
+  final Offer offer; // Dados da oferta selecionada para compra
 
   const BuyOfferPage({super.key, required this.offer});
 
@@ -50,12 +50,13 @@ class BuyOfferPage extends StatefulWidget {
 }
 
 class _BuyOfferPageState extends State<BuyOfferPage> {
-  StartupData? _startupData;
-  bool _isLoading = true;
-  int _selectedTokens = 1;
-  bool _isPurchasing = false;
+  StartupData? _startupData; // Armazena detalhes da startup para comparação de preços
+  bool _isLoading = true; // Controla o carregamento inicial dos dados da startup
+  int _selectedTokens = 1; // Quantidade de tokens que o usuário deseja comprar da oferta
+  bool _isPurchasing = false; // Estado de processamento durante a finalização da compra
   final TextEditingController _quantityController = TextEditingController();
 
+  // Formatador para exibição de moeda brasileira
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'pt_BR',
     symbol: 'R\$',
@@ -76,6 +77,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
 
   /// Carrega os dados necessários para a página, incluindo perfil do usuário e detalhes da startup.
   Future<void> _loadInitialData() async {
+    // Garante que o estado do usuário (e saldo) esteja sincronizado
     if (UserState.userNotifier.value == null) {
       await UserState.refreshUser();
     }
@@ -87,7 +89,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     }
   }
 
-  /// Busca detalhes atualizados da startup para análise financeira.
+  /// Busca detalhes atualizados da startup para análise financeira (preço de mercado atual).
   Future<void> _loadStartupDetails() async {
     final result = await StartupService.getStartupDetails(
       widget.offer.startupId,
@@ -115,9 +117,11 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
   Future<void> _handlePurchase() async {
     final userBalanceCents =
         UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
+    
     // Cálculo do custo total da transação em centavos
     final totalCents = _selectedTokens * widget.offer.tokenPriceCents;
 
+    // Validação mínima de quantidade
     if (_selectedTokens <= 0) {
       FeedbackModal.show(
         context: context,
@@ -141,6 +145,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
       return;
     }
 
+    // Solicita confirmação explícita antes de realizar a transação financeira no mercado
     final confirmed = await ConfirmationModal.show(
       context: context,
       title: 'Confirmar Compra',
@@ -165,6 +170,8 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     if (confirmed != true) return;
 
     setState(() => _isPurchasing = true);
+    
+    // Executa a aceitação da oferta (transferência de tokens entre usuários)
     final result = await OfferService.acceptOffer(
       offerId: widget.offer.id,
       qtdTokens: _selectedTokens,
@@ -173,7 +180,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
     if (mounted) {
       setState(() => _isPurchasing = false);
       if (result.success) {
-        // Atualiza o saldo do usuário após a compra bem-sucedida
+        // Atualiza o saldo do usuário após a compra bem-sucedida para refletir no app
         UserState.refreshUser();
 
         FeedbackModal.show(
@@ -183,11 +190,12 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
               'Você adquiriu $_selectedTokens tokens da ${widget.offer.startupName}.',
           type: FeedbackType.success,
           onConfirm: () {
+            // Redireciona para o portfólio para ver os novos tokens
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
                 builder: (context) => HomePage(
                   userName: UserState.user?.name ?? '',
-                  initialIndex: 4,
+                  initialIndex: 4, // Índice da aba de Portfólio
                 ),
               ),
               (route) => false,
@@ -198,6 +206,7 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
         return;
       }
 
+      // Tratamento de erros específicos da transação (ex: oferta já expirada ou comprada por outro)
       FeedbackModal.show(
         context: context,
         title: 'Erro na Compra',

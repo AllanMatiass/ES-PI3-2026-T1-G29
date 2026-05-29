@@ -14,8 +14,11 @@ import 'package:frontend/pages/news/news_detail_page.dart';
 import 'package:frontend/widgets/tiles/sentiment_badge.dart';
 import 'package:intl/intl.dart';
 
+/// View que exibe o feed de notícias (eventos) agregados de todas as startups.
+/// Utiliza paginação infinita (Infinite Scroll) e permite filtrar por texto e por startup específica.
 class NewsView extends StatefulWidget {
-  final String? initialStartupId;
+  final String? initialStartupId; // Permite abrir a view já filtrada para uma startup específica
+
   const NewsView({super.key, this.initialStartupId});
 
   @override
@@ -23,23 +26,24 @@ class NewsView extends StatefulWidget {
 }
 
 class _NewsViewState extends State<NewsView> {
+  // Controle de paginação e rolagem
   final ScrollController _scrollController = ScrollController();
-  final List<Event> _events = [];
-  bool _isLoading = false;
-  bool _hasMore = true;
-  String? _lastEventId;
+  final List<Event> _events = []; // Lista acumulada de eventos em exibição
+  bool _isLoading = false; // Bloqueio para evitar chamadas simultâneas à API
+  bool _hasMore = true; // Indica se o backend possui mais eventos a serem carregados
+  String? _lastEventId; // Cursor (ID) para a API buscar o próximo lote a partir deste ponto
 
-  // Filtros
-  String _searchTitle = "";
-  String? _selectedStartupId;
-  List<StartupListItem> _startups = [];
+  // Controle de Filtros Locais e Remotos
+  String _searchTitle = ""; // Filtro de busca textual (aplicado localmente)
+  String? _selectedStartupId; // Filtro por empresa (enviado para a API)
+  List<StartupListItem> _startups = []; // Lista do catálogo usada no Modal de filtros
 
   @override
   void initState() {
     super.initState();
-    _selectedStartupId = widget.initialStartupId;
+    _selectedStartupId = widget.initialStartupId; // Aplica o filtro inicial, se houver
     _loadInitialData();
-    _scrollController.addListener(_onScroll);
+    _scrollController.addListener(_onScroll); // Ativa o gatilho de paginação infinita
   }
 
   @override
@@ -48,6 +52,8 @@ class _NewsViewState extends State<NewsView> {
     super.dispose();
   }
 
+  /// Verifica se a rolagem chegou próxima ao fim da lista (margem de 200px)
+  /// e dispara silenciosamente o carregamento da próxima página.
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
@@ -55,10 +61,14 @@ class _NewsViewState extends State<NewsView> {
     }
   }
 
+  /// Inicializa a tela disparando duas consultas em paralelo:
+  /// 1. Busca as primeiras notícias do feed.
+  /// 2. Busca a lista de startups ativas para popular o "Filtro de Startup".
   Future<void> _loadInitialData() async {
     await Future.wait([_loadMoreEvents(refresh: true), _loadStartups()]);
   }
 
+  /// Alimenta o Modal de Filtros com a lista de startups ativas
   Future<void> _loadStartups() async {
     final result = await StartupService.listStartups();
     if (result.success && mounted) {
@@ -68,7 +78,11 @@ class _NewsViewState extends State<NewsView> {
     }
   }
 
+  /// Busca um bloco de notícias (10 itens) via EventService.
+  /// 
+  /// Se [refresh] for verdadeiro, limpa a lista existente e busca do zero.
   Future<void> _loadMoreEvents({bool refresh = false}) async {
+    // Evita chamadas duplicadas ou chamadas quando já se atingiu o fim do banco
     if (_isLoading || (!_hasMore && !refresh)) return;
 
     if (mounted) {
@@ -82,6 +96,7 @@ class _NewsViewState extends State<NewsView> {
       });
     }
 
+    // A busca traz tanto notícias globais (null) quanto de uma startup específica (ID)
     final result = await EventService.listEvents(
       limit: 10,
       lastEventId: _lastEventId,
@@ -96,16 +111,21 @@ class _NewsViewState extends State<NewsView> {
           _events.addAll(newEvents);
           _lastEventId = lastId;
           _isLoading = false;
+          // Se retornaram menos de 10 itens ou não há um "próximo ID", chegamos ao fim
           if (newEvents.length < 10 || lastId == null) {
             _hasMore = false;
           }
         });
       } else {
+        // Erro silencioso - apenas destrava a UI
         setState(() => _isLoading = false);
       }
     }
   }
 
+  /// Filtro Dinâmico: 
+  /// Retorna a lista de eventos aplicando o filtro de busca de título (Search Bar)
+  /// e garantindo o alinhamento com a Startup Selecionada no modal.
   List<Event> get _filteredEvents {
     return _events.where((event) {
       final matchesTitle = event.title.toLowerCase().contains(

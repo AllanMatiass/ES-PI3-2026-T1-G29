@@ -1,15 +1,19 @@
 // Autor: Allan Giovanni Matias Paes - 25008211
 import 'package:flutter/material.dart';
 
-// Define os tipos de feedback que o modal pode exibir.
+/// Define as categorias visuais de feedback, mapeadas para cores e ícones específicos.
 enum FeedbackType { success, error, info }
 
-// Modal de feedback personalizado para exibir mensagens de sucesso, erro ou informação.
+/// Modal de feedback personalizado utilizado para exibir os resultados de 
+/// operações importantes, como "Transação Concluída" ou "Erro de Conexão".
+/// Este componente padroniza a UX de respostas do sistema em toda a aplicação.
 class FeedbackModal extends StatelessWidget {
   final String title;
   final String message;
   final FeedbackType type;
-  final VoidCallback? onConfirm;
+  
+  // Callback executado quando o usuário clica no botão principal (Ex: Fechar, Voltar para Home)
+  final VoidCallback? onConfirm; 
   final String? buttonText;
 
   const FeedbackModal({
@@ -21,7 +25,10 @@ class FeedbackModal extends StatelessWidget {
     this.buttonText,
   });
 
-  // Método estático para exibir o modal de feedback com uma animação de escala personalizada.
+  /// Exibe o modal sobrepondo a tela atual, aplicando uma animação customizada (Scale + Opacity).
+  /// Modais de erro ou informação (FeedbackType.error ou info) permitem que o usuário 
+  /// clique fora da caixa (barrierDismissible) para fechá-la. Modais de sucesso
+  /// forçam o clique no botão para garantir que o callback `onConfirm` seja executado (ex: navegação).
   static Future<T?> show<T>({
     required BuildContext context,
     required String title,
@@ -37,6 +44,7 @@ class FeedbackModal extends StatelessWidget {
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (context, anim1, anim2) => const SizedBox.shrink(),
       transitionBuilder: (context, anim1, anim2, child) {
+        // Animação de entrada "Bounce": O modal cresce um pouco além de 100% e volta ao tamanho normal.
         final curve = Curves.easeInOutBack.transform(anim1.value);
         return Transform.scale(
           scale: curve,
@@ -62,19 +70,19 @@ class FeedbackModal extends StatelessWidget {
     IconData icon;
     Color color;
 
-    // Define o ícone e a cor com base no tipo de feedback recebido.
+    // Define a identidade visual do modal com base no tipo de feedback.
     switch (type) {
       case FeedbackType.success:
         icon = Icons.check_rounded;
-        color = const Color(0xFF00A84E);
+        color = const Color(0xFF00A84E); // Verde padrão Mescla Invest
         break;
       case FeedbackType.error:
         icon = Icons.error_outline_rounded;
-        color = const Color(0xFFEF4444);
+        color = const Color(0xFFEF4444); // Vermelho de alerta
         break;
       case FeedbackType.info:
         icon = Icons.info_outline_rounded;
-        color = const Color(0xFF3B82F6);
+        color = const Color(0xFF3B82F6); // Azul informativo
         break;
     }
 
@@ -85,6 +93,7 @@ class FeedbackModal extends StatelessWidget {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Ícone central em destaque circular
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -113,6 +122,7 @@ class FeedbackModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
+          // Botão de ação (Confirm/Dismiss)
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(

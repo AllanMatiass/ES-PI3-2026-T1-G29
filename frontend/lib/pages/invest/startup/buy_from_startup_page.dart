@@ -36,6 +36,7 @@ class MaxValueInputFormatter extends TextInputFormatter {
   }
 }
 
+/// Página que gerencia o processo de compra/investimento direto em tokens de uma startup.
 class BuyFromStartupPage extends StatefulWidget {
   final String startupId;
   final String startupName;
@@ -55,12 +56,13 @@ class BuyFromStartupPage extends StatefulWidget {
 }
 
 class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
-  StartupData? _startupData;
-  bool _isLoading = true;
-  int _selectedTokens = 1;
-  bool _isPurchasing = false;
+  StartupData? _startupData; // Armazena os detalhes técnicos da startup (valuation, tokens disponíveis)
+  bool _isLoading = true; // Controla o estado de carregamento inicial dos dados
+  int _selectedTokens = 1; // Quantidade de tokens que o usuário deseja adquirir
+  bool _isPurchasing = false; // Estado de carregamento durante o processamento da transação
   final TextEditingController _quantityController = TextEditingController();
 
+  // Formatador para exibição de moeda brasileira (Real)
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'pt_BR',
     symbol: 'R\$',
@@ -70,7 +72,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
   void initState() {
     super.initState();
     _quantityController.text = _selectedTokens.toString();
-    _loadInitialData();
+    _loadInitialData(); // Carrega os dados necessários para o investimento
   }
 
   @override
@@ -79,8 +81,9 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     super.dispose();
   }
 
+  /// Carrega os dados do usuário e da startup em paralelo
   Future<void> _loadInitialData() async {
-    // Check if we have user data, if not refresh it
+    // Garante que os dados do usuário estejam atualizados (saldo, perfil)
     if (UserState.userNotifier.value == null) {
       await UserState.refreshUser();
     }
@@ -92,6 +95,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     }
   }
 
+  /// Busca os detalhes atualizados da startup via serviço
   Future<void> _loadStartupDetails() async {
     final result = await StartupService.getStartupDetails(widget.startupId);
     if (!mounted) return;
@@ -114,11 +118,14 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     });
   }
 
+  /// Gerencia o fluxo completo de compra de tokens
   Future<void> _handlePurchase() async {
+    // Busca o saldo atual do usuário no estado global
     final userBalanceCents =
         UserState.userNotifier.value?.wallet.balanceInCents ?? 0.0;
     final totalCents = _selectedTokens * widget.tokenPriceCents;
 
+    // Validação básica de quantidade
     if (_selectedTokens <= 0) {
       FeedbackModal.show(
         context: context,
@@ -129,6 +136,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       return;
     }
 
+    // Validação de saldo (bloqueia o investimento se o saldo for insuficiente)
     if (totalCents > userBalanceCents) {
       FeedbackModal.show(
         context: context,
@@ -141,6 +149,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       return;
     }
 
+    // Solicita confirmação explícita do usuário antes de processar a transação financeira
     final confirmed = await ConfirmationModal.show(
       context: context,
       title: 'Confirmar Investimento',
@@ -165,6 +174,8 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     if (confirmed != true) return;
 
     setState(() => _isPurchasing = true);
+    
+    // Executa a transação no serviço de startup
     final result = await StartupService.buyTokensFromStartup(
       startupId: widget.startupId,
       qtdTokens: _selectedTokens,
@@ -175,9 +186,10 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     setState(() => _isPurchasing = false);
 
     if (result.success) {
-      // Background refresh of user data
+      // Atualiza os dados do usuário em segundo plano após a compra
       UserState.refreshUser();
 
+      // Exibe sucesso e redireciona para o portfólio
       FeedbackModal.show(
         context: context,
         title: 'Investimento Realizado!',
@@ -189,7 +201,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
             MaterialPageRoute(
               builder: (context) => HomePage(
                 userName: UserState.user?.name ?? '',
-                initialIndex: 4,
+                initialIndex: 4, // Aba de Portfólio
               ),
             ),
             (route) => false,
@@ -200,6 +212,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
       return;
     }
 
+    // Caso ocorra um erro na API
     FeedbackModal.show(
       context: context,
       title: 'Erro no Investimento',
@@ -208,6 +221,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     );
   }
 
+  // Converte centavos para formato de moeda brasileira (R$)
   String _formatCurrency(num cents) {
     return _currencyFormat.format(cents / 100);
   }
@@ -217,6 +231,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     final totalCents = _selectedTokens * widget.tokenPriceCents;
     final theme = Theme.of(context);
 
+    // Reage a mudanças no perfil do usuário (ex: atualização de saldo)
     return ValueListenableBuilder<UserProfile?>(
       valueListenable: UserState.userNotifier,
       builder: (context, userData, child) {
@@ -259,6 +274,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     );
   }
 
+  /// Renderiza o cabeçalho com logo e nome da startup
   Widget _buildStartupInfo() {
     final theme = Theme.of(context);
     final logoUrl = _startupData?.logoUrl ?? widget.logoUrl;
@@ -298,6 +314,7 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
     );
   }
 
+  /// Exibe dados financeiros chaves como Preço por Token e Valuation
   Widget _buildFinancialAnalysis() {
     final theme = Theme.of(context);
     final marketPrice =

@@ -7,8 +7,10 @@ import '../../services/transaction_service.dart';
 import '../../widgets/tiles/transaction_list_tile.dart';
 import '../../widgets/shimmer_placeholder.dart';
 
+/// Página que exibe o histórico detalhado de negociações de tokens (Compra e Venda).
+/// Abrange transações tanto do mercado primário (startup) quanto balcão.
 class TransactionHistoryPage extends StatefulWidget {
-  final bool isVisible;
+  final bool isVisible; // Define se os valores financeiros devem ser exibidos ou mascarados
 
   const TransactionHistoryPage({super.key, required this.isVisible});
 
@@ -17,26 +19,35 @@ class TransactionHistoryPage extends StatefulWidget {
 }
 
 class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
+  // Lista acumulada de transações recuperadas via API
   final List<Transaction> _transactions = [];
+  
+  // Estados de controle de carregamento e erro
   bool _isLoading = true;
   String? _error;
-  String? _lastId;
-  bool _hasMore = true;
+  
+  // Controle de Paginação
+  String? _lastId; // ID da última transação (cursor para busca sequencial no backend)
+  bool _hasMore = true; // Indica se existem mais transações a serem carregadas
+  
+  // Controlador para monitorar o fim da lista e disparar o carregamento da próxima página
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadMore();
-    _scrollController.addListener(_onScroll);
+    _loadMore(); // Busca o primeiro lote de dados
+    _scrollController.addListener(_onScroll); // Ativa o listener de rolagem infinita
   }
 
   @override
   void dispose() {
+    // Libera recursos para evitar memory leak
     _scrollController.dispose();
     super.dispose();
   }
 
+  /// Verifica a posição do scroll para decidir se deve carregar mais itens
   void _onScroll() {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 200 &&
@@ -46,6 +57,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     }
   }
 
+  /// Recupera o próximo lote de 20 transações via TransactionService
   Future<void> _loadMore() async {
     if (!_hasMore) return;
 
@@ -66,6 +78,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
             final newData = response.data!.transactions;
             _transactions.addAll(newData);
             _lastId = response.data!.lastTransactionId;
+            
+            // Determina se a lista chegou ao fim baseado na quantidade de retorno
             _hasMore = newData.length == 20 && _lastId != null;
           } else {
             _error = response.message;
@@ -96,11 +110,11 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         elevation: 0,
       ),
       body: _transactions.isEmpty && _isLoading
-          ? _buildLoadingState()
+          ? _buildLoadingState() // Exibe Skeleton (Shimmer) inicial
           : _error != null && _transactions.isEmpty
-          ? ErrorStateWidget(errorMessage: _error, onRetry: _loadMore)
+          ? ErrorStateWidget(errorMessage: _error, onRetry: _loadMore) // Feedback de erro
           : _transactions.isEmpty
-          ? const EmptyStateWidget(
+          ? const EmptyStateWidget( // Feedback para carteira sem movimentações de tokens
               icon: Icons.history,
               title: 'Nenhuma transação',
               message: 'Suas transações aparecerão aqui.',
@@ -111,6 +125,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
               itemCount: _transactions.length + (_hasMore ? 1 : 0),
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
+                // Renderiza spinner de carregamento no final se houver mais páginas pendentes
                 if (index == _transactions.length) {
                   return const Center(
                     child: Padding(
@@ -119,6 +134,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                     ),
                   );
                 }
+                // Exibe o card detalhado da transação
                 return TransactionListTile(
                   transaction: _transactions[index],
                   isVisible: widget.isVisible,
@@ -128,6 +144,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     );
   }
 
+  /// Constrói a lista de shimmers enquanto carrega os dados iniciais
   Widget _buildLoadingState() {
     return ListView.separated(
       padding: const EdgeInsets.all(24),

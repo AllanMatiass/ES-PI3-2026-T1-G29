@@ -106,7 +106,7 @@ class TransactionSeller {
 }
 
 // Representa uma oferta com identificador e detalhes completos.
-class OfferWithId {
+class Offer {
   final String id;
   final String startupId;
   final String startupName;
@@ -127,7 +127,7 @@ class OfferWithId {
   final FirestoreTimestamp? acceptedAt;
   final FirestoreTimestamp? cancelledAt;
 
-  OfferWithId({
+  Offer({
     required this.id,
     required this.startupId,
     required this.startupName,
@@ -149,9 +149,9 @@ class OfferWithId {
   });
 
   // Converte dados do JSON para uma instância de OfferWithId.
-  factory OfferWithId.fromJson(dynamic json) {
+  factory Offer.fromJson(dynamic json) {
     final data = Map<String, dynamic>.from(json as Map);
-    return OfferWithId(
+    return Offer(
       id: data['id'] ?? '',
       startupId: data['startupId'] ?? '',
       startupName: data['startupName'] ?? '',
@@ -178,7 +178,7 @@ class OfferWithId {
 
 // Resposta da API de listagem de ofertas.
 class OfferListResponse {
-  final List<OfferWithId> offers;
+  final List<Offer> offers;
   final String? lastOfferId;
 
   OfferListResponse({required this.offers, this.lastOfferId});
@@ -187,7 +187,7 @@ class OfferListResponse {
     final data = Map<String, dynamic>.from(json as Map);
     final List<dynamic> offersJson = data['offers'] ?? [];
     return OfferListResponse(
-      offers: offersJson.map((e) => OfferWithId.fromJson(e)).toList(),
+      offers: offersJson.map((e) => Offer.fromJson(e)).toList(),
       lastOfferId: data['lastOfferId'],
     );
   }
