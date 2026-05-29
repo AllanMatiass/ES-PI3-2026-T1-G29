@@ -1,115 +1,203 @@
 // Autor: Allan Giovanni Matias Paes - 25008211
+
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
+import { Timestamp } from "firebase-admin/firestore";
 import { isCPF } from "validation-br";
+
 import { auth } from "../../shared/firebase";
+
 import {
   isEmailValid,
   normalizePhone,
   normalizeString,
 } from "../../shared/validation";
+
 import {
   createUserProfile,
   getUserByCpf,
+  getUserByEmail,
   getUserByPhone,
 } from "../../user/repositories/userRepository";
+
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
-import { Timestamp } from "firebase-admin/firestore";
+
 import { SignupRequestDTO, SignupResponseDTO } from "../types/dtos";
 
 /**
- * Realiza o cadastro de um novo usuario no MesclaInvest.
+ * Realiza o cadastro de um novo usuário.
  *
- * Esta Funcao e callable e deve ser chamada pelo app com:
- * - `name`: Nome completo.
- * - `email`: E-mail valido.
- * - `cpf`: CPF valido (com ou sem mascara).
- * - `phone`: Número de telefone
- * - `password`: Senha para login.
- *
- * A funcao valida os dados, cria o usuario no Firebase Auth e
- * salva o perfil complementar no Firestore (colecao `users`).
+ * Fluxo:
+ * 1. Valida e normaliza os dados recebidos.
+ * 2. Verifica duplicidade de email, CPF e telefone.
+ * 3. Cria usuário no Firebase Authentication.
+ * 4. Cria perfil complementar no Firestore.
+ * 5. Caso ocorra falha após criação no Auth,
+ *    realiza rollback removendo o usuário criado.
  */
 export const signup = onCall(
   withCallHandler<SignupRequestDTO, SignupResponseDTO>(async (request) => {
     const data = request.data;
 
+    /**
+     * Normalização dos dados.
+     * Remove espaços desnecessários e padroniza formatos.
+     */
     const name = normalizeString(data.name);
-    const email = normalizeString(data.email);
+    const email = normalizeString(data.email)?.toLowerCase();
     const cpf = normalizeString(data.cpf)?.replace(/\D/g, "");
     const phone = normalizePhone(data.phone);
     const password = data.password;
 
+    /**
+     * Validação de campos obrigatórios.
+     */
     if (!name || !email || !cpf || !phone || !password) {
       throw new HttpsError(
         "invalid-argument",
-        "Todos os campos são obrigatorios: name, email, cpf, phone, password.",
+        "Todos os campos são obrigatórios: name, email, cpf, phone e password.",
       );
     }
 
+    /**
+     * Validação de email.
+     */
     if (!isEmailValid(email)) {
       throw new HttpsError("invalid-argument", "E-mail inválido.");
     }
 
+    /**
+     * Validação de CPF.
+     */
     if (!isCPF(cpf)) {
       throw new HttpsError("invalid-argument", "CPF inválido.");
     }
 
+    /**
+     * Validação mínima de senha.
+     */
     if (password.length < 6) {
       throw new HttpsError(
         "invalid-argument",
-        "A senha deve ter pelo menos 6 caracteres.",
+        "A senha deve possuir pelo menos 6 caracteres.",
       );
     }
 
-    // Verifica se CPF ja existe
-    const existingUserByCpf = await getUserByCpf(cpf);
+    /**
+     * Executa consultas em paralelo para reduzir latência.
+     */
+    const [existingUserByEmail, existingUserByCpf, existingUserByPhone] =
+      await Promise.all([
+        getUserByEmail(email),
+        getUserByCpf(cpf),
+        getUserByPhone(phone),
+      ]);
+
+    /**
+     * Verifica duplicidade de email.
+     */
+    if (existingUserByEmail) {
+      throw new HttpsError(
+        "already-exists",
+        "E-mail já cadastrado no sistema.",
+      );
+    }
+
+    /**
+     * Verifica duplicidade de CPF.
+     */
     if (existingUserByCpf) {
       throw new HttpsError("already-exists", "CPF já cadastrado no sistema.");
     }
 
-    // Verifica se o Número já existe
-    const existingUserByPhone = await getUserByPhone(phone);
+    /**
+     * Verifica duplicidade de telefone.
+     */
     if (existingUserByPhone) {
       throw new HttpsError(
         "already-exists",
-        "Número de telefone já cadastrado",
+        "Número de telefone já cadastrado.",
       );
     }
 
-    // 1. Criar usuario no Firebase Auth
-    const userRecord = await auth.createUser({
-      email,
-      password,
-      phoneNumber: phone,
-      displayName: name,
-    });
+    const now = Timestamp.now();
 
-    // 2. Criar perfil no Firestore
-    await createUserProfile({
-      uid: userRecord.uid,
-      name,
-      email,
-      phone,
-      cpf,
-      wallet: {
-        balanceInCents: 0,
-        totalInvestedCents: 0,
-        updatedAt: Timestamp.now(),
-        positions: [],
-      },
-      createdAt: Timestamp.now(),
-    });
+    /**
+     * Variável utilizada para rollback caso
+     * ocorra erro após criação no Firebase Auth.
+     */
+    let createdUserUid: string | null = null;
 
-    logger.info("Novo usuario cadastrado com sucesso.", {
-      uid: userRecord.uid,
-      email,
-    });
+    try {
+      /**
+       * Cria usuário no Firebase Authentication.
+       */
+      const userRecord = await auth.createUser({
+        email,
+        password,
+        phoneNumber: phone,
+        displayName: name,
+      });
 
-    return {
-      uid: userRecord.uid,
-      name,
-      email,
-    };
+      createdUserUid = userRecord.uid;
+
+      /**
+       * Cria perfil complementar no Firestore.
+       */
+      await createUserProfile({
+        uid: userRecord.uid,
+        name,
+        email,
+        phone,
+        cpf,
+
+        wallet: {
+          balanceInCents: 0,
+          totalInvestedCents: 0,
+          updatedAt: now,
+          positions: [],
+        },
+
+        createdAt: now,
+      });
+
+      /**
+       * Log de sucesso.
+       */
+      logger.info("Usuário cadastrado com sucesso.", {
+        uid: userRecord.uid,
+        email,
+      });
+
+      /**
+       * Retorno da função.
+       */
+      return {
+        uid: userRecord.uid,
+        name,
+        email,
+      };
+    } catch (error) {
+      /**
+       * Rollback:
+       * Remove usuário do Auth caso o Firestore falhe.
+       */
+      if (createdUserUid) {
+        try {
+          await auth.deleteUser(createdUserUid);
+
+          logger.warn("Rollback realizado após falha no cadastro.", {
+            uid: createdUserUid,
+          });
+        } catch (rollbackError) {
+          logger.error("Erro ao realizar rollback do usuário.", rollbackError);
+        }
+      }
+
+      /**
+       * Repassa erro para middleware global.
+       */
+      throw error;
+    }
   }),
 );
