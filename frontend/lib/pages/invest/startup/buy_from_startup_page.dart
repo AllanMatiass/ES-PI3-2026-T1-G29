@@ -6,6 +6,7 @@ import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/user.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/states/user_state.dart';
+import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/modals/confirmation_modal.dart';
 import 'package:intl/intl.dart';
@@ -183,8 +184,18 @@ class _BuyFromStartupPageState extends State<BuyFromStartupPage> {
         message:
             'Você adquiriu $_selectedTokens tokens da ${widget.startupName}.',
         type: FeedbackType.success,
-        onConfirm: () => Navigator.of(context).pop(true),
-        buttonText: 'Voltar para o Portfólio',
+        onConfirm: () {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => HomePage(
+                userName: UserState.user?.name ?? '',
+                initialIndex: 4,
+              ),
+            ),
+            (route) => false,
+          );
+        },
+        buttonText: 'Ir para o Portfólio',
       );
       return;
     }

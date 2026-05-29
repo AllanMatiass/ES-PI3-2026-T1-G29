@@ -8,6 +8,7 @@ import 'package:frontend/models/user.dart';
 import 'package:frontend/services/offer_service.dart';
 import 'package:frontend/services/startup_service.dart';
 import 'package:frontend/states/user_state.dart';
+import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/widgets/modals/feedback_modal.dart';
 import 'package:frontend/widgets/modals/confirmation_modal.dart';
 import 'package:intl/intl.dart';
@@ -181,8 +182,18 @@ class _BuyOfferPageState extends State<BuyOfferPage> {
           message:
               'Você adquiriu $_selectedTokens tokens da ${widget.offer.startupName}.',
           type: FeedbackType.success,
-          onConfirm: () => Navigator.of(context).pop(true),
-          buttonText: 'Ir para Ofertas',
+          onConfirm: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => HomePage(
+                  userName: UserState.user?.name ?? '',
+                  initialIndex: 4,
+                ),
+              ),
+              (route) => false,
+            );
+          },
+          buttonText: 'Ir para o Portfólio',
         );
         return;
       }
