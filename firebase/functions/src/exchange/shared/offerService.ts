@@ -1,4 +1,5 @@
-// Autor: Allan Giovanni Matias Paes - 25008211 e Pedro Vinícius Romanato - 25004075
+// Autores: Allan Giovanni Matias Paes - 25008211
+// Pedro Vinícius Romanato - 25004075 (cancelar oferta)
 import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";

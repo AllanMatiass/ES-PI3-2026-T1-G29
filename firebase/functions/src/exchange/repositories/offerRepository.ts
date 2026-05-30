@@ -1,4 +1,5 @@
-// Autor: Allan Giovanni Matias Paes - 25008211 e Pedro Vinícius Romanato - 25004075
+// Autor: Allan Giovanni Matias Paes - 25008211
+// Pedro Vinícius Romanato - 25004075
 import { HttpsError } from "firebase-functions/v2/https";
 import { Wallet, WalletTokenPosition } from "../../user/types";
 import { db } from "../../firebase";

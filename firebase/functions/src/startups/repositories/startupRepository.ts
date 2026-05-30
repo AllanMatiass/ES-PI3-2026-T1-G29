@@ -210,8 +210,6 @@ export async function seedDemoStartups(): Promise<string[]> {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
 
-      // No gráfico mensal, a variância pode ser um pouco maior (até 12% ao mês)
-      // para mostrar ciclos de mercado mais claros na banca.
       const variance = (Math.random() - 0.48) * 0.25;
       currentPrice = Math.round(currentPrice * (1 + variance));
 
