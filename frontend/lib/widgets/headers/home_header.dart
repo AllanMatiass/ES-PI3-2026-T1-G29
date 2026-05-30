@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/user.dart';
+import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/pages/profile/mfa_setup_page.dart';
+import 'package:frontend/pages/profile/profile_page.dart';
 import 'package:frontend/services/auth.dart';
 import 'package:frontend/pages/market/my_offers_page.dart';
 import 'package:frontend/constants/colors.dart';
@@ -76,13 +79,53 @@ class AppHeader extends StatelessWidget {
                       builder: (context) => const MyOffersView(),
                     ),
                   );
-                } else if (value == 'logout') {
-                  await AuthService.signOut(context);
+                } else if (value == 'profile') {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => HomePage(
+                        userName: userData?.name ?? 'Usuário',
+                            initialIndex: 5,
+                      ),
+                    ),
+                  );
+                } else if (value == 'security'){
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const MfaSetupPage()
+                    ),
+                  );
                 }
               },
               itemBuilder: (context) => [
                 PopupMenuItem<String>(
+                  value: 'profile',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.person_2_outlined,
+                        color: theme.colorScheme.onSurface,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Meu Perfil'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(value: 'security',
+                  child: Row(
+                    children: [
+                      Icon(Icons.security_outlined,
+                      color: theme.colorScheme.onSurface,
+                      size: 20
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Segurança'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
                   value: 'offers',
+
                   child: Row(
                     children: [
                       Icon(
@@ -95,20 +138,7 @@ class AppHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                PopupMenuItem<String>(
-                  value: 'logout',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.logout,
-                        color: theme.colorScheme.onSurface,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      const Text('Sair'),
-                    ],
-                  ),
-                ),
+
               ],
               child: ValueListenableBuilder<String?>(
                 valueListenable: UserState.profilePictureUrlNotifier,
