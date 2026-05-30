@@ -1,7 +1,9 @@
 /**
  * @file userRepository.ts
  * @description Repositório para gerenciamento de perfis de usuário, carteiras (wallets) e movimentações financeiras no Firestore.
- * @author Allan Giovanni Matias Paes - 25008211 e Murilo Rigoni
+ * @author Allan Giovanni Matias Paes - 25008211
+ * @author Murilo Rigoni - 25006049
+ * @author Pedro Vinícius Romanato - 25004075
  */
 
 import { Timestamp } from "firebase-admin/firestore";
