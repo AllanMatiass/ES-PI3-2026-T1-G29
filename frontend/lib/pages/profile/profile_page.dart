@@ -117,6 +117,139 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  /// Mostra as opções de foto de perfil (Ver, Mudar, Remover)
+  void _showPhotoOptions() {
+    final profileUrl = UserState.profilePictureUrlNotifier.value;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (profileUrl != null)
+                ListTile(
+                  leading:
+                      const Icon(Icons.visibility, color: AppColors.primary),
+                  title: const Text('Ver Foto'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _viewProfilePicture(profileUrl);
+                  },
+                ),
+              ListTile(
+                leading:
+                    const Icon(Icons.photo_camera, color: AppColors.primary),
+                title: const Text('Mudar Foto'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _changeProfilePicture();
+                },
+              ),
+              if (profileUrl != null)
+                ListTile(
+                  leading: const Icon(Icons.delete, color: AppColors.danger),
+                  title: const Text('Remover Foto',
+                      style: TextStyle(color: AppColors.danger)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _removeProfilePicture();
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Exibe a foto de perfil em tela cheia
+  void _viewProfilePicture(String url) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Fechar',
+      barrierColor: Colors.black.withOpacity(0.9),
+      pageBuilder: (context, anim1, anim2) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    url,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    height: double.infinity,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child:
+                            CircularProgressIndicator(color: AppColors.primary),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 40,
+                right: 20,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Remove a foto de perfil atual
+  Future<void> _removeProfilePicture() async {
+    setState(() => _isUploadingPicture = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final fileName = 'profilePicture.jpg';
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('users')
+          .child(user.uid)
+          .child(fileName);
+
+      await storageRef.delete();
+
+      // Atualiza o estado global para null
+      UserState.profilePictureUrlNotifier.value = null;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto de perfil removida!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao remover imagem: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingPicture = false);
+    }
+  }
+
   /// Envia o e-mail de verificação oficial do Firebase
   Future<void> _sendVerificationEmail() async {
     setState(() => _isSendingVerification = true);
@@ -659,7 +792,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               InkWell(
                                 onTap: _isUploadingPicture
                                     ? null
-                                    : _changeProfilePicture,
+                                    : _showPhotoOptions,
                                 borderRadius: BorderRadius.circular(44),
                                 child: ValueListenableBuilder<String?>(
                                   valueListenable:
