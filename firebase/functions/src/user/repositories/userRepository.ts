@@ -1,14 +1,14 @@
-// Autores: Allan Giovanni Matias Paes - 25008211
-// Murilo Rigoni - 25006049 (saque/deposito)
+/**
+ * @file userRepository.ts
+ * @description Repositório para gerenciamento de perfis de usuário, carteiras (wallets) e movimentações financeiras no Firestore.
+ * @author Allan Giovanni Matias Paes - 25008211
+ * @author Murilo Rigoni - 25006049
+ * @author Pedro Vinícius Romanato - 25004075
+ */
 
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../shared/firebase";
-import {
-  UpdateWalletParams,
-  UserProfile,
-  Wallet,
-  MovementWithId,
-} from "../types";
+import { UserProfile, Wallet, MovementWithId } from "../types";
 import {
   UserCreateDTO,
   WalletTokenPositionDTO,
@@ -17,20 +17,19 @@ import {
 import { HttpsError } from "firebase-functions/https";
 import { listPaginated } from "../../shared/paginatedQueryBuilder";
 
+// Referência para a coleção principal de usuários
 const usersCollection = db.collection("users");
 
-//
-// ==========================
-// USER
-// ==========================
-//
-
+/**
+ * Atualiza dados parciais do perfil de um usuário.
+ * @param userId UID do usuário.
+ * @param data Campos a serem atualizados.
+ */
 export async function updateUser(
   userId: string,
   data: Partial<UserProfile>,
 ): Promise<void> {
   const userRef = usersCollection.doc(userId);
-
   const snapshot = await userRef.get();
 
   if (!snapshot.exists) {
@@ -40,40 +39,49 @@ export async function updateUser(
   await userRef.update(data);
 }
 
+/**
+ * Cria um novo perfil de usuário no Firestore.
+ */
 export async function createUserProfile(profile: UserCreateDTO): Promise<void> {
   await usersCollection.doc(profile.uid).set(profile);
 }
 
+/**
+ * Busca um usuário pelo email.
+ */
 export async function getUserByEmail(
   email: string,
 ): Promise<UserProfile | undefined> {
   const snapshot = await usersCollection.where("email", "==", email).get();
-
   if (snapshot.empty) return undefined;
-
   return snapshot.docs[0].data() as UserProfile;
 }
 
+/**
+ * Busca um usuário pelo CPF.
+ */
 export async function getUserByCpf(
   cpf: string,
 ): Promise<UserProfile | undefined> {
   const snapshot = await usersCollection.where("cpf", "==", cpf).get();
-
   if (snapshot.empty) return undefined;
-
   return snapshot.docs[0].data() as UserProfile;
 }
 
+/**
+ * Busca um usuário pelo telefone (formato apenas números).
+ */
 export async function getUserByPhone(
   phone: string,
 ): Promise<UserProfile | undefined> {
   const snapshot = await usersCollection.where("phone", "==", phone).get();
-
   if (snapshot.empty) return undefined;
-
   return snapshot.docs[0].data() as UserProfile;
 }
 
+/**
+ * Obtém o perfil completo do usuário pelo ID e aplica a "cura" na carteira.
+ */
 export async function getUserById(
   id: string,
 ): Promise<UserProfile | undefined> {
@@ -83,6 +91,7 @@ export async function getUserById(
 
   const data = snapshot.data() as UserProfile;
 
+  // Garante que a carteira possua todos os campos e cálculos consistentes ao carregar
   if (data.wallet) {
     data.wallet = healWallet(data.wallet);
   }
@@ -90,6 +99,10 @@ export async function getUserById(
   return data;
 }
 
+/**
+ * Lógica de "Cura" (Heal): Garante a integridade dos dados da carteira,
+ * convertendo tipos, tratando nulos e recalculando o total investido com base nas posições.
+ */
 function healWallet(wallet: Wallet): Wallet {
   const positions = (wallet.positions ?? []).map(
     (p: WalletTokenPositionDTO) => ({
@@ -120,131 +133,9 @@ function healWallet(wallet: Wallet): Wallet {
   };
 }
 
-function createPosition(
-  params: Omit<UpdateWalletParams, "userId">,
-): WalletTokenPositionDTO {
-  const qtdTokens = Number(params.qtdTokens) || 0;
-  const tokenPriceCents = Number(params.tokenPriceCents) || 0;
-  const currentTokenPriceCents = Number(params.currentTokenPriceCents) || 0;
-
-  const investedCents = qtdTokens * tokenPriceCents;
-  const currentValueCents = qtdTokens * currentTokenPriceCents;
-
-  return {
-    startupId: params.startupId,
-    startupName: params.startupName,
-
-    qtdTokens,
-    lockedTokens: 0,
-
-    averagePriceCents: tokenPriceCents,
-    investedCents,
-
-    currentTokenPriceCents,
-    currentValueCents,
-
-    updatedAt: Timestamp.now(),
-  };
-}
-
-function updatePosition(
-  position: WalletTokenPositionDTO,
-  qtdTokensDelta: number,
-  tokenPriceCents: number,
-  currentTokenPriceCents: number,
-): WalletTokenPositionDTO {
-  const currentQtd = Number(position.qtdTokens) || 0;
-  const currentInvested = Number(position.investedCents) || 0;
-
-  const totalTokens = currentQtd + qtdTokensDelta;
-
-  let investedCents = currentInvested;
-  if (qtdTokensDelta > 0) {
-    investedCents += qtdTokensDelta * tokenPriceCents;
-  } else if (qtdTokensDelta < 0) {
-    // Proporcional ao que foi investido (preço médio)
-    const avgPrice = currentQtd > 0 ? currentInvested / currentQtd : 0;
-    investedCents += qtdTokensDelta * avgPrice;
-  }
-
-  // Garante que não fique negativo por arredondamento
-  investedCents = Math.max(0, investedCents);
-
-  const averagePriceCents = totalTokens > 0 ? investedCents / totalTokens : 0;
-
-  const currentValueCents = totalTokens * currentTokenPriceCents;
-
-  return {
-    ...position,
-
-    qtdTokens: totalTokens,
-    investedCents: Math.round(investedCents),
-
-    averagePriceCents: Math.round(averagePriceCents),
-    currentTokenPriceCents,
-    currentValueCents: Math.round(currentValueCents),
-    updatedAt: Timestamp.now(),
-  };
-}
-
-function recalculateWallet(wallet: Wallet): Wallet {
-  const positions = wallet.positions ?? [];
-
-  const totalInvestedCents = positions.reduce(
-    (sum, p) => sum + (Number(p.investedCents) || 0),
-    0,
-  );
-
-  return {
-    ...wallet,
-
-    positions,
-
-    totalInvestedCents: Math.round(totalInvestedCents),
-
-    updatedAt: Timestamp.now(),
-  };
-}
-
-export async function updateWallet({
-  userId,
-  ...params
-}: UpdateWalletParams): Promise<void> {
-  const user = await getUserById(userId);
-
-  if (!user) {
-    throw new HttpsError("not-found", "Usuário não encontrado.");
-  }
-
-  const positions: WalletTokenPositionDTO[] = [
-    ...(user.wallet.positions ?? []),
-  ];
-
-  const index = positions.findIndex((p) => p.startupId === params.startupId);
-
-  if (index === -1) {
-    positions.push(createPosition(params));
-  } else {
-    positions[index] = updatePosition(
-      positions[index],
-      params.qtdTokens,
-      params.tokenPriceCents,
-      params.currentTokenPriceCents,
-    );
-  }
-
-  const wallet = recalculateWallet({
-    ...user.wallet,
-    positions,
-  });
-
-  await updateUser(userId, { wallet });
-}
-
-// ==========================
-// MOVIMENTAÇÕES (DEPÓSITO E SAQUE)
-// ==========================
-
+/**
+ * Processa um depósito na conta do usuário e registra na sub-coleção de movimentações.
+ */
 export async function processDeposit(
   userId: string,
   amountInCents: number,
@@ -264,19 +155,20 @@ export async function processDeposit(
     updatedAt: Timestamp.now(),
   };
 
-  // 1. Registra a movimentação exatamente como pedido no requisito
+  // Registro da movimentação para extrato
   await usersCollection.doc(userId).collection("movements").add({
     type: "DEPOSIT",
     amountInCents: amountInCents,
     createdAt: Timestamp.now(),
   });
 
-  // 2. Atualiza o saldo do usuário
   await updateUser(userId, { wallet });
-
   return newBalanceInCents;
 }
 
+/**
+ * Processa um saque da conta do usuário, validando se há saldo suficiente.
+ */
 export async function processWithdraw(
   userId: string,
   amountInCents: number,
@@ -289,7 +181,7 @@ export async function processWithdraw(
   const currentWallet = user.wallet;
   const currentBalance = Number(currentWallet?.balanceInCents) || 0;
 
-  // TRATAMENTO DE EXCEÇÃO: Impede o saque se não houver saldo suficiente
+  // Validação Crítica: Impede saque descoberto
   if (currentBalance < amountInCents) {
     throw new HttpsError(
       "failed-precondition",
@@ -305,19 +197,20 @@ export async function processWithdraw(
     updatedAt: Timestamp.now(),
   };
 
-  // 1. Registra a movimentação de saque
+  // Registro da movimentação
   await usersCollection.doc(userId).collection("movements").add({
     type: "WITHDRAW",
     amountInCents: amountInCents,
     createdAt: Timestamp.now(),
   });
 
-  // 2. Atualiza o saldo do usuário
   await updateUser(userId, { wallet });
-
   return newBalanceInCents;
 }
 
+/**
+ * Obtém todas as movimentações de um usuário de forma sequencial (não paginada).
+ */
 export async function getMovementsByUserId(userId: string): Promise<
   {
     type: "DEPOSIT" | "WITHDRAW";
@@ -341,6 +234,9 @@ export async function getMovementsByUserId(userId: string): Promise<
   );
 }
 
+/**
+ * Lista movimentações com paginação, ideal para telas de extrato com scroll infinito.
+ */
 export async function listMovementsByUserId(
   userId: string,
   limit = 10,

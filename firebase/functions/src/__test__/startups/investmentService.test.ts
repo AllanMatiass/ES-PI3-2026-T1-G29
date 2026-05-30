@@ -1,4 +1,8 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+/**
+ * @file investmentService.test.ts
+ * @description Testes unitários para o InvestmentMetricService.
+ * @author Allan Giovanni Matias Paes - 25008211
+ */
 
 import { InvestmentMetricService } from "../../startups/shared/investmentMetricService";
 import * as repo from "../../startups/repositories/startupRepository";
@@ -6,6 +10,10 @@ import { Timestamp } from "firebase-admin/firestore";
 
 jest.mock("../../startups/repositories/startupRepository");
 
+/**
+ * Helper para criar um objeto de startup mockado com valores padrão.
+ * @param overrides Propriedades a serem sobrescritas no mock.
+ */
 const mockStartup = (overrides = {}) => ({
   stage: "nova",
   founders: [{}],
@@ -23,6 +31,9 @@ describe("InvestmentMetricService", () => {
     jest.clearAllMocks();
   });
 
+  /**
+   * Verifica se o serviço lança a exceção correta quando uma startup não é encontrada.
+   */
   test("deve lançar erro se startup não existir", async () => {
     (repo.getStartupById as jest.Mock).mockResolvedValue(null);
 
@@ -31,6 +42,9 @@ describe("InvestmentMetricService", () => {
     );
   });
 
+  /**
+   * Valida o cálculo básico de risco para uma startup simples.
+   */
   test("deve calcular risco corretamente para startup simples", async () => {
     (repo.getStartupById as jest.Mock).mockResolvedValue(
       mockStartup({
@@ -47,6 +61,9 @@ describe("InvestmentMetricService", () => {
     expect(risk).toBeGreaterThanOrEqual(0);
   });
 
+  /**
+   * Testa se tags complexas (ex: iot) aumentam a pontuação de risco.
+   */
   test("deve aumentar risco com tags complexas e founder solo", async () => {
     (repo.getStartupById as jest.Mock).mockResolvedValue(
       mockStartup({
@@ -62,6 +79,9 @@ describe("InvestmentMetricService", () => {
     expect(risk).toBeGreaterThan(5);
   });
 
+  /**
+   * Valida a redução de risco quando a startup possui múltiplos fundadores e mentores.
+   */
   test("deve reduzir risco com múltiplos founders e mentores", async () => {
     (repo.getStartupById as jest.Mock).mockResolvedValue(
       mockStartup({
@@ -77,6 +97,9 @@ describe("InvestmentMetricService", () => {
     expect(risk).toBeLessThanOrEqual(5);
   });
 
+  /**
+   * Verifica se o retorno esperado é calculado e retornado no formato de objeto correto.
+   */
   test("deve calcular retorno esperado corretamente", async () => {
     (repo.getStartupById as jest.Mock).mockResolvedValue(
       mockStartup({
@@ -96,18 +119,27 @@ describe("InvestmentMetricService", () => {
     expect(typeof result.expected).toBe("number");
   });
 
+  /**
+   * Valida o mapeamento de pontuação numérica para códigos de perfil de risco.
+   */
   test("deve classificar corretamente o perfil de risco", () => {
     expect(service.getRiskProfileCodes(2)).toBe("lowRisk");
     expect(service.getRiskProfileCodes(5)).toBe("mediumRisk");
     expect(service.getRiskProfileCodes(9)).toBe("highRisk");
   });
 
+  /**
+   * Valida o mapeamento de pontuação numérica para labels amigáveis de perfil de risco.
+   */
   test("deve retornar o label do perfil de risco", () => {
     expect(service.getRiskProfile(2)).toBe("Risco Baixo");
     expect(service.getRiskProfile(5)).toBe("Risco Médio");
     expect(service.getRiskProfile(9)).toBe("Risco Alto");
   });
 
+  /**
+   * Testa se o horizonte de investimento é corretamente determinado pelo estágio da startup.
+   */
   test("deve retornar o horizonte de investimento baseado no estágio", () => {
     expect(service.getHorizon("nova")).toBe("Longo prazo");
     expect(service.getHorizon("em_operacao")).toBe("Médio prazo");
@@ -115,18 +147,27 @@ describe("InvestmentMetricService", () => {
     expect(service.getHorizon(undefined)).toBe("Desconhecido");
   });
 
+  /**
+   * Valida a recuperação do valor de valuation da startup via repositório.
+   */
   test("deve obter valuation da startup", async () => {
     (repo.getStartupValuationById as jest.Mock).mockResolvedValue(1500000);
     const valuation = await service.getStartupValuation("1");
     expect(valuation).toBe(1500000);
   });
 
+  /**
+   * Garante que o valuation retorne 0 caso não existam dados no repositório.
+   */
   test("deve retornar 0 se valuation não existir", async () => {
     (repo.getStartupValuationById as jest.Mock).mockResolvedValue(null);
     const valuation = await service.getStartupValuation("1");
     expect(valuation).toBe(0);
   });
 
+  /**
+   * Teste de integração mockado para o método principal que consolida todas as métricas da startup.
+   */
   test("deve obter métricas completas da startup", async () => {
     const startup = mockStartup({ id: "1", stage: "em_operacao" });
     (repo.getStartupById as jest.Mock).mockResolvedValue(startup);
@@ -152,6 +193,9 @@ describe("InvestmentMetricService", () => {
     expect(metrics.priceHistory.history).toHaveLength(1);
   });
 
+  /**
+   * Valida o cálculo do histórico de preços, incluindo variação nominal e percentual.
+   */
   test("deve calcular histórico de preços corretamente", async () => {
     const startup = mockStartup({ totalTokensIssued: 1000 });
     (repo.getStartupById as jest.Mock).mockResolvedValue(startup);
@@ -160,8 +204,8 @@ describe("InvestmentMetricService", () => {
     const date2 = new Date("2023-02-01");
 
     (repo.getValuationHistory as jest.Mock).mockResolvedValue([
-      { value: 100000, createdAt: Timestamp.fromDate(date1) }, // price = 100000 / 1000 / 100 = 1.00
-      { value: 150000, createdAt: Timestamp.fromDate(date2) }, // price = 150000 / 1000 / 100 = 1.50
+      { value: 100000, createdAt: Timestamp.fromDate(date1) }, // preço = 100000 / 1000 / 100 = 1.00
+      { value: 150000, createdAt: Timestamp.fromDate(date2) }, // preço = 150000 / 1000 / 100 = 1.50
     ]);
 
     const result = await service.getStartupPriceHistory(
@@ -183,6 +227,9 @@ describe("InvestmentMetricService", () => {
     expect(result.summary.averagePrice).toBe(1.25);
   });
 
+  /**
+   * Verifica se o agrupamento anual do histórico de preços seleciona corretamente o último valor do ano.
+   */
   test("deve agrupar histórico por intervalo anual", async () => {
     const startup = mockStartup({ totalTokensIssued: 1000 });
     (repo.getStartupById as jest.Mock).mockResolvedValue(startup);
