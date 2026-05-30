@@ -1,3 +1,4 @@
+// Autor: Allan Giovanni Matias Paes - 25008211
 import { onCall } from "firebase-functions/https";
 import { withCallHandler } from "../../shared/middlewares/errorHandler";
 import { UserProfile } from "../types";

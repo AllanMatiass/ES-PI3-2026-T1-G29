@@ -171,7 +171,7 @@ describe("BuyFromStartupService - Testes Unitários", () => {
   });
 
   // ------------------------------------------------------------------------
-  // Validações e Processamento Interno da Transação (Garantia Atômica)
+  // Validações e Processamento Interno da Transação
   describe("Processamento Concorrente e Transacional", () => {
     let mockStartupData: any;
     let mockUserData: any;
