@@ -1,6 +1,4 @@
-// Autores:
-// Allan Giovanni Matias Paes - 25008211
-// Pedro Vinicius Romanato - 25004075
+// Autor: Pedro Vinicius Romanato - 25004075
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/models/api_response.dart';
