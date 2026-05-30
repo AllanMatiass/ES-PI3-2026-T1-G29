@@ -1,6 +1,6 @@
 // Autores:
 // Allan Giovanni Matias Paes - 25008211
-// Pedro Romanato - 25004075
+// Pedro Romanato - 25004075 (cancelar Oferta)
 import '../models/offer.dart';
 import '../models/api_response.dart';
 import 'base_service.dart';
