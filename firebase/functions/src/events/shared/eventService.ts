@@ -1,6 +1,5 @@
 // Autor: Allan Giovanni Matias Paes - 25008211
 
-// Importa o tipo de erro HTTP do Firebase
 import { HttpsError } from "firebase-functions/https";
 import { createEventTx } from "../repositories/eventRepository";
 import { EventRequestDTO, EventResponseDTO } from "../types/dtos/dtos";

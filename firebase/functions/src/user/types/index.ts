@@ -35,18 +35,6 @@ export type UserProfile = {
   createdAt: Timestamp;
 };
 
-export type UpdateWalletParams = {
-  userId: string;
-
-  startupId: string;
-  startupName: string;
-
-  qtdTokens: number;
-
-  tokenPriceCents: number;
-  currentTokenPriceCents: number;
-};
-
 export type UserEntity = UserProfile & {
   createdAt: Timestamp;
 };

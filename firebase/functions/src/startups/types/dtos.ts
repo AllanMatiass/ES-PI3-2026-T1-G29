@@ -88,11 +88,10 @@ export type StartupDetails = {
 };
 
 /* =====================================================
-  
 DTOs DE RESPOSTA (API)
 ===================================================== */
 
-export type StartupListingResponse<T> = {
+export type StartupListingResponseDTO<T> = {
   count: number;
   filters: {
     availableStages: string[];
