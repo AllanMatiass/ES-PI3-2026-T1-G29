@@ -1,3 +1,4 @@
+// Autor: Pedro Vinícius Romanato - 25004075
 import * as admin from "firebase-admin";
 import { getAuth } from "firebase-admin/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";

@@ -1,4 +1,9 @@
-// Autor: Allan Giovanni Matias Paes - 25008211
+/**
+ * @file startupRepository.ts
+ * @description Repositório para gerenciamento de dados de startups no Firestore.
+ * @author Allan Giovanni Matias Paes - 25008211
+ */
+
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import {
   StartupDocument,
@@ -14,8 +19,16 @@ import {
   Variation,
 } from "../types/dtos";
 
+// Referência para a coleção principal de startups
 export const startupsCollection = db.collection("startups");
 
+/**
+ * Converte um documento de startup do Firestore para o formato de item de listagem (DTO).
+ * Calcula a variação de valuation e define a tendência (subida, descida, estável).
+ *
+ * @param id ID do documento.
+ * @param startup Dados brutos do documento.
+ */
 function toListItem(id: string, startup: StartupDocument): StartupListItem {
   const currentValuation =
     startup.currentTokenPriceCents * startup.totalTokensIssued;
@@ -50,6 +63,9 @@ function toListItem(id: string, startup: StartupDocument): StartupListItem {
   };
 }
 
+/**
+ * Recupera uma lista resumida de startups para exibição em catálogos.
+ */
 export async function listStartupItems(): Promise<StartupListItem[]> {
   const snapshot = await startupsCollection.limit(100).get();
 
@@ -58,6 +74,9 @@ export async function listStartupItems(): Promise<StartupListItem[]> {
   );
 }
 
+/**
+ * Obtém os detalhes completos de uma startup pelo ID.
+ */
 export async function getStartupById(
   startupId: string,
 ): Promise<StartupDocumentDTO | undefined> {
@@ -70,6 +89,9 @@ export async function getStartupById(
   return startupSnapshot.data() as StartupDocumentDTO;
 }
 
+/**
+ * Obtém múltiplas startups de uma vez através de seus IDs (Batch Read).
+ */
 export async function getStartupsByIds(
   startupIds: string[],
 ): Promise<(StartupDocumentDTO | undefined)[]> {
@@ -84,6 +106,9 @@ export async function getStartupsByIds(
   });
 }
 
+/**
+ * Verifica se um usuário específico é investidor de uma determinada startup.
+ */
 export async function userIsInvestor(
   startupId: string,
   uid: string,
@@ -97,6 +122,9 @@ export async function userIsInvestor(
   return investorSnapshot.exists;
 }
 
+/**
+ * Lista as perguntas públicas de uma startup.
+ */
 export async function listPublicQuestions(startupId: string) {
   const questionsSnapshot = await startupsCollection
     .doc(startupId)
@@ -126,6 +154,9 @@ export async function listPublicQuestions(startupId: string) {
     );
 }
 
+/**
+ * Lista perguntas direcionadas a uma startup, filtrando privadas caso o usuário não seja investidor.
+ */
 export async function listStartupQuestions(
   startupId: string,
   isInvestor: boolean,
@@ -157,6 +188,7 @@ export async function listStartupQuestions(
       };
     })
     .filter((question) => {
+      // Regra: Público é visível a todos. Privado apenas se isInvestor for true.
       if (question.visibility === "publica") return true;
       if (question.visibility === "privada" && isInvestor) return true;
       return false;
@@ -168,6 +200,9 @@ export async function listStartupQuestions(
   return questions;
 }
 
+/**
+ * Cria uma nova pergunta para uma startup.
+ */
 export async function createQuestion(
   question: StartupQuestionCreateDTO,
 ): Promise<string> {
@@ -179,6 +214,9 @@ export async function createQuestion(
   return questionRef.id;
 }
 
+/**
+ * Popula o banco de dados com startups de demonstração e gera histórico de valuation simulado.
+ */
 export async function seedDemoStartups(): Promise<string[]> {
   const batch = db.batch();
 
@@ -202,16 +240,14 @@ export async function seedDemoStartups(): Promise<string[]> {
       { merge: true },
     );
 
-    // Gerar 40 pontos históricos (Meses) com Random Walk
+    // Gerar 40 pontos históricos (Meses) com Random Walk para simular realidade de mercado
     let currentPrice = data.currentTokenPriceCents;
 
-    // Começa de 40 meses atrás até hoje
     for (let i = 40; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
 
-      // No gráfico mensal, a variância pode ser um pouco maior (até 12% ao mês)
-      // para mostrar ciclos de mercado mais claros na banca.
+      // Variância aleatória de até 12% para criar um gráfico dinâmico
       const variance = (Math.random() - 0.48) * 0.25;
       currentPrice = Math.round(currentPrice * (1 + variance));
 
@@ -235,6 +271,9 @@ export async function seedDemoStartups(): Promise<string[]> {
   return startupsData.map((startup) => startup.id);
 }
 
+/**
+ * Calcula o valuation atual de uma startup com base no preço do token e total emitido.
+ */
 export async function getStartupValuationById(
   startupId: string,
 ): Promise<number | undefined> {
@@ -247,6 +286,9 @@ export async function getStartupValuationById(
   return startup.currentTokenPriceCents * startup.totalTokensIssued;
 }
 
+/**
+ * Obtém o valor de valuation imediatamente anterior ao atual (usado para calcular variações).
+ */
 export async function getPreviousStartupValuation(
   startupId: string,
 ): Promise<number | undefined> {
@@ -266,6 +308,9 @@ export async function getPreviousStartupValuation(
   return previous.value;
 }
 
+/**
+ * Salva um snapshot de valuation na sub-coleção histórica da startup.
+ */
 export async function saveValuationSnapshot(
   startupId: string,
   valuation: number,
@@ -284,6 +329,9 @@ export async function saveValuationSnapshot(
     });
 }
 
+/**
+ * Recupera o histórico de valuation em um intervalo de tempo específico.
+ */
 export async function getValuationHistory(
   startupId: string,
   from: Date,
@@ -305,6 +353,9 @@ export async function getValuationHistory(
   }));
 }
 
+/**
+ * Atualiza o preço do token de uma startup e registra o novo valuation no histórico.
+ */
 export async function updateStartupValuation(
   startupId: string,
   newTokenPriceCents: number,
@@ -320,6 +371,8 @@ export async function updateStartupValuation(
     startup.currentTokenPriceCents * startup.totalTokensIssued;
 
   const newValuation = newTokenPriceCents * startup.totalTokensIssued;
+
+  // Registra no histórico antes de atualizar o documento principal
   await saveValuationSnapshot(
     startupId,
     newValuation,
