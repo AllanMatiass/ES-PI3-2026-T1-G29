@@ -1,10 +1,18 @@
 // Autor: Pedro Romanato - 25004075
 import 'package:flutter/material.dart';
 
+/// mostrando avatar com iniciais, nome, cargo e percentual de participação.
 class SocioRow extends StatelessWidget {
+  /// Iniciais do nome do sócio (ex: "PR" para Pedro Romanato)
   final String iniciais;
+
+  /// Nome completo do sócio
   final String nome;
+
+  /// Cargo ou função do sócio na empresa
   final String cargo;
+
+  /// Percentual de participação societária
   final String porcentagem;
 
   const SocioRow({
@@ -17,9 +25,11 @@ class SocioRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // se adapta de acrodo com o tema mudando as cores
     final theme = Theme.of(context);
     return Row(
       children: [
+        // Avatar circular com as iniciais do sócio
         CircleAvatar(
           radius: 22,
           backgroundColor: const Color(0xFF00A84E).withOpacity(0.1),
@@ -32,10 +42,12 @@ class SocioRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
+        // Coluna central com nome e cargo, expandida para ocupar o espaço disponível
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Nome completo do sócio
               Text(
                 nome,
                 style: TextStyle(
@@ -44,6 +56,7 @@ class SocioRow extends StatelessWidget {
                   color: theme.colorScheme.onSurface,
                 ),
               ),
+              // Cargo/função do sócio
               Text(
                 cargo,
                 style: TextStyle(
@@ -54,6 +67,7 @@ class SocioRow extends StatelessWidget {
             ],
           ),
         ),
+        // Percentual de participação societária exibido em destaque
         Text(
           porcentagem,
           style: const TextStyle(
