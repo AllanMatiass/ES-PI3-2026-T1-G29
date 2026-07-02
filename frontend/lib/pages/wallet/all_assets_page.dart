@@ -13,7 +13,8 @@ import '../../widgets/shimmer_placeholder.dart';
 /// Página que exibe a listagem completa de todos os tokens (ativos) que o usuário possui.
 /// Cruza dados da carteira do usuário com informações de mercado (preços, logos) das startups.
 class AllAssetsPage extends StatefulWidget {
-  final bool isVisible; // Define se os valores financeiros devem ser exibidos ou ocultos (olho)
+  final bool
+  isVisible; // Define se os valores financeiros devem ser exibidos ou ocultos (olho)
 
   const AllAssetsPage({super.key, required this.isVisible});
 
@@ -24,7 +25,7 @@ class AllAssetsPage extends StatefulWidget {
 class _AllAssetsPageState extends State<AllAssetsPage> {
   // Mapa para acesso rápido aos detalhes das startups (Key: ID da Startup)
   Map<String, StartupListItem> _startupsMap = {};
-  
+
   // Estados de controle da interface
   bool _isLoading = true;
   String? _error;
